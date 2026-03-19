@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>iPad版拖拽填空模拟题</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      background: #fff;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+      color: #666;
+      touch-action: manipulation;
+    }
+
+    .page {
+      width: min(94vw, 980px);
+      margin: 14px auto 28px;
+      background: #fff;
+      padding-bottom: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .btn-main, .btn-check {
+      border: none;
+      background: #6fbf4e;
+      color: #fff;
+      border-radius: 22px;
+      padding: 10px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      min-height: 42px;
+    }
+
+    .btn-main:hover, .btn-check:hover {
+      background: #5dad3f;
+    }
+
+    .exercise {
+      margin-bottom: 34px;
+    }
+
+    .title {
+      margin: 0 0 14px;
+      font-size: 17px;
+      line-height: 1.7;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .board .row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      padding: 10px 0 14px;
+      border-bottom: 2px solid #d9d9d9;
+    }
+
+    .board .row:last-child {
+      border-bottom: none;
+    }
+
+    .cell {
+      height: 118px;
+      border: 1.5px solid #cfcfcf;
+      background: #fff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: all .18s ease;
+    }
+
+    .cell.blank {
+      background: #dff4cc;
+    }
+
+    .cell.blank.drag-over {
+      background: #d1efb8;
+      box-shadow: inset 0 0 0 3px #78bc4b;
+    }
+
+    .cell.blank.filled {
+      background: linear-gradient(180deg, #eef9e5 0%, #e2f4d4 100%);
+      border-color: #9bc885;
+      transform: scale(1.02);
+    }
+
+    .cell.blank.right {
+      background: linear-gradient(180deg, #eef9e6 0%, #dbf0ca 100%);
+      border-color: #87bf72;
+      box-shadow: inset 0 0 0 2px #a9d39a;
+    }
+
+    .cell.blank.wrong {
+      background: linear-gradient(180deg, #fff1f1 0%, #ffe1e1 100%);
+      border-color: #e09b9b;
+      box-shadow: inset 0 0 0 2px #efbbbb;
+    }
+
+    .emoji-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      font-size: 62px;
+      line-height: 1;
+      touch-action: none;
+    }
+
+    .emoji-wrap.small {
+      font-size: 48px;
+    }
+
+    .draggable-emoji {
+      cursor: grab;
+    }
+
+    .draggable-emoji.dragging-source {
+      opacity: .25;
+      transform: scale(.95);
+    }
+
+    .option-wrap {
+      margin-top: 18px;
+    }
+
+    .option-title-line {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .option-line {
+      flex: 1;
+      border-top: 4px dashed #79c655;
+      height: 0;
+    }
+
+    .option-title {
+      min-width: 80px;
+      text-align: center;
+      font-size: 18px;
+      color: #777;
+      font-weight: 700;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    .opt {
+      height: 88px;
+      border: 1.5px solid #cfcfcf;
+      background: #fff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .opt.used {
+      opacity: .28;
+      filter: grayscale(.15);
+    }
+
+    .exercise-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 14px;
+      color: #888;
+    }
+
+    .status.ok {
+      color: #549943;
+      font-weight: 600;
+    }
+
+    .status.no {
+      color: #c76969;
+      font-weight: 600;
+    }
+
+    .reason-box {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border: 1px solid #f0caca;
+      background: #fff7f7;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #a85c5c;
+      line-height: 1.8;
+    }
+
+    .reason-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .reason-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .reason-list li {
+      margin: 2px 0;
+    }
+
+    .drag-ghost {
+      position: fixed;
+      width: 72px;
+      height: 72px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.96);
+      border: 1.5px solid #d8d8d8;
+      box-shadow: 0 8px 20px rgba(0,0,0,.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 50px;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    @media (max-width: 900px) {
+      .title { font-size: 16px; }
+      .cell { height: 104px; }
+      .emoji-wrap { font-size: 54px; }
+      .emoji-wrap.small { font-size: 42px; }
+      .opt { height: 78px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <button class="btn-main" onclick="renderAll()">重新随机生成</button>
+    </div>
+    <div id="app"></div>
+  </div>
+
+  <script>
+    function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+    function pick(arr,n){ return shuffle(arr).slice(0,n); }
+    function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+    function uid(){ return 'id_' + Math.random().toString(36).slice(2,10); }
+
+    const factories = {
+      水果: ["🍎","🍐","🍊","🍌","🍓","🍇"],
+      动物: ["🐶","🐱","🐰","🐻","🦊","🐷"],
+      交通工具: ["🚗","🚌","🚲","🚄","✈️","🚢"],
+      蔬菜: ["🥕","🌽","🍆","🍅","🥬","🥔"],
+      学习用品: ["📘","✏️","✂️","📏","🖊️","🎒"],
+      天气现象: ["☀️","☁️","🌈","🌧️","🌙","❄️"],
+      乐器: ["🥁","🎺","🎸","🎹","🎻","🎷"],
+      生活用品: ["🧴","🧼","🧻","🧹","🚪","🛏️"],
+      衣物: ["👕","🧢","👟","🧦","👖","👗"],
+      餐具器皿: ["☕","🥣","🍽️","🍵","🥄","🍴"],
+      花卉植物: ["🌹","🌷","🌼","🌺","🌸","🌻"],
+      食物: ["🍜","🍲","🍞","🍰","🍕","🍬"],
+      球类运动: ["⚽","🏀","🏐","⚾","🎾","🏓"],
+      玩具: ["🧱","🎁","🎈","🧸","🦆","🚙"]
+    };
+
+    // 双小类模板：固定 6 格，空格固定 [1,4]
+    const dualSubgroupTemplates = [
+      {
+        bigCat: "学习用品",
+        leftSub: "书写类",
+        rightSub: "裁量收纳类",
+        left: ["✏️","🖊️","📏"],
+        right: ["✂️","🎒","📘"]
+      },
+      {
+        bigCat: "餐具器皿",
+        leftSub: "盛装类",
+        rightSub: "进食工具类",
+        left: ["☕","🥣","🍵"],
+        right: ["🥄","🍴","🍽️"]
+      },
+      {
+        bigCat: "衣物",
+        leftSub: "上身穿戴类",
+        rightSub: "下身脚部类",
+        left: ["👕","🧢","👗"],
+        right: ["👖","👟","🧦"]
+      },
+      {
+        bigCat: "乐器",
+        leftSub: "弦键类",
+        rightSub: "打击吹奏类",
+        left: ["🎸","🎹","🎻"],
+        right: ["🥁","🎺","🎷"]
+      },
+      {
+        bigCat: "生活用品",
+        leftSub: "清洁类",
+        rightSub: "家居类",
+        left: ["🧼","🧹","🧻"],
+        right: ["🚪","🛏️","🧴"]
+      },
+      {
+        bigCat: "交通工具",
+        leftSub: "地面交通类",
+        rightSub: "远程交通类",
+        left: ["🚗","🚌","🚲"],
+        right: ["🚄","✈️","🚢"]
+      }
+    ];
+
+    const categories = Object.keys(factories);
+    let appState = [];
+    let dragState = null;
+
+    function validEmoji(e) {
+      return typeof e === "string" && e.trim() !== "";
+    }
+
+    function makeUniqueItems(cat, count) {
+      const source = factories[cat].filter(validEmoji);
+      return shuffle(source).slice(0, count).map(item => ({
+        uid: uid(),
+        cat,
+        id: `${cat}_${item}`,
+        emoji: item
+      }));
+    }
+
+    function createSingleBlankRow(cat, rowIndex) {
+      const rowItems = makeUniqueItems(cat, 6);
+      const blankPos = Math.floor(Math.random() * 6);
+      const row = rowItems.map((x, idx) => ({
+        ...x,
+        originalIndex: idx
+      }));
+
+      const answerItem = row[blankPos];
+      row[blankPos] = {
+        blank: true,
+        cat,
+        answerId: answerItem.id,
+        answerEmoji: answerItem.emoji,
+        current: null,
+        isRight: undefined,
+        rowIndex,
+        colIndex: blankPos,
+        isDualBlankRow: false,
+        subGroupName: null,
+        dualSide: null
+      };
+
+      return {
+        row,
+        shownIds: row.filter(x => !x.blank).map(x => x.id),
+        answers: [{
+          ...answerItem,
+          rowIndex,
+          colIndex: blankPos,
+          blankOrder: 0,
+          isDualBlankRow: false
+        }]
+      };
+    }
+
+    function createDualBlankRowFromTemplate(template, rowIndex) {
+      const leftPool = shuffle(template.left);
+      const rightPool = shuffle(template.right);
+
+      const leftShown1 = leftPool[0];
+      const leftAnswer = leftPool[1];
+      const leftShown2 = leftPool[2];
+
+      const rightShown1 = rightPool[0];
+      const rightAnswer = rightPool[1];
+      const rightShown2 = rightPool[2];
+
+      const row = [
+        { uid: uid(), cat: template.bigCat, id: `${template.bigCat}_${leftShown1}`, emoji: leftShown1, subGroupName: template.leftSub },
+        {
+          blank: true,
+          cat: template.bigCat,
+          answerId: `${template.bigCat}_${leftAnswer}`,
+          answerEmoji: leftAnswer,
+          current: null,
+          isRight: undefined,
+          rowIndex,
+          colIndex: 1,
+          isDualBlankRow: true,
+          subGroupName: template.leftSub,
+          dualSide: "left"
+        },
+        { uid: uid(), cat: template.bigCat, id: `${template.bigCat}_${leftShown2}`, emoji: leftShown2, subGroupName: template.leftSub },
+        { uid: uid(), cat: template.bigCat, id: `${template.bigCat}_${rightShown1}`, emoji: rightShown1, subGroupName: template.rightSub },
+        {
+          blank: true,
+          cat: template.bigCat,
+          answerId: `${template.bigCat}_${rightAnswer}`,
+          answerEmoji: rightAnswer,
+          current: null,
+          isRight: undefined,
+          rowIndex,
+          colIndex: 4,
+          isDualBlankRow: true,
+          subGroupName: template.rightSub,
+          dualSide: "right"
+        },
+        { uid: uid(), cat: template.bigCat, id: `${template.bigCat}_${rightShown2}`, emoji: rightShown2, subGroupName: template.rightSub }
+      ];
+
+      return {
+        row,
+        shownIds: row.filter(x => !x.blank).map(x => x.id),
+        answers: [
+          {
+            uid: uid(),
+            cat: template.bigCat,
+            id: `${template.bigCat}_${leftAnswer}`,
+            emoji: leftAnswer,
+            rowIndex,
+            colIndex: 1,
+            blankOrder: 0,
+            isDualBlankRow: true,
+            subGroupName: template.leftSub,
+            dualSide: "left"
+          },
+          {
+            uid: uid(),
+            cat: template.bigCat,
+            id: `${template.bigCat}_${rightAnswer}`,
+            emoji: rightAnswer,
+            rowIndex,
+            colIndex: 4,
+            blankOrder: 1,
+            isDualBlankRow: true,
+            subGroupName: template.rightSub,
+            dualSide: "right"
+          }
+        ]
+      };
+    }
+
+    function countDualBlankRows(rows) {
+      let count = 0;
+      rows.forEach(row => {
+        const blankCount = row.filter(cell => cell.blank).length;
+        if (blankCount === 2) count++;
+      });
+      return count;
+    }
+
+    function createExercise(exIndex) {
+      const chosenDualTemplate = rand(dualSubgroupTemplates);
+      const remainCats = categories.filter(c => c !== chosenDualTemplate.bigCat);
+      const usedCats = shuffle([chosenDualTemplate.bigCat, ...pick(remainCats, 5)]);
+      const dualRowIndex = Math.floor(Math.random() * 6);
+
+      const rows = [];
+      const answers = [];
+      const shownImageIds = new Set();
+
+      usedCats.forEach((cat, rowIndex) => {
+        let rowData;
+
+        if (rowIndex === dualRowIndex && cat === chosenDualTemplate.bigCat) {
+          rowData = createDualBlankRowFromTemplate(chosenDualTemplate, rowIndex);
+        } else {
+          rowData = createSingleBlankRow(cat, rowIndex);
+        }
+
+        rows.push(rowData.row);
+        rowData.answers.forEach(a => answers.push(a));
+        rowData.shownIds.forEach(id => shownImageIds.add(id));
+      });
+
+      // 强制校验：每题必须且仅有1行双答题项
+      if (countDualBlankRows(rows) !== 1) {
+        return createExercise(exIndex);
+      }
+
+      const optionMap = new Map();
+
+      answers.forEach(a => {
+        if (!optionMap.has(a.id)) {
+          optionMap.set(a.id, {
+            ...a,
+            source: "correct",
+            used: false,
+            optionUid: uid()
+          });
+        }
+      });
+
+      const excludedIds = new Set([
+        ...shownImageIds,
+        ...Array.from(optionMap.keys())
+      ]);
+
+      let guard = 0;
+      while (optionMap.size < 12 && guard < 5000) {
+        guard++;
+        const cat = rand(categories);
+        const item = makeUniqueItems(cat, 1)[0];
+        if (item && !excludedIds.has(item.id) && !optionMap.has(item.id)) {
+          optionMap.set(item.id, {
+            ...item,
+            source: "wrong",
+            used: false,
+            optionUid: uid()
+          });
+          excludedIds.add(item.id);
+        }
+      }
+
+      return {
+        exIndex,
+        rows,
+        options: shuffle(Array.from(optionMap.values())).slice(0, 12),
+        result: null,
+        reasons: []
+      };
+    }
+
+    function renderAll() {
+      appState = [createExercise(1), createExercise(2)];
+
+      // 双保险校验：两题都必须有1行双答题项
+      if (
+        countDualBlankRows(appState[0].rows) !== 1 ||
+        countDualBlankRows(appState[1].rows) !== 1
+      ) {
+        return renderAll();
+      }
+
+      renderApp();
+    }
+
+    function renderApp() {
+      document.getElementById("app").innerHTML = appState.map((ex, i) => renderExercise(ex, i)).join("");
+      bindPointerDrag();
+    }
+
+    function renderExercise(ex, exi) {
+      return `
+        <section class="exercise" data-ex="${exi}">
+          <p class="title">${exi + 1}. 选择出绿色背景格子对应的图形。</p>
+
+          <div class="board">
+            ${ex.rows.map((row, ri) => `
+              <div class="row">
+                ${row.map((cell, ci) => renderCell(cell, exi, ri, ci)).join("")}
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="option-wrap">
+            <div class="option-title-line">
+              <div class="option-line"></div>
+              <div class="option-title">选项区</div>
+              <div class="option-line"></div>
+            </div>
+
+            <div class="options">
+              ${ex.options.map((opt, oi) => `
+                <div class="opt ${opt.used ? 'used' : ''}">
+                  ${
+                    !opt.used
+                      ? `<div class="emoji-wrap small draggable-emoji"
+                             data-drag-type="option"
+                             data-ex="${exi}"
+                             data-opt="${oi}">${opt.emoji}</div>`
+                      : ``
+                  }
+                </div>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="exercise-actions">
+            <button class="btn-check" onclick="checkExercise(${exi})">检查答案</button>
+            <div class="status ${ex.result === null ? '' : (ex.result.correct === ex.result.total ? 'ok' : 'no')}">
+              ${
+                ex.result === null
+                  ? '请将选项拖入绿色格子后再检查。'
+                  : ex.result.correct === ex.result.total
+                    ? `全部正确（${ex.result.correct}/${ex.result.total}）`
+                    : `答对 ${ex.result.correct}/${ex.result.total}`
+              }
+            </div>
+          </div>
+
+          ${
+            ex.reasons && ex.reasons.length
+              ? `
+                <div class="reason-box">
+                  <div class="reason-title">错误原因：</div>
+                  <ul class="reason-list">
+                    ${ex.reasons.map(r => `<li>${r}</li>`).join("")}
+                  </ul>
+                </div>
+              `
+              : ``
+          }
+        </section>
+      `;
+    }
+
+    function renderCell(cell, exi, ri, ci) {
+      if (!cell.blank) {
+        return `
+          <div class="cell">
+            <div class="emoji-wrap">${cell.emoji}</div>
+          </div>
+        `;
+      }
+
+      const cls = [
+        "cell",
+        "blank",
+        cell.current ? "filled" : "",
+        cell.isRight === true ? "right" : "",
+        cell.isRight === false ? "wrong" : ""
+      ].join(" ");
+
+      return `
+        <div class="${cls}" data-drop-ex="${exi}" data-drop-row="${ri}" data-drop-col="${ci}">
+          ${
+            cell.current
+              ? `<div class="emoji-wrap draggable-emoji"
+                      data-drag-type="blank"
+                      data-ex="${exi}"
+                      data-row="${ri}"
+                      data-col="${ci}">${cell.current.emoji}</div>`
+              : ``
+          }
+        </div>
+      `;
+    }
+
+    function bindPointerDrag() {
+      document.querySelectorAll('.draggable-emoji').forEach(el => {
+        el.addEventListener('pointerdown', startPointerDrag);
+      });
+    }
+
+    function startPointerDrag(e) {
+      e.preventDefault();
+
+      const el = e.currentTarget;
+      const dragType = el.dataset.dragType;
+
+      let payload = null;
+      let emoji = el.textContent.trim();
+
+      if (dragType === "option") {
+        const exi = Number(el.dataset.ex);
+        const optIndex = Number(el.dataset.opt);
+        const option = appState[exi].options[optIndex];
+        if (!option || option.used) return;
+
+        payload = {
+          sourceType: "option",
+          ex: exi,
+          optIndex,
+          id: option.id,
+          emoji: option.emoji,
+          cat: option.cat
+        };
+      } else if (dragType === "blank") {
+        const exi = Number(el.dataset.ex);
+        const row = Number(el.dataset.row);
+        const col = Number(el.dataset.col);
+        const blank = appState[exi].rows[row][col];
+        if (!blank || !blank.current) return;
+
+        payload = {
+          sourceType: "blank",
+          ex: exi,
+          row,
+          col,
+          id: blank.current.id,
+          emoji: blank.current.emoji,
+          cat: blank.current.cat,
+          optIndex: blank.current.optIndex
+        };
+      }
+
+      if (!payload) return;
+
+      dragState = {
+        payload,
+        sourceEl: el,
+        ghost: createGhost(emoji, e.clientX, e.clientY)
+      };
+
+      el.classList.add('dragging-source');
+
+      window.addEventListener('pointermove', onPointerMove, { passive: false });
+      window.addEventListener('pointerup', onPointerUp, { passive: false });
+      window.addEventListener('pointercancel', onPointerUp, { passive: false });
+    }
+
+    function createGhost(emoji, x, y) {
+      const ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.textContent = emoji;
+      ghost.style.left = x + 'px';
+      ghost.style.top = y + 'px';
+      document.body.appendChild(ghost);
+      return ghost;
+    }
+
+    function clearDragHighlights() {
+      document.querySelectorAll('.cell.blank.drag-over').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    function onPointerMove(e) {
+      if (!dragState) return;
+      e.preventDefault();
+
+      dragState.ghost.style.left = e.clientX + 'px';
+      dragState.ghost.style.top = e.clientY + 'px';
+
+      clearDragHighlights();
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const dropCell = target && target.closest('[data-drop-ex]');
+      if (dropCell) {
+        dropCell.classList.add('drag-over');
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!dragState) return;
+      e.preventDefault();
+
+      const { payload, sourceEl, ghost } = dragState;
+      clearDragHighlights();
+
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const dropCell = target && target.closest('[data-drop-ex]');
+
+      if (dropCell) {
+        const toEx = Number(dropCell.dataset.dropEx);
+        const toRow = Number(dropCell.dataset.dropRow);
+        const toCol = Number(dropCell.dataset.dropCol);
+        placeDraggedItem(payload, toEx, toRow, toCol);
+      }
+
+      if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+      if (sourceEl) sourceEl.classList.remove('dragging-source');
+
+      dragState = null;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+    }
+
+    function placeDraggedItem(payload, toEx, toRow, toCol) {
+      if (payload.ex !== toEx) return;
+
+      const ex = appState[toEx];
+      const targetBlank = ex.rows[toRow][toCol];
+      if (!targetBlank || !targetBlank.blank) return;
+
+      if (payload.sourceType === "option") {
+        const option = ex.options[payload.optIndex];
+        if (!option || option.used) return;
+
+        if (targetBlank.current) {
+          const oldOpt = ex.options[targetBlank.current.optIndex];
+          if (oldOpt) oldOpt.used = false;
+        }
+
+        option.used = true;
+        targetBlank.current = {
+          optionUid: option.optionUid,
+          id: option.id,
+          emoji: option.emoji,
+          cat: option.cat,
+          optIndex: payload.optIndex
+        };
+      }
+
+      if (payload.sourceType === "blank") {
+        const sourceBlank = ex.rows[payload.row][payload.col];
+        if (!sourceBlank || !sourceBlank.current) return;
+        if (payload.row === toRow && payload.col === toCol) return;
+
+        const movingCurrent = { ...sourceBlank.current };
+
+        if (targetBlank.current) {
+          const targetCurrent = { ...targetBlank.current };
+          sourceBlank.current = targetCurrent;
+        } else {
+          sourceBlank.current = null;
+        }
+
+        targetBlank.current = movingCurrent;
+      }
+
+      targetBlank.isRight = undefined;
+      ex.result = null;
+      ex.reasons = [];
+
+      ex.rows.forEach(row => {
+        row.forEach(cell => {
+          if (cell.blank) cell.isRight = undefined;
+        });
+      });
+
+      renderApp();
+    }
+
+    function checkExercise(exi) {
+      const ex = appState[exi];
+      let total = 0;
+      let correct = 0;
+      const reasons = [];
+
+      ex.rows.forEach((row, ri) => {
+        row.forEach((cell, ci) => {
+          if (!cell.blank) return;
+
+          total++;
+
+          if (cell.current && cell.current.id === cell.answerId) {
+            cell.isRight = true;
+            correct++;
+            return;
+          }
+
+          cell.isRight = false;
+
+          if (!cell.current) {
+            if (cell.isDualBlankRow) {
+              if (cell.dualSide === "left") {
+                reasons.push(`第${ri + 1}行左侧绿色格属于“${cell.cat}”中的“${cell.subGroupName}”，它位于左侧小类的中间位置，你还没有作答。`);
+              } else {
+                reasons.push(`第${ri + 1}行右侧绿色格属于“${cell.cat}”中的“${cell.subGroupName}”，它位于右侧小类的中间位置，你还没有作答。`);
+              }
+            } else {
+              reasons.push(`第${ri + 1}行的绿色格子还没有作答。本行属于“${cell.cat}”类，应选择与本行其余图片同类的图形。`);
+            }
+            return;
+          }
+
+          if (cell.isDualBlankRow) {
+            if (cell.current.cat === cell.cat) {
+              if (cell.dualSide === "left") {
+                reasons.push(`第${ri + 1}行左侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”。你选择的 ${cell.current.emoji} 虽属于同一大类“${cell.cat}”，但不属于左侧这一组的小类，或不对应左侧中间位置。`);
+              } else {
+                reasons.push(`第${ri + 1}行右侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”。你选择的 ${cell.current.emoji} 虽属于同一大类“${cell.cat}”，但不属于右侧这一组的小类，或不对应右侧中间位置。`);
+              }
+            } else {
+              if (cell.dualSide === "left") {
+                reasons.push(`第${ri + 1}行左侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”，你填入的是“${cell.current.cat}”类图形（${cell.current.emoji}），大类和左侧小类都不匹配。`);
+              } else {
+                reasons.push(`第${ri + 1}行右侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”，你填入的是“${cell.current.cat}”类图形（${cell.current.emoji}），大类和右侧小类都不匹配。`);
+              }
+            }
+          } else {
+            if (cell.current.cat === cell.cat) {
+              reasons.push(`第${ri + 1}行应补入与本行同类的图形。你选择的 ${cell.current.emoji} 虽属于“${cell.cat}”类，但它不是这个空格对应的正确图形。`);
+            } else {
+              reasons.push(`第${ri + 1}行属于“${cell.cat}”类，你选择了“${cell.current.cat}”类图形（${cell.current.emoji}），分类不一致。应选择与本行其余图片同类的图形。`);
+            }
+          }
+        });
+      });
+
+      ex.result = { total, correct };
+      ex.reasons = reasons;
+      renderApp();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
+### 总结
+1. 该代码实现了一个适配iPad的拖拽填空模拟题页面，核心功能是通过拖拽emoji表情完成分类填空，并能检查答案对错。
+2. 页面包含随机生成题目、拖拽交互、答案校验、错误提示等完整功能，支持单空格和双空格两种题型模板。
+3. 代码采用原生HTML/CSS/JavaScript实现，无外部依赖，适配移动端触摸操作，样式上有丰富的视觉反馈（如拖拽高亮、对错状态色值区分）。
