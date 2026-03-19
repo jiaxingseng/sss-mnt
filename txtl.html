@@ -2,110 +2,211 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>iPad版拖拽填空模拟题</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>iPad明显放大版</title>
   <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+
+    :root {
+      --bg-page: #f4f8ee;
+      --bg-card: #fbfdf7;
+      --bg-cell: #ffffff;
+      --bg-blank: #dff1c9;
+      --bg-blank-hover: #d3ebb7;
+      --bg-fill: linear-gradient(180deg, #eef7e3 0%, #e3f0d2 100%);
+      --border-main: #c8d0c0;
+      --border-blank: #9cc37f;
+      --border-right: #84b76d;
+      --border-wrong: #d79a9a;
+      --text-main: #5f6658;
+      --text-sub: #7a8273;
+      --green: #73bb52;
+
+
+      /* 横屏：明显放大 */
+      --box-size: 92px;
+      --emoji-main: 68px;
+      --emoji-option: 68px;
+      --gap: 8px;
+      --border: 1.2px;
+      --page-max-width: 1180px;
+
+
+      --title-size: 16px;
+      --title-line: 1.35;
+      --btn-size: 14px;
+      --btn-height: 38px;
+      --option-title-size: 16px;
+      --status-size: 12px;
+      --reason-size: 11px;
+    }
+
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg-page);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+      color: var(--text-main);
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+    }
+
 
     body {
-      margin: 0;
-      background: #fff;
-      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
-      color: #666;
-      touch-action: manipulation;
+      touch-action: pan-y;
     }
 
-    .page {
-      width: min(94vw, 980px);
-      margin: 14px auto 28px;
-      background: #fff;
-      padding-bottom: 20px;
+
+    .page,
+    .exercise,
+    .cell,
+    .opt,
+    .emoji-wrap,
+    .draggable-emoji,
+    .title,
+    .status,
+    .reason-box {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
+
+
+    .page {
+      width: min(96vw, var(--page-max-width));
+      margin: 8px auto 14px;
+      padding: 8px 12px 14px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      background: var(--bg-page);
+    }
+
 
     .topbar {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
+
 
     .btn-main, .btn-check {
       border: none;
-      background: #6fbf4e;
+      background: var(--green);
       color: #fff;
-      border-radius: 22px;
-      padding: 10px 18px;
-      font-size: 15px;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: var(--btn-size);
       cursor: pointer;
-      min-height: 42px;
+      min-height: var(--btn-height);
+      line-height: 1;
+      box-shadow: 0 2px 6px rgba(97, 148, 73, .14);
     }
+
 
     .btn-main:hover, .btn-check:hover {
-      background: #5dad3f;
+      background: #63ab44;
     }
+
 
     .exercise {
-      margin-bottom: 34px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 8px 10px 10px;
+      box-shadow: 0 2px 8px rgba(120, 135, 110, .07);
     }
 
+
     .title {
-      margin: 0 0 14px;
-      font-size: 17px;
-      line-height: 1.7;
-      color: #666;
+      margin: 0 0 8px;
+      font-size: var(--title-size);
+      line-height: var(--title-line);
+      color: var(--text-main);
       font-weight: 600;
     }
 
-    .board .row {
+
+    .board .row,
+    .options {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
-      padding: 10px 0 14px;
-      border-bottom: 2px solid #d9d9d9;
+      grid-template-columns: repeat(6, var(--box-size));
+      justify-content: space-between;
+      gap: var(--gap);
     }
+
+
+    .board .row {
+      padding: 4px 0 7px;
+      border-bottom: 1.2px solid #d7ded0;
+    }
+
 
     .board .row:last-child {
       border-bottom: none;
     }
 
-    .cell {
-      height: 118px;
-      border: 1.5px solid #cfcfcf;
-      background: #fff;
-      border-radius: 4px;
+
+    .cell,
+    .opt {
+      width: var(--box-size);
+      height: var(--box-size);
+      border: var(--border) solid var(--border-main);
+      background: var(--bg-cell);
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
-      transition: all .18s ease;
+      transition: all .15s ease;
+      flex: 0 0 auto;
     }
+
 
     .cell.blank {
-      background: #dff4cc;
+      background: var(--bg-blank);
     }
+
 
     .cell.blank.drag-over {
-      background: #d1efb8;
-      box-shadow: inset 0 0 0 3px #78bc4b;
+      background: var(--bg-blank-hover);
+      box-shadow: inset 0 0 0 2px var(--green);
     }
+
 
     .cell.blank.filled {
-      background: linear-gradient(180deg, #eef9e5 0%, #e2f4d4 100%);
-      border-color: #9bc885;
-      transform: scale(1.02);
+      background: var(--bg-fill);
+      border-color: var(--border-blank);
+      transform: scale(1.01);
     }
+
 
     .cell.blank.right {
-      background: linear-gradient(180deg, #eef9e6 0%, #dbf0ca 100%);
-      border-color: #87bf72;
-      box-shadow: inset 0 0 0 2px #a9d39a;
+      background: var(--bg-fill);
+      border-color: var(--border-right);
     }
 
+
     .cell.blank.wrong {
-      background: linear-gradient(180deg, #fff1f1 0%, #ffe1e1 100%);
-      border-color: #e09b9b;
-      box-shadow: inset 0 0 0 2px #efbbbb;
+      background: linear-gradient(180deg, #fff4f4 0%, #ffe8e8 100%);
+      border-color: var(--border-wrong);
     }
+
 
     .emoji-wrap {
       width: 100%;
@@ -114,145 +215,178 @@
       align-items: center;
       justify-content: center;
       user-select: none;
-      font-size: 62px;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+      font-size: var(--emoji-main);
       line-height: 1;
       touch-action: none;
+      pointer-events: auto;
     }
 
+
     .emoji-wrap.small {
-      font-size: 48px;
+      font-size: var(--emoji-option);
     }
+
 
     .draggable-emoji {
       cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+      -webkit-user-modify: read-only;
     }
 
+
     .draggable-emoji.dragging-source {
-      opacity: .25;
+      opacity: .22;
       transform: scale(.95);
     }
 
+
     .option-wrap {
-      margin-top: 18px;
+      margin-top: 8px;
     }
+
 
     .option-title-line {
       display: flex;
       align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 6px;
     }
+
 
     .option-line {
       flex: 1;
-      border-top: 4px dashed #79c655;
+      border-top: 3px dashed #8fcf70;
       height: 0;
     }
 
+
     .option-title {
-      min-width: 80px;
+      min-width: 70px;
       text-align: center;
-      font-size: 18px;
-      color: #777;
+      font-size: var(--option-title-size);
+      color: var(--text-sub);
       font-weight: 700;
+      user-select: none;
+      -webkit-user-select: none;
     }
+
 
     .options {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
+      gap: var(--gap);
     }
 
-    .opt {
-      height: 88px;
-      border: 1.5px solid #cfcfcf;
-      background: #fff;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .18s ease;
-      position: relative;
-      overflow: hidden;
-    }
 
     .opt.used {
-      opacity: .28;
+      opacity: .22;
       filter: grayscale(.15);
     }
+
 
     .exercise-actions {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 12px;
-      gap: 14px;
+      margin-top: 8px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
+
     .status {
-      font-size: 14px;
-      color: #888;
+      font-size: var(--status-size);
+      color: var(--text-sub);
+      line-height: 1.2;
     }
+
 
     .status.ok {
-      color: #549943;
+      color: #4e8f3e;
       font-weight: 600;
     }
+
 
     .status.no {
-      color: #c76969;
+      color: #be6767;
       font-weight: 600;
     }
 
+
     .reason-box {
-      margin-top: 10px;
-      padding: 10px 14px;
-      border: 1px solid #f0caca;
-      background: #fff7f7;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border: 1px solid #e6caca;
+      background: #fff8f8;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: var(--reason-size);
       color: #a85c5c;
-      line-height: 1.8;
+      line-height: 1.35;
+      overflow: hidden;
     }
+
 
     .reason-title {
       font-weight: 700;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
+
 
     .reason-list {
       margin: 0;
-      padding-left: 18px;
+      padding-left: 16px;
     }
+
 
     .reason-list li {
       margin: 2px 0;
     }
 
+
     .drag-ghost {
       position: fixed;
-      width: 72px;
-      height: 72px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.96);
-      border: 1.5px solid #d8d8d8;
-      box-shadow: 0 8px 20px rgba(0,0,0,.12);
+      width: 62px;
+      height: 62px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.98);
+      border: 1px solid #d7ddd1;
+      box-shadow: 0 6px 14px rgba(80, 96, 72, .12);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 50px;
+      font-size: 40px;
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
     }
 
-    @media (max-width: 900px) {
-      .title { font-size: 16px; }
-      .cell { height: 104px; }
-      .emoji-wrap { font-size: 54px; }
-      .emoji-wrap.small { font-size: 42px; }
-      .opt { height: 78px; }
+
+    /* 竖屏：也明显放大，但略保守，避免过度溢出 */
+    @media (orientation: portrait) {
+      :root {
+        --box-size: 70px;
+        --emoji-main: 50px;
+        --emoji-option: 50px;
+        --gap: 6px;
+        --page-max-width: 980px;
+
+
+        --title-size: 14px;
+        --btn-size: 12px;
+        --btn-height: 32px;
+        --option-title-size: 14px;
+        --status-size: 10px;
+        --reason-size: 9px;
+      }
+
+
+      .page {
+        width: min(96vw, var(--page-max-width));
+      }
     }
   </style>
 </head>
@@ -264,11 +398,13 @@
     <div id="app"></div>
   </div>
 
+
   <script>
     function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
     function pick(arr,n){ return shuffle(arr).slice(0,n); }
     function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
     function uid(){ return 'id_' + Math.random().toString(36).slice(2,10); }
+
 
     const factories = {
       水果: ["🍎","🍐","🍊","🍌","🍓","🍇"],
@@ -287,7 +423,7 @@
       玩具: ["🧱","🎁","🎈","🧸","🦆","🚙"]
     };
 
-    // 双小类模板：固定 6 格，空格固定 [1,4]
+
     const dualSubgroupTemplates = [
       {
         bigCat: "学习用品",
@@ -333,13 +469,16 @@
       }
     ];
 
+
     const categories = Object.keys(factories);
     let appState = [];
     let dragState = null;
 
+
     function validEmoji(e) {
       return typeof e === "string" && e.trim() !== "";
     }
+
 
     function makeUniqueItems(cat, count) {
       const source = factories[cat].filter(validEmoji);
@@ -351,13 +490,12 @@
       }));
     }
 
+
     function createSingleBlankRow(cat, rowIndex) {
       const rowItems = makeUniqueItems(cat, 6);
       const blankPos = Math.floor(Math.random() * 6);
-      const row = rowItems.map((x, idx) => ({
-        ...x,
-        originalIndex: idx
-      }));
+      const row = rowItems.map((x, idx) => ({ ...x, originalIndex: idx }));
+
 
       const answerItem = row[blankPos];
       row[blankPos] = {
@@ -374,6 +512,7 @@
         dualSide: null
       };
 
+
       return {
         row,
         shownIds: row.filter(x => !x.blank).map(x => x.id),
@@ -387,17 +526,21 @@
       };
     }
 
+
     function createDualBlankRowFromTemplate(template, rowIndex) {
       const leftPool = shuffle(template.left);
       const rightPool = shuffle(template.right);
+
 
       const leftShown1 = leftPool[0];
       const leftAnswer = leftPool[1];
       const leftShown2 = leftPool[2];
 
+
       const rightShown1 = rightPool[0];
       const rightAnswer = rightPool[1];
       const rightShown2 = rightPool[2];
+
 
       const row = [
         { uid: uid(), cat: template.bigCat, id: `${template.bigCat}_${leftShown1}`, emoji: leftShown1, subGroupName: template.leftSub },
@@ -432,6 +575,7 @@
         { uid: uid(), cat: template.bigCat, id: `${template.bigCat}_${rightShown2}`, emoji: rightShown2, subGroupName: template.rightSub }
       ];
 
+
       return {
         row,
         shownIds: row.filter(x => !x.blank).map(x => x.id),
@@ -464,6 +608,7 @@
       };
     }
 
+
     function countDualBlankRows(rows) {
       let count = 0;
       rows.forEach(row => {
@@ -473,18 +618,22 @@
       return count;
     }
 
-    function createExercise(exIndex) {
+
+    function createExercise() {
       const chosenDualTemplate = rand(dualSubgroupTemplates);
       const remainCats = categories.filter(c => c !== chosenDualTemplate.bigCat);
       const usedCats = shuffle([chosenDualTemplate.bigCat, ...pick(remainCats, 5)]);
       const dualRowIndex = Math.floor(Math.random() * 6);
 
+
       const rows = [];
       const answers = [];
       const shownImageIds = new Set();
 
+
       usedCats.forEach((cat, rowIndex) => {
         let rowData;
+
 
         if (rowIndex === dualRowIndex && cat === chosenDualTemplate.bigCat) {
           rowData = createDualBlankRowFromTemplate(chosenDualTemplate, rowIndex);
@@ -492,17 +641,18 @@
           rowData = createSingleBlankRow(cat, rowIndex);
         }
 
+
         rows.push(rowData.row);
         rowData.answers.forEach(a => answers.push(a));
         rowData.shownIds.forEach(id => shownImageIds.add(id));
       });
 
-      // 强制校验：每题必须且仅有1行双答题项
-      if (countDualBlankRows(rows) !== 1) {
-        return createExercise(exIndex);
-      }
+
+      if (countDualBlankRows(rows) !== 1) return createExercise();
+
 
       const optionMap = new Map();
+
 
       answers.forEach(a => {
         if (!optionMap.has(a.id)) {
@@ -515,10 +665,12 @@
         }
       });
 
+
       const excludedIds = new Set([
         ...shownImageIds,
         ...Array.from(optionMap.keys())
       ]);
+
 
       let guard = 0;
       while (optionMap.size < 12 && guard < 5000) {
@@ -536,8 +688,8 @@
         }
       }
 
+
       return {
-        exIndex,
         rows,
         options: shuffle(Array.from(optionMap.values())).slice(0, 12),
         result: null,
@@ -545,29 +697,25 @@
       };
     }
 
+
     function renderAll() {
-      appState = [createExercise(1), createExercise(2)];
-
-      // 双保险校验：两题都必须有1行双答题项
-      if (
-        countDualBlankRows(appState[0].rows) !== 1 ||
-        countDualBlankRows(appState[1].rows) !== 1
-      ) {
-        return renderAll();
-      }
-
+      appState = [createExercise()];
       renderApp();
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 40);
     }
+
 
     function renderApp() {
       document.getElementById("app").innerHTML = appState.map((ex, i) => renderExercise(ex, i)).join("");
       bindPointerDrag();
     }
 
+
     function renderExercise(ex, exi) {
       return `
         <section class="exercise" data-ex="${exi}">
-          <p class="title">${exi + 1}. 选择出绿色背景格子对应的图形。</p>
+          <p class="title">1. 选择出绿色背景格子对应的图形。</p>
+
 
           <div class="board">
             ${ex.rows.map((row, ri) => `
@@ -577,12 +725,14 @@
             `).join("")}
           </div>
 
+
           <div class="option-wrap">
             <div class="option-title-line">
               <div class="option-line"></div>
               <div class="option-title">选项区</div>
               <div class="option-line"></div>
             </div>
+
 
             <div class="options">
               ${ex.options.map((opt, oi) => `
@@ -600,6 +750,7 @@
             </div>
           </div>
 
+
           <div class="exercise-actions">
             <button class="btn-check" onclick="checkExercise(${exi})">检查答案</button>
             <div class="status ${ex.result === null ? '' : (ex.result.correct === ex.result.total ? 'ok' : 'no')}">
@@ -613,13 +764,14 @@
             </div>
           </div>
 
+
           ${
             ex.reasons && ex.reasons.length
               ? `
                 <div class="reason-box">
                   <div class="reason-title">错误原因：</div>
                   <ul class="reason-list">
-                    ${ex.reasons.map(r => `<li>${r}</li>`).join("")}
+                    ${ex.reasons.slice(0, 2).map(r => `<li>${r}</li>`).join("")}
                   </ul>
                 </div>
               `
@@ -628,6 +780,7 @@
         </section>
       `;
     }
+
 
     function renderCell(cell, exi, ri, ci) {
       if (!cell.blank) {
@@ -638,6 +791,7 @@
         `;
       }
 
+
       const cls = [
         "cell",
         "blank",
@@ -645,6 +799,7 @@
         cell.isRight === true ? "right" : "",
         cell.isRight === false ? "wrong" : ""
       ].join(" ");
+
 
       return `
         <div class="${cls}" data-drop-ex="${exi}" data-drop-row="${ri}" data-drop-col="${ci}">
@@ -661,26 +816,30 @@
       `;
     }
 
+
     function bindPointerDrag() {
       document.querySelectorAll('.draggable-emoji').forEach(el => {
         el.addEventListener('pointerdown', startPointerDrag);
       });
     }
 
+
     function startPointerDrag(e) {
       e.preventDefault();
 
+
       const el = e.currentTarget;
       const dragType = el.dataset.dragType;
-
       let payload = null;
       let emoji = el.textContent.trim();
+
 
       if (dragType === "option") {
         const exi = Number(el.dataset.ex);
         const optIndex = Number(el.dataset.opt);
         const option = appState[exi].options[optIndex];
         if (!option || option.used) return;
+
 
         payload = {
           sourceType: "option",
@@ -697,6 +856,7 @@
         const blank = appState[exi].rows[row][col];
         if (!blank || !blank.current) return;
 
+
         payload = {
           sourceType: "blank",
           ex: exi,
@@ -709,7 +869,9 @@
         };
       }
 
+
       if (!payload) return;
+
 
       dragState = {
         payload,
@@ -717,12 +879,15 @@
         ghost: createGhost(emoji, e.clientX, e.clientY)
       };
 
+
       el.classList.add('dragging-source');
+
 
       window.addEventListener('pointermove', onPointerMove, { passive: false });
       window.addEventListener('pointerup', onPointerUp, { passive: false });
       window.addEventListener('pointercancel', onPointerUp, { passive: false });
     }
+
 
     function createGhost(emoji, x, y) {
       const ghost = document.createElement('div');
@@ -734,34 +899,40 @@
       return ghost;
     }
 
+
     function clearDragHighlights() {
       document.querySelectorAll('.cell.blank.drag-over').forEach(el => el.classList.remove('drag-over'));
     }
+
 
     function onPointerMove(e) {
       if (!dragState) return;
       e.preventDefault();
 
+
       dragState.ghost.style.left = e.clientX + 'px';
       dragState.ghost.style.top = e.clientY + 'px';
+
 
       clearDragHighlights();
       const target = document.elementFromPoint(e.clientX, e.clientY);
       const dropCell = target && target.closest('[data-drop-ex]');
-      if (dropCell) {
-        dropCell.classList.add('drag-over');
-      }
+      if (dropCell) dropCell.classList.add('drag-over');
     }
+
 
     function onPointerUp(e) {
       if (!dragState) return;
       e.preventDefault();
 
+
       const { payload, sourceEl, ghost } = dragState;
       clearDragHighlights();
 
+
       const target = document.elementFromPoint(e.clientX, e.clientY);
       const dropCell = target && target.closest('[data-drop-ex]');
+
 
       if (dropCell) {
         const toEx = Number(dropCell.dataset.dropEx);
@@ -770,8 +941,10 @@
         placeDraggedItem(payload, toEx, toRow, toCol);
       }
 
+
       if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
       if (sourceEl) sourceEl.classList.remove('dragging-source');
+
 
       dragState = null;
       window.removeEventListener('pointermove', onPointerMove);
@@ -779,21 +952,26 @@
       window.removeEventListener('pointercancel', onPointerUp);
     }
 
+
     function placeDraggedItem(payload, toEx, toRow, toCol) {
       if (payload.ex !== toEx) return;
+
 
       const ex = appState[toEx];
       const targetBlank = ex.rows[toRow][toCol];
       if (!targetBlank || !targetBlank.blank) return;
 
+
       if (payload.sourceType === "option") {
         const option = ex.options[payload.optIndex];
         if (!option || option.used) return;
+
 
         if (targetBlank.current) {
           const oldOpt = ex.options[targetBlank.current.optIndex];
           if (oldOpt) oldOpt.used = false;
         }
+
 
         option.used = true;
         targetBlank.current = {
@@ -805,12 +983,15 @@
         };
       }
 
+
       if (payload.sourceType === "blank") {
         const sourceBlank = ex.rows[payload.row][payload.col];
         if (!sourceBlank || !sourceBlank.current) return;
         if (payload.row === toRow && payload.col === toCol) return;
 
+
         const movingCurrent = { ...sourceBlank.current };
+
 
         if (targetBlank.current) {
           const targetCurrent = { ...targetBlank.current };
@@ -819,21 +1000,19 @@
           sourceBlank.current = null;
         }
 
+
         targetBlank.current = movingCurrent;
       }
 
-      targetBlank.isRight = undefined;
+
       ex.result = null;
       ex.reasons = [];
+      ex.rows.forEach(row => row.forEach(cell => { if (cell.blank) cell.isRight = undefined; }));
 
-      ex.rows.forEach(row => {
-        row.forEach(cell => {
-          if (cell.blank) cell.isRight = undefined;
-        });
-      });
 
       renderApp();
     }
+
 
     function checkExercise(exi) {
       const ex = appState[exi];
@@ -841,11 +1020,14 @@
       let correct = 0;
       const reasons = [];
 
+
       ex.rows.forEach((row, ri) => {
-        row.forEach((cell, ci) => {
+        row.forEach((cell) => {
           if (!cell.blank) return;
 
+
           total++;
+
 
           if (cell.current && cell.current.id === cell.answerId) {
             cell.isRight = true;
@@ -853,55 +1035,50 @@
             return;
           }
 
+
           cell.isRight = false;
+
 
           if (!cell.current) {
             if (cell.isDualBlankRow) {
-              if (cell.dualSide === "left") {
-                reasons.push(`第${ri + 1}行左侧绿色格属于“${cell.cat}”中的“${cell.subGroupName}”，它位于左侧小类的中间位置，你还没有作答。`);
-              } else {
-                reasons.push(`第${ri + 1}行右侧绿色格属于“${cell.cat}”中的“${cell.subGroupName}”，它位于右侧小类的中间位置，你还没有作答。`);
-              }
+              reasons.push(`第${ri + 1}行双答题项采用左右两个小类排列，当前绿色格属于“${cell.subGroupName}”，你还没有作答。`);
             } else {
-              reasons.push(`第${ri + 1}行的绿色格子还没有作答。本行属于“${cell.cat}”类，应选择与本行其余图片同类的图形。`);
+              reasons.push(`第${ri + 1}行还没有完成作答，本行属于“${cell.cat}”类。`);
             }
             return;
           }
 
+
           if (cell.isDualBlankRow) {
             if (cell.current.cat === cell.cat) {
-              if (cell.dualSide === "left") {
-                reasons.push(`第${ri + 1}行左侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”。你选择的 ${cell.current.emoji} 虽属于同一大类“${cell.cat}”，但不属于左侧这一组的小类，或不对应左侧中间位置。`);
-              } else {
-                reasons.push(`第${ri + 1}行右侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”。你选择的 ${cell.current.emoji} 虽属于同一大类“${cell.cat}”，但不属于右侧这一组的小类，或不对应右侧中间位置。`);
-              }
+              reasons.push(`第${ri + 1}行当前绿色格对应“${cell.cat}”中的“${cell.subGroupName}”，你选择的 ${cell.current.emoji} 虽属于同一大类，但不对应该小类中间位置。`);
             } else {
-              if (cell.dualSide === "left") {
-                reasons.push(`第${ri + 1}行左侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”，你填入的是“${cell.current.cat}”类图形（${cell.current.emoji}），大类和左侧小类都不匹配。`);
-              } else {
-                reasons.push(`第${ri + 1}行右侧绿色格对应“${cell.cat}”中的“${cell.subGroupName}”，你填入的是“${cell.current.cat}”类图形（${cell.current.emoji}），大类和右侧小类都不匹配。`);
-              }
+              reasons.push(`第${ri + 1}行当前绿色格对应“${cell.cat}”中的“${cell.subGroupName}”，你填入的是“${cell.current.cat}”类图形（${cell.current.emoji}），分类不匹配。`);
             }
           } else {
             if (cell.current.cat === cell.cat) {
-              reasons.push(`第${ri + 1}行应补入与本行同类的图形。你选择的 ${cell.current.emoji} 虽属于“${cell.cat}”类，但它不是这个空格对应的正确图形。`);
+              reasons.push(`第${ri + 1}行应补入与本行同类的图形，你选择的 ${cell.current.emoji} 虽属“${cell.cat}”类，但不是该空格对应图形。`);
             } else {
-              reasons.push(`第${ri + 1}行属于“${cell.cat}”类，你选择了“${cell.current.cat}”类图形（${cell.current.emoji}），分类不一致。应选择与本行其余图片同类的图形。`);
+              reasons.push(`第${ri + 1}行属于“${cell.cat}”类，你选择了“${cell.current.cat}”类图形（${cell.current.emoji}），分类不一致。`);
             }
           }
         });
       });
 
+
       ex.result = { total, correct };
       ex.reasons = reasons;
       renderApp();
+
+
+      setTimeout(() => {
+        const reasonBox = document.querySelector('.reason-box');
+        if (reasonBox) reasonBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 40);
     }
+
 
     renderAll();
   </script>
 </body>
 </html>
-### 总结
-1. 该代码实现了一个适配iPad的拖拽填空模拟题页面，核心功能是通过拖拽emoji表情完成分类填空，并能检查答案对错。
-2. 页面包含随机生成题目、拖拽交互、答案校验、错误提示等完整功能，支持单空格和双空格两种题型模板。
-3. 代码采用原生HTML/CSS/JavaScript实现，无外部依赖，适配移动端触摸操作，样式上有丰富的视觉反馈（如拖拽高亮、对错状态色值区分）。
