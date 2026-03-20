@@ -48,7 +48,6 @@
       font-size: 1.5rem;
       font-weight: 600;
       color: #333;
-      letter-spacing: 0.02em;
     }
 
     .badge {
@@ -102,11 +101,10 @@
       font-weight: 600;
       margin: 24px 0 12px;
       color: #000;
-      display: block;
       text-align: center;
     }
 
-    /* 记忆区固定10个，两行，每行5个 */
+    /* 记忆区：固定10个，两行，每行5个 */
     .memory-grid {
       display: grid;
       grid-template-columns: repeat(5, var(--box-size));
@@ -115,7 +113,7 @@
       margin-bottom: 20px;
     }
 
-    /* 作答区固定8个，两行，每行4个 */
+    /* 作答区：固定8个，两行，每行4个 */
     .answer-grid {
       display: grid;
       grid-template-columns: repeat(4, var(--box-size));
@@ -124,7 +122,7 @@
       margin-bottom: 30px;
     }
 
-    /* 选项区固定12个 */
+    /* 选项区：固定12个，两行，每行6个 */
     .options-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
@@ -133,27 +131,21 @@
       margin-bottom: 30px;
     }
 
-    .answer-placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff;
-      border: 1px solid #000;
-      aspect-ratio: 1 / 1;
-      width: var(--box-size);
-      min-height: var(--box-size);
-    }
-
+    .answer-placeholder,
     .pattern-container {
       display: flex;
       align-items: center;
       justify-content: center;
       background: #fff;
       border: 1px solid #000;
-      aspect-ratio: 1 / 1;
       width: var(--box-size);
       min-height: var(--box-size);
+      aspect-ratio: 1 / 1;
       padding: 4px;
+    }
+
+    .answer-placeholder {
+      padding: 0;
     }
 
     .pattern-item {
@@ -162,12 +154,12 @@
       cursor: grab;
     }
 
-    .pattern-item.dragging {
-      opacity: 0.7;
-    }
-
     .memory-grid .pattern-item {
       cursor: default;
+    }
+
+    .pattern-item.dragging {
+      opacity: 0.7;
     }
 
     .button-row {
@@ -212,7 +204,6 @@
       font-size: 0.95rem;
       padding: 16px;
       margin: 16px 0;
-      font-weight: 500;
       color: #333;
       line-height: 1.8;
       max-height: 420px;
@@ -246,9 +237,8 @@
       padding: 2px 6px;
       border-radius: 4px;
       font-weight: bold;
-      font-size: 1.05rem;
-      margin: 0 2px;
       display: inline-block;
+      margin: 0 2px;
     }
 
     .action-group {
@@ -264,25 +254,12 @@
         --box-size: 68px;
         --box-gap: 10px;
       }
-
-      .card {
-        max-width: 980px;
-        padding: 28px 20px 32px;
-      }
-
-      .pattern-item {
-        font-size: 2.4rem;
-      }
     }
 
     @media (max-width: 767px) {
       :root {
         --box-size: 54px;
         --box-gap: 8px;
-      }
-
-      .card {
-        padding: 20px 12px 28px;
       }
 
       .memory-grid {
@@ -303,11 +280,6 @@
 
       #countdown {
         font-size: 1.1rem;
-        padding: 2px 8px;
-      }
-
-      .title {
-        font-size: 1.25rem;
       }
     }
   </style>
@@ -331,7 +303,7 @@
       请记住当前图片，并在下一页找出没有出现过的图片。
     </div>
 
-    <div class="area-label">记忆图片</div>
+    <div class="area-label">记忆图片区</div>
     <div id="memoryGrid" class="memory-grid"></div>
 
     <div class="button-row">
@@ -364,76 +336,31 @@
 
 <script>
 (function () {
-  const SCORE_PER_QUESTION = 1;
   const TOTAL_QUESTIONS = 10;
   const MEMORY_COUNT = 10;
   const ANSWER_GRID_COUNT = 8;
-  const TOTAL_OPTIONS_COUNT = 12;
-  const MIN_CORRECT_COUNT = 2;
-  const MAX_CORRECT_COUNT = 8;
+  const OPTIONS_COUNT = 12;
+  const MIN_CORRECT = 2;
+  const MAX_CORRECT = 8;
+  const SCORE_PER_QUESTION = 1;
   const COUNTDOWN_SECONDS = 60;
 
   const themeBank = [
-    {
-      theme: '动物',
-      items: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐮','🐷','🐸','🐵','🐨','🐔','🐧','🐦','🦆','🦉']
-    },
-    {
-      theme: '水果',
-      items: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋','🍏','🍐','🍓','🥝','🍈','🫐']
-    },
-    {
-      theme: '蔬菜',
-      items: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬','🧄','🍄','🌶️','🌰','🥜']
-    },
-    {
-      theme: '食物',
-      items: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖','🍔','🌭','🥪','🍕','🍟','🍚','🍜','🍝','🍣','🍤']
-    },
-    {
-      theme: '运动',
-      items: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🥋','⛳','🎳','🏒']
-    },
-    {
-      theme: '交通',
-      items: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🚚','🚜','🛵','🏍️','🚲','✈️','🚁','⛵','🚢','🚤']
-    },
-    {
-      theme: '天气',
-      items: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧','❄️','🌫️','🌞','🌩️','💨']
-    },
-    {
-      theme: '植物',
-      items: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂','🌱','🌿','☘️','🪴','🌾']
-    },
-    {
-      theme: '电子产品',
-      items: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽','📲','📻','💿','📹','🎙️']
-    },
-    {
-      theme: '爱心',
-      items: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖','💘','💝','💓','💞','♥️']
-    },
-    {
-      theme: '海洋生物',
-      items: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐','🦑','🐚','🦞','🐢','🐊']
-    },
-    {
-      theme: '文具',
-      items: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚','📖','📝','📒','📕','📘']
-    },
-    {
-      theme: '服饰',
-      items: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩','👒','🧣','🧤','👞','🥾']
-    },
-    {
-      theme: '建筑',
-      items: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏬','⛪','🕌','🏛️','🏭']
-    },
-    {
-      theme: '表情',
-      items: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😎','🤔','😭']
-    }
+    { theme: '动物', items: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐮','🐷','🐸','🐵','🐨','🐔','🐧','🐦','🦆','🦉'] },
+    { theme: '水果', items: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋','🍏','🍐','🍓','🥝','🍈','🫐'] },
+    { theme: '蔬菜', items: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬','🧄','🍄','🌶️','🌰','🥜'] },
+    { theme: '食物', items: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖','🍔','🌭','🥪','🍕','🍟','🍚','🍜','🍝','🍣','🍤'] },
+    { theme: '运动', items: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🎳','⛳','🏒','🥋'] },
+    { theme: '交通', items: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🚚','🚜','🛵','🏍️','🚲','✈️','🚁','⛵','🚢','🚤'] },
+    { theme: '天气', items: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧','❄️','🌫️','🌞','🌩️','💨'] },
+    { theme: '植物', items: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂','🌱','🌿','☘️','🪴','🌾'] },
+    { theme: '电子产品', items: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽','📲','📻','💿','📹','🎙️'] },
+    { theme: '爱心', items: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖','💘','💝','💓','💞','♥️'] },
+    { theme: '海洋生物', items: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐','🦑','🐚','🦞','🐢','🐊'] },
+    { theme: '文具', items: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚','📖','📝','📒','📕','📘'] },
+    { theme: '服饰', items: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩','👒','🧣','🧤','👞','🥾'] },
+    { theme: '建筑', items: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏬','⛪','🕌','🏛️','🏭'] },
+    { theme: '表情', items: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😎','🤔','😭'] }
   ];
 
   let questions = [];
@@ -474,36 +401,44 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
+  function validateQuestion(question) {
+    return (
+      question.memory.length === MEMORY_COUNT &&
+      question.options.length === OPTIONS_COUNT &&
+      question.distractors.length >= MIN_CORRECT &&
+      question.distractors.length <= MAX_CORRECT
+    );
+  }
+
   function buildQuestionSet() {
     const selectedThemes = shuffleArray(themeBank).slice(0, TOTAL_QUESTIONS);
 
     questions = selectedThemes.map(themeObj => {
-      const allItems = shuffleArray([...themeObj.items]);
-
+      const allItems = shuffleArray(themeObj.items);
       const memory = allItems.slice(0, MEMORY_COUNT);
-      const remainingPool = allItems.slice(MEMORY_COUNT);
+      const poolOutsideMemory = allItems.filter(item => !memory.includes(item));
 
-      const correctCount = randomInt(MIN_CORRECT_COUNT, MAX_CORRECT_COUNT);
+      const correctCount = randomInt(MIN_CORRECT, MAX_CORRECT);
+      const shownMemoryCount = OPTIONS_COUNT - correctCount;
 
-      // 选项区中要出现的记忆图片数量
-      const memoryShownInOptionsCount = TOTAL_OPTIONS_COUNT - correctCount;
-
-      // 从10个记忆图里随机抽取一部分放入选项区
-      const shownMemoryItems = shuffleArray([...memory]).slice(0, memoryShownInOptionsCount);
-
-      // 从未出现图片中取 correctCount 个作为正确答案
-      const distractors = remainingPool.slice(0, correctCount);
+      const shownMemoryItems = shuffleArray([...memory]).slice(0, shownMemoryCount);
+      const distractors = shuffleArray(poolOutsideMemory).slice(0, correctCount);
 
       const options = shuffleArray([...shownMemoryItems, ...distractors]);
 
-      return {
+      const q = {
         theme: themeObj.theme,
         memory,
         shownMemoryItems,
         distractors,
-        options,
-        correctCount
+        options
       };
+
+      if (!validateQuestion(q)) {
+        throw new Error(`题目生成失败：${themeObj.theme}`);
+      }
+
+      return q;
     });
   }
 
@@ -511,7 +446,7 @@
     if (arr1.length !== arr2.length) return false;
     const a = [...arr1].sort();
     const b = [...arr2].sort();
-    return a.every((item, i) => item === b[i]);
+    return a.every((item, index) => item === b[index]);
   }
 
   function updateCountdownDisplay() {
@@ -528,6 +463,7 @@
     countdownTimer = setInterval(() => {
       remainingTime--;
       updateCountdownDisplay();
+
       if (remainingTime <= 0) {
         clearInterval(countdownTimer);
         if (quizView.classList.contains('active')) {
@@ -545,9 +481,7 @@
 
   function renderMemoryView() {
     memoryGrid.innerHTML = '';
-    const memItems = questions[currentIndex].memory;
-
-    memItems.forEach(emoji => {
+    questions[currentIndex].memory.forEach(emoji => {
       const container = document.createElement('div');
       container.className = 'pattern-container';
 
@@ -576,9 +510,12 @@
     optionsContainer.innerHTML = '';
 
     const currentQuestion = questions[currentIndex];
-    const currentOptions = shuffleArray([...currentQuestion.options]);
+    if (currentQuestion.options.length !== OPTIONS_COUNT) {
+      quizMessage.textContent = '当前题目选项数量异常，请重新答题。';
+      return;
+    }
 
-    currentOptions.forEach(emoji => {
+    currentQuestion.options.forEach(emoji => {
       const container = document.createElement('div');
       container.className = 'pattern-container';
 
@@ -594,25 +531,19 @@
     quizMessage.className = 'message';
     quizMessage.innerHTML =
       `当前主题：<strong>${currentQuestion.theme}</strong><br>` +
-      `记忆区固定 10 个图片，选项区固定 12 个选项。请拖拽所有未出现过的图片到作答区（必须全对才得分）。`;
+      `记忆区固定10个图片，作答区固定8个方框，选项区固定12个选项。请拖拽所有未出现过的图片到作答区。`;
   }
 
   function getUserAnswers() {
     return [...answerContainer.querySelectorAll('.pattern-item')].map(el => el.textContent);
   }
 
-  function getCorrectAnswers(question) {
-    return [...question.distractors];
-  }
-
   function saveCurrentQuestionResult() {
-    if (!questions[currentIndex]) return;
-
     const currentQuestion = questions[currentIndex];
     const userAnswers = getUserAnswers();
-    const correctAnswers = getCorrectAnswers(currentQuestion);
+    const correctAnswers = [...currentQuestion.distractors];
     const isCorrect = arraysAreEqual(userAnswers, correctAnswers);
-    const currentScore = isCorrect ? SCORE_PER_QUESTION : 0;
+    const score = isCorrect ? SCORE_PER_QUESTION : 0;
 
     const record = {
       questionIndex: currentIndex,
@@ -621,74 +552,60 @@
       isCorrect,
       userAnswer: [...userAnswers],
       allUnusedAnswers: [...correctAnswers],
-      score: currentScore
+      score
     };
 
-    const existingIndex = questionResults.findIndex(item => item.questionIndex === currentIndex);
-    if (existingIndex > -1) {
-      questionResults[existingIndex] = record;
-    } else {
-      questionResults.push(record);
-    }
+    const existingIndex = questionResults.findIndex(r => r.questionIndex === currentIndex);
+    if (existingIndex > -1) questionResults[existingIndex] = record;
+    else questionResults.push(record);
 
-    totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
+    totalScore = questionResults.reduce((sum, r) => sum + r.score, 0);
   }
 
   function buildScoreHtml() {
-    totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
+    totalScore = questionResults.reduce((sum, r) => sum + r.score, 0);
 
-    let scoreHtml = `
-      <div style="font-size:1rem; font-weight:600; margin-bottom:12px;">
+    let html = `
+      <div style="font-size:1rem;font-weight:600;margin-bottom:12px;">
         📊 总分：${totalScore} / ${TOTAL_QUESTIONS * SCORE_PER_QUESTION} 分
       </div>
-      <div style="margin-bottom:16px; font-size:0.9rem; color:#c62828; font-weight:500;">
-        ⚠️ 得分规则：必须选择出所有未出现选项，且不能多选，才得1分
+      <div style="margin-bottom:16px;font-size:0.9rem;color:#c62828;font-weight:500;">
+        ⚠️ 得分规则：必须完整选出所有未出现的图片，且不能多选，才得1分
       </div>
-      <div style="border-top:1px solid #eee; padding-top:12px;">
+      <div style="border-top:1px solid #eee;padding-top:12px;">
         <strong>📝 所有题目答题情况：</strong>
     `;
 
     for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-      const record = questionResults.find(item => item.questionIndex === i);
-      const question = questions[i];
-      const correctList = getCorrectAnswers(question);
-      const correctAnswersHtml = correctList.map(ans =>
-        `<span class="correct-answer">${ans}</span>`
-      ).join('');
+      const q = questions[i];
+      const record = questionResults.find(r => r.questionIndex === i);
+      const correctHtml = q.distractors.map(ans => `<span class="correct-answer">${ans}</span>`).join('');
 
       if (record) {
-        let errorReason = '';
-        if (!record.isCorrect) {
-          if (record.userAnswer.length < correctList.length) errorReason = '（错误原因：少选）';
-          else if (record.userAnswer.length > correctList.length) errorReason = '（错误原因：多选）';
-          else errorReason = '（错误原因：选错）';
-        }
-
-        scoreHtml += `
+        html += `
           <div class="question-result ${record.isCorrect ? 'correct' : 'incorrect'}">
-            <strong>第${i + 1}题</strong>【${question.theme}】：
-            ${record.isCorrect ? '✅ 回答正确' : '❌ 回答错误'}
-            (得分：${record.score}分)<br>
-            • 正确答案数量：${correctList.length} 个 ${errorReason}<br>
-            • 正确答案：${correctAnswersHtml}<br>
+            <strong>第${i + 1}题</strong>【${q.theme}】：
+            ${record.isCorrect ? '✅ 回答正确' : '❌ 回答错误'}（得分：${record.score}分）<br>
+            • 正确答案数量：${q.distractors.length}<br>
+            • 正确答案：${correctHtml}<br>
             • 你的选择：${record.userAnswer.length ? record.userAnswer.join('、') : '未选择'}
           </div>
         `;
       } else {
-        scoreHtml += `
+        html += `
           <div class="question-result unanswered">
-            <strong>第${i + 1}题</strong>【${question.theme}】：
-            ⚪ 未作答 (得分：0分)<br>
-            • 正确答案数量：${correctList.length} 个<br>
-            • 正确答案：${correctAnswersHtml}<br>
+            <strong>第${i + 1}题</strong>【${q.theme}】：
+            ⚪ 未作答（得分：0分）<br>
+            • 正确答案数量：${q.distractors.length}<br>
+            • 正确答案：${correctHtml}<br>
             • 你的选择：未作答
           </div>
         `;
       }
     }
 
-    scoreHtml += `</div>`;
-    return scoreHtml;
+    html += `</div>`;
+    return html;
   }
 
   function showScore() {
@@ -729,8 +646,8 @@
     nextQuestionBtn.textContent = '下一题';
 
     buildQuestionSet();
-    renderMemoryView();
     updateCounter();
+    renderMemoryView();
 
     memoryView.classList.add('active');
     quizView.classList.remove('active');
@@ -766,7 +683,7 @@
       return;
     }
 
-    currentIndex += 1;
+    currentIndex++;
     updateCounter();
     showMemoryView();
   }
@@ -851,8 +768,8 @@
 
   initDragAndDrop();
   buildQuestionSet();
-  renderMemoryView();
   updateCounter();
+  renderMemoryView();
   initCountdown();
 })();
 </script>
