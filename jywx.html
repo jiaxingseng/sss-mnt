@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>序列-无序-拖曳</title>
+  <title>序列-无序-拖曳-超丝滑自定义拖拽版</title>
   <style>
     * {
       box-sizing: border-box;
@@ -18,24 +18,24 @@
       margin: 0;
       padding: 0;
       overscroll-behavior: none;
-      touch-action: manipulation;
-      -webkit-overflow-scrolling: auto;
       overflow-x: hidden;
+      touch-action: none;
+      background: #fff;
     }
 
     :root {
-      /* 再放大2档 */
-      --box-size: 96px;
-      --box-gap: 16px;
-      --emoji-size: 3.55rem;
-      --card-max-width: 1380px;
-      --transition-fast: 0.14s ease;
-      --transition-mid: 0.2s ease;
+      --box-size: 108px;
+      --box-gap: 18px;
+      --emoji-size: 4rem;
+      --card-max-width: 1480px;
+      --transition-fast: 0.12s ease;
+      --transition-mid: 0.18s ease;
       --transition-slow: 0.28s ease;
+      --shadow-soft: 0 8px 18px rgba(0,0,0,0.14);
+      --shadow-strong: 0 14px 28px rgba(0,0,0,0.24);
     }
 
     body {
-      background: #ffffff;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -47,9 +47,10 @@
       max-width: var(--card-max-width);
       width: 100%;
       background: #fff;
-      padding: 30px 24px 36px;
-      margin-top: 6px;
-      touch-action: none; /* 关键：避免页面手势干扰拖拽 */
+      padding: 30px 22px 38px;
+      margin-top: 4px;
+      touch-action: none;
+      position: relative;
     }
 
     .header {
@@ -62,29 +63,29 @@
     }
 
     .title {
-      font-size: 1.9rem;
-      font-weight: 700;
+      font-size: 2rem;
+      font-weight: 800;
       color: #333;
       letter-spacing: 0.02em;
     }
 
     .badge {
       background: #f5f5f5;
-      padding: 8px 18px;
+      padding: 9px 18px;
       border-radius: 999px;
-      font-weight: 600;
+      font-weight: 700;
       color: #666;
-      font-size: 1.08rem;
+      font-size: 1.12rem;
     }
 
     #countdown {
-      font-size: 1.55rem;
+      font-size: 1.62rem;
       font-weight: 800;
       color: #ff0000;
       padding: 6px 14px;
       border: 2px solid #ff0000;
       border-radius: 10px;
-      min-width: 82px;
+      min-width: 84px;
       text-align: center;
       line-height: 1.2;
     }
@@ -100,31 +101,30 @@
     }
 
     .memory-tip {
-      padding: 18px 14px;
+      padding: 18px 12px;
       color: #333;
-      font-size: 1.16rem;
-      line-height: 1.6;
+      font-size: 1.22rem;
+      line-height: 1.65;
       margin-bottom: 18px;
       text-align: center;
     }
 
     .last-question-tip {
       color: #d32f2f;
-      font-weight: 700;
+      font-weight: 800;
       margin-bottom: 12px;
       text-align: center;
-      font-size: 1.08rem;
+      font-size: 1.1rem;
     }
 
     .area-label {
-      font-size: 1.24rem;
-      font-weight: 700;
+      font-size: 1.3rem;
+      font-weight: 800;
       margin: 28px 0 16px;
       color: #000;
       text-align: center;
     }
 
-    /* 记忆区：固定10个，两行，每行5个 */
     .memory-grid {
       display: grid;
       grid-template-columns: repeat(5, var(--box-size));
@@ -133,7 +133,6 @@
       margin-bottom: 24px;
     }
 
-    /* 作答区：固定8个，两行，每行4个 */
     .answer-grid {
       display: grid;
       grid-template-columns: repeat(4, var(--box-size));
@@ -142,7 +141,6 @@
       margin-bottom: 34px;
     }
 
-    /* 选项区：固定12个，两行，每行6个 */
     .options-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
@@ -157,23 +155,23 @@
       align-items: center;
       justify-content: center;
       background: #fff;
-      border: 2px solid #000;
+      border: 2.5px solid #000;
       width: var(--box-size);
       min-height: var(--box-size);
       aspect-ratio: 1 / 1;
-      will-change: transform, box-shadow, border-color, background-color;
+      border-radius: 8px;
+      position: relative;
       transition:
         transform var(--transition-fast),
         box-shadow var(--transition-fast),
         border-color var(--transition-fast),
         background-color var(--transition-fast);
-      backface-visibility: hidden;
-      transform: translateZ(0);
-      position: relative;
+      will-change: transform, box-shadow, border-color, background-color;
     }
 
     .pattern-container {
       padding: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
     .answer-placeholder {
@@ -184,15 +182,12 @@
     .pattern-item {
       font-size: var(--emoji-size);
       line-height: 1;
-      cursor: grab;
+      touch-action: none;
       transition:
         transform var(--transition-fast),
-        opacity var(--transition-fast),
-        filter var(--transition-fast);
+        filter var(--transition-fast),
+        opacity var(--transition-fast);
       will-change: transform, opacity, filter;
-      backface-visibility: hidden;
-      transform: translateZ(0);
-      pointer-events: auto;
     }
 
     .memory-grid .pattern-item {
@@ -201,30 +196,47 @@
 
     .pattern-container:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.14);
+      box-shadow: var(--shadow-soft);
     }
 
-    .answer-placeholder.hovered {
-      border: 3px solid #ff9800;
-      background: #fff4cf;
-      box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.18), 0 8px 18px rgba(0,0,0,0.14);
-      transform: scale(1.045);
+    .press-feedback {
+      transform: scale(0.95) !important;
+      background: #fff7db !important;
+      border-color: #ffb300 !important;
+      box-shadow: inset 0 0 0 3px rgba(255, 193, 7, 0.18);
     }
 
-    .answer-placeholder.filled {
-      background: #fffef6;
+    .drag-source {
+      opacity: 0.25 !important;
+      transform: scale(0.96) !important;
     }
 
-    .pattern-item.dragging {
-      opacity: 0.72;
-      transform: scale(1.16);
-      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.28));
-      cursor: grabbing;
+    .drop-target {
+      border: 3px solid #ff9800 !important;
+      background: #fff3c7 !important;
+      box-shadow: 0 0 0 5px rgba(255, 193, 7, 0.18), 0 10px 20px rgba(0,0,0,0.16) !important;
+      transform: scale(1.05) !important;
     }
 
-    .drag-active .options-grid,
-    .drag-active .answer-grid {
-      transform: translateZ(0);
+    .filled {
+      background: #fffef6 !important;
+    }
+
+    @keyframes dropSuccess {
+      0% {
+        transform: scale(1.08);
+        background: #fff1a8;
+        box-shadow: 0 0 0 8px rgba(255,193,7,0.24);
+      }
+      100% {
+        transform: scale(1);
+        background: #fffef6;
+        box-shadow: none;
+      }
+    }
+
+    .drop-success {
+      animation: dropSuccess 0.28s ease;
     }
 
     .button-row {
@@ -250,17 +262,12 @@
     .btn-primary {
       background: linear-gradient(#ffe47d, #ffbf1f);
       border: 1px solid #e6a800;
-      padding: 13px 36px;
+      padding: 14px 38px;
       border-radius: 10px;
-      font-size: 1.12rem;
-      font-weight: 700;
+      font-size: 1.16rem;
+      font-weight: 800;
       color: #333;
       box-shadow: 0 4px 10px rgba(0,0,0,0.18);
-    }
-
-    .btn-primary:hover {
-      box-shadow: 0 6px 14px rgba(0,0,0,0.22);
-      transform: translateY(-1px);
     }
 
     .btn-sm {
@@ -270,11 +277,7 @@
       border-radius: 6px;
       font-size: 1rem;
       color: #333;
-      font-weight: 500;
-    }
-
-    .btn-sm:hover {
-      background: #efefef;
+      font-weight: 600;
     }
 
     .view { display: none; }
@@ -282,11 +285,11 @@
 
     .message {
       text-align: left;
-      font-size: 1.03rem;
+      font-size: 1.08rem;
       padding: 16px;
       margin: 18px 0;
       color: #333;
-      line-height: 1.9;
+      line-height: 1.95;
       max-height: 440px;
       overflow-y: auto;
     }
@@ -321,7 +324,7 @@
       font-weight: bold;
       display: inline-block;
       margin: 2px 3px;
-      font-size: 1.03rem;
+      font-size: 1.04rem;
     }
 
     .action-group {
@@ -332,21 +335,47 @@
       margin-top: 18px;
     }
 
-    /* iPad 专门适配：放大后仍然保证完整显示 */
+    /* 自定义拖拽镜像 */
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--box-size);
+      height: var(--box-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2.5px solid #ff9800;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 16px 30px rgba(0,0,0,0.25);
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate3d(-9999px, -9999px, 0) scale(1.12);
+      transition: transform 0.03s linear;
+      backdrop-filter: blur(2px);
+    }
+
+    .drag-ghost .ghost-emoji {
+      font-size: var(--emoji-size);
+      line-height: 1;
+      filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
+    }
+
     @media (min-width: 768px) and (max-width: 1024px) {
       :root {
-        --box-size: 82px;
+        --box-size: 84px;
         --box-gap: 12px;
-        --emoji-size: 3rem;
+        --emoji-size: 3.05rem;
         --card-max-width: 980px;
       }
 
       .card {
-        padding: 24px 14px 30px;
+        padding: 22px 12px 28px;
       }
 
       .title {
-        font-size: 1.6rem;
+        font-size: 1.62rem;
       }
 
       .badge {
@@ -355,7 +384,7 @@
 
       #countdown {
         font-size: 1.3rem;
-        min-width: 74px;
+        min-width: 72px;
       }
 
       .memory-tip {
@@ -366,30 +395,17 @@
         font-size: 1.12rem;
       }
 
-      .memory-grid {
-        grid-template-columns: repeat(5, var(--box-size));
-      }
-
-      .answer-grid {
-        grid-template-columns: repeat(4, var(--box-size));
-      }
-
-      .options-grid {
-        grid-template-columns: repeat(6, var(--box-size));
-      }
-
       .btn-primary {
         padding: 11px 28px;
         font-size: 1rem;
       }
 
       .btn-sm {
-        padding: 9px 16px;
-        font-size: 0.94rem;
+        padding: 9px 15px;
+        font-size: 0.92rem;
       }
     }
 
-    /* 手机适配 */
     @media (max-width: 767px) {
       :root {
         --box-size: 60px;
@@ -500,6 +516,10 @@
   </div>
 </div>
 
+<div id="dragGhost" class="drag-ghost" style="display:none;">
+  <div class="ghost-emoji" id="dragGhostEmoji"></div>
+</div>
+
 <script>
 (function () {
   const TOTAL_QUESTIONS = 10;
@@ -537,7 +557,18 @@
   let countdownTimer = null;
   let remainingTime = COUNTDOWN_SECONDS;
   let isRestartMode = false;
-  let draggedItem = null;
+
+  let dragState = {
+    active: false,
+    item: null,
+    sourceArea: null,
+    sourceContainer: null,
+    sourcePlaceholder: null,
+    pointerId: null,
+    offsetX: 0,
+    offsetY: 0,
+    currentTargetPlaceholder: null
+  };
 
   const app = document.getElementById('app');
   const memoryView = document.getElementById('memoryView');
@@ -555,6 +586,9 @@
   const backToMemoryBtn = document.getElementById('backToMemoryBtn');
   const resetQuizBtn = document.getElementById('resetQuizBtn');
   const checkAnswerBtn = document.getElementById('checkAnswerBtn');
+
+  const dragGhost = document.getElementById('dragGhost');
+  const dragGhostEmoji = document.getElementById('dragGhostEmoji');
 
   function shuffleArray(arr) {
     const copy = [...arr];
@@ -677,10 +711,11 @@
     lastQuestionTip.style.display = currentIndex === TOTAL_QUESTIONS - 1 ? 'block' : 'none';
   }
 
-  function clearHoveredPlaceholders() {
+  function clearDropTargets() {
     document.querySelectorAll('.answer-placeholder').forEach(ph => {
-      ph.classList.remove('hovered');
+      ph.classList.remove('drop-target');
     });
+    dragState.currentTargetPlaceholder = null;
   }
 
   function updateFilledState() {
@@ -688,6 +723,19 @@
       if (ph.querySelector('.pattern-item')) ph.classList.add('filled');
       else ph.classList.remove('filled');
     });
+  }
+
+  function pulseElement(el) {
+    if (!el) return;
+    el.classList.remove('drop-success');
+    void el.offsetWidth;
+    el.classList.add('drop-success');
+  }
+
+  function addPressFeedback(container) {
+    if (!container) return;
+    container.classList.add('press-feedback');
+    setTimeout(() => container.classList.remove('press-feedback'), 110);
   }
 
   function renderMemoryView() {
@@ -706,7 +754,6 @@
       const item = document.createElement('div');
       item.className = 'pattern-item';
       item.textContent = emoji;
-      item.draggable = false;
 
       container.appendChild(item);
       memoryGrid.appendChild(container);
@@ -724,6 +771,19 @@
     updateFilledState();
   }
 
+  function createDraggableOption(emoji) {
+    const container = document.createElement('div');
+    container.className = 'pattern-container';
+
+    const item = document.createElement('div');
+    item.className = 'pattern-item';
+    item.textContent = emoji;
+    item.dataset.draggable = 'true';
+
+    container.appendChild(item);
+    return container;
+  }
+
   function initQuizView() {
     const currentQuestion = questions[currentIndex];
     createAnswerPlaceholders();
@@ -736,16 +796,7 @@
     }
 
     currentQuestion.options.forEach(emoji => {
-      const container = document.createElement('div');
-      container.className = 'pattern-container';
-
-      const item = document.createElement('div');
-      item.className = 'pattern-item';
-      item.textContent = emoji;
-      item.draggable = true;
-
-      container.appendChild(item);
-      optionsContainer.appendChild(container);
+      optionsContainer.appendChild(createDraggableOption(emoji));
     });
 
     updateFilledState();
@@ -866,7 +917,8 @@
     questionResults = [];
     totalScore = 0;
     isRestartMode = false;
-    draggedItem = null;
+    clearDragState();
+
     nextQuestionBtn.textContent = '下一题';
 
     buildQuestionSet();
@@ -912,93 +964,157 @@
     showMemoryView();
   }
 
-  function initDragAndDrop() {
-    // 禁用容易干扰拖拽的默认行为
-    ['touchmove', 'gesturestart', 'gesturechange', 'gestureend', 'selectstart', 'contextmenu'].forEach(type => {
+  function clearDragState() {
+    dragState.active = false;
+    dragState.item = null;
+    dragState.sourceArea = null;
+    dragState.sourceContainer = null;
+    dragState.sourcePlaceholder = null;
+    dragState.pointerId = null;
+    dragState.offsetX = 0;
+    dragState.offsetY = 0;
+    dragState.currentTargetPlaceholder = null;
+
+    dragGhost.style.display = 'none';
+    clearDropTargets();
+
+    document.querySelectorAll('.drag-source').forEach(el => el.classList.remove('drag-source'));
+    document.querySelectorAll('.press-feedback').forEach(el => el.classList.remove('press-feedback'));
+  }
+
+  function startCustomDrag(item, clientX, clientY, pointerId) {
+    const parent = item.closest('.pattern-container, .answer-placeholder');
+    if (!parent) return;
+
+    const rect = item.getBoundingClientRect();
+
+    dragState.active = true;
+    dragState.item = item;
+    dragState.pointerId = pointerId;
+    dragState.sourceContainer = parent;
+    dragState.sourcePlaceholder = parent.classList.contains('answer-placeholder') ? parent : null;
+    dragState.sourceArea = parent.closest('.options-grid') ? 'options' : 'answer';
+    dragState.offsetX = clientX - rect.left;
+    dragState.offsetY = clientY - rect.top;
+
+    parent.classList.add('drag-source');
+
+    dragGhostEmoji.textContent = item.textContent;
+    dragGhost.style.display = 'flex';
+    moveGhost(clientX, clientY);
+  }
+
+  function moveGhost(clientX, clientY) {
+    const x = clientX - dragState.offsetX;
+    const y = clientY - dragState.offsetY;
+    dragGhost.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.08)`;
+  }
+
+  function getElementFromPointSafe(x, y) {
+    dragGhost.style.visibility = 'hidden';
+    const el = document.elementFromPoint(x, y);
+    dragGhost.style.visibility = 'visible';
+    return el;
+  }
+
+  function updateDropTarget(clientX, clientY) {
+    clearDropTargets();
+    const el = getElementFromPointSafe(clientX, clientY);
+    const placeholder = el ? el.closest('.answer-placeholder') : null;
+    if (placeholder) {
+      placeholder.classList.add('drop-target');
+      dragState.currentTargetPlaceholder = placeholder;
+    }
+  }
+
+  function sendItemBackToOptions(item) {
+    const container = createDraggableOption(item.textContent);
+    optionsContainer.appendChild(container);
+    pulseElement(container);
+  }
+
+  function placeItemIntoPlaceholder(item, placeholder) {
+    const existingItem = placeholder.querySelector('.pattern-item');
+    if (existingItem) {
+      sendItemBackToOptions(existingItem);
+    }
+
+    placeholder.innerHTML = '';
+    placeholder.appendChild(item);
+    pulseElement(placeholder);
+  }
+
+  function endCustomDrag(clientX, clientY) {
+    if (!dragState.active || !dragState.item) {
+      clearDragState();
+      return;
+    }
+
+    const item = dragState.item;
+    const el = getElementFromPointSafe(clientX, clientY);
+    const targetPlaceholder = el ? el.closest('.answer-placeholder') : null;
+    const targetOptionsGrid = el ? el.closest('.options-grid') : null;
+
+    if (targetPlaceholder) {
+      if (dragState.sourceArea === 'options') {
+        dragState.sourceContainer.remove();
+      }
+      placeItemIntoPlaceholder(item, targetPlaceholder);
+    } else if (targetOptionsGrid) {
+      if (dragState.sourceArea === 'answer') {
+        dragState.sourcePlaceholder.innerHTML = '';
+        sendItemBackToOptions(item);
+      }
+    }
+
+    updateFilledState();
+    clearDragState();
+  }
+
+  function initPointerDrag() {
+    ['gesturestart', 'gesturechange', 'gestureend', 'selectstart', 'contextmenu', 'dragstart'].forEach(type => {
       document.addEventListener(type, (e) => {
-        if (quizView.classList.contains('active')) {
-          e.preventDefault();
-        }
+        e.preventDefault();
       }, { passive: false });
     });
 
-    document.addEventListener('dragstart', (e) => {
-      if (e.target.classList.contains('pattern-item') && e.target.draggable) {
-        draggedItem = e.target;
-        e.target.classList.add('dragging');
-        app.classList.add('drag-active');
-        e.dataTransfer.setData('text/plain', e.target.textContent);
-        e.dataTransfer.effectAllowed = 'move';
-      }
-    });
+    app.addEventListener('pointerdown', (e) => {
+      if (!quizView.classList.contains('active')) return;
 
-    document.addEventListener('dragend', (e) => {
-      if (e.target.classList.contains('pattern-item')) {
-        e.target.classList.remove('dragging');
-      }
-      draggedItem = null;
-      app.classList.remove('drag-active');
-      clearHoveredPlaceholders();
-      updateFilledState();
-    });
+      const item = e.target.closest('.pattern-item');
+      if (!item) return;
 
-    document.addEventListener('dragover', (e) => {
-      if (!draggedItem) return;
+      const parent = item.closest('.pattern-container, .answer-placeholder');
+      if (!parent) return;
 
-      const targetPlaceholder = e.target.closest('.answer-placeholder');
-      const targetGrid = e.target.closest('.options-grid');
+      // 记忆区不可拖
+      if (parent.closest('.memory-grid')) return;
 
-      if (targetPlaceholder || targetGrid) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-      }
+      addPressFeedback(parent);
 
-      clearHoveredPlaceholders();
-
-      if (targetPlaceholder) {
-        targetPlaceholder.classList.add('hovered');
-      }
-    });
-
-    document.addEventListener('dragleave', (e) => {
-      const placeholder = e.target.closest('.answer-placeholder');
-      if (placeholder) {
-        placeholder.classList.remove('hovered');
-      }
-    });
-
-    document.addEventListener('drop', (e) => {
       e.preventDefault();
-      if (!draggedItem) return;
+      try { item.setPointerCapture(e.pointerId); } catch (_) {}
 
-      const targetPlaceholder = e.target.closest('.answer-placeholder');
-      const inOptionsGrid = e.target.closest('.options-grid');
+      startCustomDrag(item, e.clientX, e.clientY, e.pointerId);
+    });
 
-      if (targetPlaceholder) {
-        const existingItem = targetPlaceholder.querySelector('.pattern-item');
-        if (existingItem) {
-          const container = document.createElement('div');
-          container.className = 'pattern-container';
-          container.appendChild(existingItem);
-          optionsContainer.appendChild(container);
-        }
-        targetPlaceholder.innerHTML = '';
-        targetPlaceholder.appendChild(draggedItem);
-        draggedItem.classList.remove('dragging');
-      } else if (inOptionsGrid) {
-        if (!draggedItem.closest('.options-grid')) {
-          const container = document.createElement('div');
-          container.className = 'pattern-container';
-          container.appendChild(draggedItem);
-          optionsContainer.appendChild(container);
-          draggedItem.classList.remove('dragging');
-        }
-      }
+    app.addEventListener('pointermove', (e) => {
+      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
+      e.preventDefault();
+      moveGhost(e.clientX, e.clientY);
+      updateDropTarget(e.clientX, e.clientY);
+    });
 
-      draggedItem = null;
-      app.classList.remove('drag-active');
-      clearHoveredPlaceholders();
-      updateFilledState();
+    app.addEventListener('pointerup', (e) => {
+      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
+      e.preventDefault();
+      endCustomDrag(e.clientX, e.clientY);
+    });
+
+    app.addEventListener('pointercancel', (e) => {
+      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
+      e.preventDefault();
+      clearDragState();
     });
   }
 
@@ -1008,7 +1124,7 @@
   checkAnswerBtn.addEventListener('click', showScore);
   nextQuestionBtn.addEventListener('click', () => nextQuestion(false));
 
-  initDragAndDrop();
+  initPointerDrag();
   buildQuestionSet();
   updateCounter();
   renderMemoryView();
