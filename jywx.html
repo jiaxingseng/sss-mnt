@@ -10,11 +10,22 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     :root {
-      --box-size: 64px;
-      --box-gap: 10px;
+      /* 放大2档后的基础尺寸 */
+      --box-size: 80px;
+      --box-gap: 14px;
+      --emoji-size: 3rem;
+      --card-max-width: 1260px;
+      --transition-fast: 0.16s ease;
+      --transition-mid: 0.22s ease;
+    }
+
+    html, body {
+      touch-action: manipulation;
+      -webkit-overflow-scrolling: touch;
     }
 
     body {
@@ -28,10 +39,10 @@
     }
 
     .card {
-      max-width: 1100px;
+      max-width: var(--card-max-width);
       width: 100%;
       background: #fff;
-      padding: 28px 24px 36px;
+      padding: 30px 26px 38px;
       margin-top: 10px;
     }
 
@@ -39,40 +50,42 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 24px;
+      margin-bottom: 26px;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 14px;
     }
 
     .title {
-      font-size: 1.5rem;
-      font-weight: 600;
+      font-size: 1.7rem;
+      font-weight: 700;
       color: #333;
+      letter-spacing: 0.02em;
     }
 
     .badge {
       background: #f5f5f5;
-      padding: 6px 16px;
-      border-radius: 40px;
-      font-weight: 500;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-weight: 600;
       color: #666;
-      font-size: 0.95rem;
+      font-size: 1rem;
     }
 
     #countdown {
-      font-size: 1.3rem;
-      font-weight: 700;
+      font-size: 1.45rem;
+      font-weight: 800;
       color: #ff0000;
-      padding: 4px 10px;
+      padding: 6px 12px;
       border: 2px solid #ff0000;
-      border-radius: 8px;
-      min-width: 70px;
+      border-radius: 10px;
+      min-width: 78px;
       text-align: center;
+      line-height: 1.2;
     }
 
     @keyframes blink {
       0% { opacity: 1; }
-      50% { opacity: 0.4; }
+      50% { opacity: 0.45; }
       100% { opacity: 1; }
     }
 
@@ -81,54 +94,55 @@
     }
 
     .memory-tip {
-      padding: 16px 20px;
+      padding: 18px 20px;
       color: #333;
-      font-size: 1rem;
-      line-height: 1.5;
+      font-size: 1.08rem;
+      line-height: 1.6;
       margin-bottom: 20px;
       text-align: center;
     }
 
     .last-question-tip {
       color: #d32f2f;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 12px;
       text-align: center;
+      font-size: 1.02rem;
     }
 
     .area-label {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 24px 0 12px;
+      font-size: 1.18rem;
+      font-weight: 700;
+      margin: 28px 0 14px;
       color: #000;
       text-align: center;
     }
 
-    /* 记忆区：固定10个，2行，每行5个 */
+    /* 记忆区：固定10个，两行，每行5个 */
     .memory-grid {
       display: grid;
       grid-template-columns: repeat(5, var(--box-size));
       justify-content: center;
       gap: var(--box-gap);
-      margin-bottom: 20px;
+      margin-bottom: 22px;
     }
 
-    /* 作答区：固定8个，2行，每行4个 */
+    /* 作答区：固定8个，两行，每行4个 */
     .answer-grid {
       display: grid;
       grid-template-columns: repeat(4, var(--box-size));
       justify-content: center;
       gap: var(--box-gap);
-      margin-bottom: 30px;
+      margin-bottom: 34px;
     }
 
-    /* 选项区：固定12个，2行，每行6个 */
+    /* 选项区：固定12个，两行，每行6个 */
     .options-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
       justify-content: center;
       gap: var(--box-gap);
-      margin-bottom: 30px;
+      margin-bottom: 32px;
     }
 
     .answer-placeholder,
@@ -137,36 +151,67 @@
       align-items: center;
       justify-content: center;
       background: #fff;
-      border: 1px solid #000;
+      border: 1.5px solid #000;
       width: var(--box-size);
       min-height: var(--box-size);
       aspect-ratio: 1 / 1;
+      will-change: transform, box-shadow, border-color, background-color;
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        border-color var(--transition-fast),
+        background-color var(--transition-fast);
+      backface-visibility: hidden;
+      transform: translateZ(0);
+    }
+
+    .pattern-container {
       padding: 4px;
     }
 
     .answer-placeholder {
       padding: 0;
+      background: #fff;
     }
 
     .pattern-item {
-      font-size: 2.35rem;
+      font-size: var(--emoji-size);
       line-height: 1;
       cursor: grab;
+      transition: transform var(--transition-fast), opacity var(--transition-fast), filter var(--transition-fast);
+      will-change: transform, opacity;
+      backface-visibility: hidden;
+      transform: translateZ(0);
     }
 
     .memory-grid .pattern-item {
       cursor: default;
     }
 
+    .pattern-container:hover {
+      box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+      transform: translateY(-1px);
+    }
+
+    .answer-placeholder.hovered {
+      border: 2.5px solid #000;
+      background: #fff8d9;
+      box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.18);
+      transform: scale(1.03);
+    }
+
     .pattern-item.dragging {
-      opacity: 0.7;
+      opacity: 0.72;
+      transform: scale(1.1);
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.22));
+      cursor: grabbing;
     }
 
     .button-row {
       display: flex;
       justify-content: center;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 14px;
+      margin-top: 22px;
       flex-wrap: wrap;
     }
 
@@ -174,26 +219,41 @@
       background: none;
       border: none;
       cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
     }
 
     .btn-primary {
-      background: linear-gradient(#ffd700, #ffb800);
+      background: linear-gradient(#ffe173, #ffbf1f);
       border: 1px solid #e6a800;
-      padding: 10px 30px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
+      padding: 12px 34px;
+      border-radius: 10px;
+      font-size: 1.06rem;
+      font-weight: 700;
       color: #333;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 5px 12px rgba(0,0,0,0.22);
+      transform: translateY(-1px);
     }
 
     .btn-sm {
       background: #f5f5f5;
       border: 1px solid #ccc;
-      padding: 8px 18px;
-      border-radius: 4px;
-      font-size: 0.9rem;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 0.96rem;
       color: #333;
+      font-weight: 500;
+    }
+
+    .btn-sm:hover {
+      background: #efefef;
     }
 
     .view { display: none; }
@@ -201,19 +261,20 @@
 
     .message {
       text-align: left;
-      font-size: 0.95rem;
+      font-size: 1rem;
       padding: 16px;
-      margin: 16px 0;
+      margin: 18px 0;
       color: #333;
-      line-height: 1.8;
-      max-height: 420px;
+      line-height: 1.85;
+      max-height: 440px;
       overflow-y: auto;
     }
 
     .question-result {
-      margin: 8px 0;
-      padding: 8px;
+      margin: 10px 0;
+      padding: 10px;
       border-left: 3px solid #ccc;
+      border-radius: 4px;
     }
 
     .question-result.correct {
@@ -234,32 +295,86 @@
     .correct-answer {
       background-color: #d4edda;
       color: #155724;
-      padding: 2px 6px;
+      padding: 2px 7px;
       border-radius: 4px;
       font-weight: bold;
       display: inline-block;
-      margin: 0 2px;
+      margin: 2px 3px;
+      font-size: 1.02rem;
     }
 
     .action-group {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
       justify-content: center;
-      margin-top: 16px;
+      margin-top: 18px;
     }
 
+    /* iPad 适配：放大后仍保证稳定显示 */
     @media (min-width: 768px) and (max-width: 1024px) {
       :root {
-        --box-size: 68px;
-        --box-gap: 10px;
+        --box-size: 74px;
+        --box-gap: 11px;
+        --emoji-size: 2.8rem;
+        --card-max-width: 980px;
+      }
+
+      .card {
+        padding: 26px 18px 32px;
+      }
+
+      .title {
+        font-size: 1.55rem;
+      }
+
+      .memory-grid {
+        grid-template-columns: repeat(5, var(--box-size));
+      }
+
+      .answer-grid {
+        grid-template-columns: repeat(4, var(--box-size));
+      }
+
+      .options-grid {
+        grid-template-columns: repeat(6, var(--box-size));
+      }
+
+      .btn-primary {
+        padding: 11px 28px;
       }
     }
 
+    /* 手机适配 */
     @media (max-width: 767px) {
       :root {
-        --box-size: 54px;
+        --box-size: 58px;
         --box-gap: 8px;
+        --emoji-size: 2.15rem;
+      }
+
+      .card {
+        padding: 18px 10px 28px;
+      }
+
+      .title {
+        font-size: 1.28rem;
+      }
+
+      .badge {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+      }
+
+      #countdown {
+        font-size: 1.05rem;
+        min-width: 62px;
+        padding: 3px 8px;
+      }
+
+      .memory-tip {
+        font-size: 0.96rem;
+        padding: 12px 8px;
       }
 
       .memory-grid {
@@ -274,12 +389,14 @@
         grid-template-columns: repeat(4, var(--box-size));
       }
 
-      .pattern-item {
-        font-size: 1.95rem;
+      .btn-primary {
+        padding: 10px 22px;
+        font-size: 0.98rem;
       }
 
-      #countdown {
-        font-size: 1.1rem;
+      .btn-sm {
+        padding: 8px 14px;
+        font-size: 0.88rem;
       }
     }
   </style>
@@ -421,25 +538,17 @@
 
   function createOneQuestion(themeObj) {
     const allItems = shuffleArray([...new Set(themeObj.items)]);
-
-    if (allItems.length < MEMORY_COUNT + MIN_CORRECT) {
-      return null;
-    }
+    if (allItems.length < MEMORY_COUNT + MIN_CORRECT) return null;
 
     const memory = allItems.slice(0, MEMORY_COUNT);
     const outsideMemory = allItems.filter(item => !memory.includes(item));
 
     const dynamicMaxCorrect = Math.min(MAX_CORRECT, outsideMemory.length);
-    if (dynamicMaxCorrect < MIN_CORRECT) {
-      return null;
-    }
+    if (dynamicMaxCorrect < MIN_CORRECT) return null;
 
     const correctCount = randomInt(MIN_CORRECT, dynamicMaxCorrect);
     const shownMemoryCount = OPTIONS_COUNT - correctCount;
-
-    if (shownMemoryCount < 0 || shownMemoryCount > MEMORY_COUNT) {
-      return null;
-    }
+    if (shownMemoryCount < 0 || shownMemoryCount > MEMORY_COUNT) return null;
 
     const shownMemoryItems = shuffleArray([...memory]).slice(0, shownMemoryCount);
     const distractors = shuffleArray([...outsideMemory]).slice(0, correctCount);
@@ -458,20 +567,18 @@
 
   function buildQuestionSet() {
     const validThemes = themeBank.filter(t => [...new Set(t.items)].length >= MEMORY_COUNT + MIN_CORRECT);
-
     if (validThemes.length === 0) {
       throw new Error('没有足够素材的主题可用于生成题目');
     }
 
     const result = [];
-
     let attempts = 0;
+
     while (result.length < TOTAL_QUESTIONS && attempts < MAX_BUILD_ATTEMPTS) {
       attempts++;
 
       let themeObj;
       if (validThemes.length >= TOTAL_QUESTIONS) {
-        themeObj = shuffleArray(validThemes)[0];
         const usedThemes = result.map(q => q.theme);
         const unusedThemes = validThemes.filter(t => !usedThemes.includes(t.theme));
         themeObj = unusedThemes.length > 0 ? shuffleArray(unusedThemes)[0] : shuffleArray(validThemes)[0];
@@ -480,9 +587,7 @@
       }
 
       const question = createOneQuestion(themeObj);
-      if (question) {
-        result.push(question);
-      }
+      if (question) result.push(question);
     }
 
     if (result.length < TOTAL_QUESTIONS) {
@@ -520,6 +625,12 @@
   function updateCounter() {
     questionCounter.innerText = `第 ${currentIndex + 1} / ${TOTAL_QUESTIONS} 题`;
     lastQuestionTip.style.display = currentIndex === TOTAL_QUESTIONS - 1 ? 'block' : 'none';
+  }
+
+  function clearHoveredPlaceholders() {
+    document.querySelectorAll('.answer-placeholder').forEach(ph => {
+      ph.classList.remove('hovered');
+    });
   }
 
   function renderMemoryView() {
@@ -619,10 +730,10 @@
     totalScore = questionResults.reduce((sum, r) => sum + r.score, 0);
 
     let html = `
-      <div style="font-size:1rem;font-weight:600;margin-bottom:12px;">
+      <div style="font-size:1rem;font-weight:700;margin-bottom:12px;">
         📊 总分：${totalScore} / ${TOTAL_QUESTIONS * SCORE_PER_QUESTION} 分
       </div>
-      <div style="margin-bottom:16px;font-size:0.9rem;color:#c62828;font-weight:500;">
+      <div style="margin-bottom:16px;font-size:0.95rem;color:#c62828;font-weight:600;">
         ⚠️ 得分规则：必须完整选出所有未出现的图片，且不能多选，才得1分
       </div>
       <div style="border-top:1px solid #eee;padding-top:12px;">
@@ -754,8 +865,9 @@
     document.addEventListener('dragend', (e) => {
       if (e.target.classList.contains('pattern-item')) {
         e.target.classList.remove('dragging');
-        draggedItem = null;
       }
+      draggedItem = null;
+      clearHoveredPlaceholders();
     });
 
     document.addEventListener('dragover', (e) => {
@@ -767,14 +879,18 @@
       if (targetPlaceholder || targetGrid) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+      }
 
-        document.querySelectorAll('.answer-placeholder').forEach(ph => {
-          ph.style.border = '1px solid #000';
-        });
+      clearHoveredPlaceholders();
+      if (targetPlaceholder) {
+        targetPlaceholder.classList.add('hovered');
+      }
+    });
 
-        if (targetPlaceholder) {
-          targetPlaceholder.style.border = '2px solid #000';
-        }
+    document.addEventListener('dragleave', (e) => {
+      const placeholder = e.target.closest('.answer-placeholder');
+      if (placeholder) {
+        placeholder.classList.remove('hovered');
       }
     });
 
@@ -782,11 +898,8 @@
       e.preventDefault();
       if (!draggedItem) return;
 
-      document.querySelectorAll('.answer-placeholder').forEach(ph => {
-        ph.style.border = '1px solid #000';
-      });
-
       const targetPlaceholder = e.target.closest('.answer-placeholder');
+      const inOptionsGrid = e.target.closest('.options-grid');
 
       if (targetPlaceholder) {
         const existingItem = targetPlaceholder.querySelector('.pattern-item');
@@ -799,7 +912,7 @@
         targetPlaceholder.innerHTML = '';
         targetPlaceholder.appendChild(draggedItem);
         draggedItem.classList.remove('dragging');
-      } else if (e.target.closest('.options-grid')) {
+      } else if (inOptionsGrid) {
         if (!draggedItem.closest('.options-grid')) {
           const container = document.createElement('div');
           container.className = 'pattern-container';
@@ -810,6 +923,7 @@
       }
 
       draggedItem = null;
+      clearHoveredPlaceholders();
     });
   }
 
