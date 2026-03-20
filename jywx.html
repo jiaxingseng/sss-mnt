@@ -7,7 +7,7 @@
     <style>
         * {
             box-sizing: border-box;
-            font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -108,7 +108,6 @@
             display: block;
         }
 
-        /* 固定两行布局 */
         .memory-grid {
             display: grid;
             grid-template-columns: repeat(5, var(--box-size));
@@ -163,18 +162,15 @@
         }
 
         .pattern-item {
-            font-size: 2.6rem;
+            font-size: 2.4rem;
             cursor: grab;
             transition: none;
             z-index: 10;
+            line-height: 1;
         }
 
         .pattern-item:active {
             cursor: grabbing;
-        }
-
-        .pattern-item:hover {
-            transform: none;
         }
 
         .pattern-item.dragging {
@@ -199,9 +195,7 @@
             background: none;
             border: none;
             padding: 0;
-            border-radius: 0;
             cursor: pointer;
-            transition: none;
         }
 
         .btn-primary {
@@ -240,22 +234,12 @@
             text-align: left;
             font-size: 0.95rem;
             padding: 16px;
-            background: none;
             margin: 16px 0;
             font-weight: 500;
-            border: none;
             color: #333;
             line-height: 1.8;
             max-height: 420px;
             overflow-y: auto;
-        }
-
-        .message.success {
-            color: #2e7d32;
-        }
-
-        .message.error {
-            color: #c62828;
         }
 
         .question-result {
@@ -285,7 +269,7 @@
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             margin: 0 2px;
             display: inline-block;
         }
@@ -298,7 +282,6 @@
             margin-top: 16px;
         }
 
-        /* iPad 适配 */
         @media (min-width: 768px) and (max-width: 1024px) {
             :root {
                 --box-size: 68px;
@@ -310,22 +293,11 @@
                 padding: 28px 20px 32px;
             }
 
-            .title {
-                font-size: 1.45rem;
-            }
-
             .pattern-item {
-                font-size: 2.5rem;
-            }
-
-            .memory-grid,
-            .answer-grid,
-            .options-grid {
-                justify-content: center;
+                font-size: 2.4rem;
             }
         }
 
-        /* 手机适配 */
         @media (max-width: 767px) {
             :root {
                 --box-size: 54px;
@@ -349,7 +321,7 @@
             }
 
             .pattern-item {
-                font-size: 2rem;
+                font-size: 1.95rem;
             }
 
             #countdown {
@@ -397,7 +369,9 @@
         <div class="area-label">选项区</div>
         <div id="optionsContainer" class="options-grid"></div>
 
-        <div id="quizMessage" class="message">拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）</div>
+        <div id="quizMessage" class="message">
+            拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）
+        </div>
 
         <div class="action-group">
             <button class="btn btn-sm" id="resetQuizBtn">重置</button>
@@ -412,37 +386,81 @@
 
 <script>
 (function() {
+    const SCORE_PER_QUESTION = 1;
+    const TOTAL_QUESTIONS = 10;
+    const ANSWER_GRID_COUNT = 8;
+    const COUNTDOWN_SECONDS = 60;
+
+    // 兼容性更好的 emoji 题库
     const questionBank = [
-        { memory: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐨', '🐯', '🦁'], options: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐨', '🐯', '🦁', '🐩', '🍈', '🐀', '🐇', '🐅'] },
-        { memory: ['🍎', '🍌', '🍇', '🍊', '🍉', '🍒', '🍑', '🍍', '🥭', '🍋'], options: ['🍎', '🍌', '🍇', '🍊', '🍉', '🍒', '🍑', '🍍', '🥭', '🍋', '🍏', '🍐', '🍓', '🥝', '🍈'] },
-        { memory: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸'], options: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸', '🥎', '🏏', '🏑', '🏒', '🥊'] },
-        { memory: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐'], options: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚘', '🚖', '🚛', '🚜', '🚠'] },
-        { memory: ['☀️', '☁️', '🌧️', '⛄', '🌪️', '🌈', '🌊', '🌋', '🔥', '💧'], options: ['☀️', '☁️', '🌧️', '⛄', '🌪️', '🌈', '🌊', '🌋', '🔥', '💧', '🌞', '🌩️', '❄️', '💨', '🌫️'] },
-        { memory: ['🐧', '🐦', '🐤', '🐣', '🦆', '🦅', '🦉', '🐝', '🐜', '🦋'], options: ['🐧', '🐦', '🐤', '🐣', '🦆', '🦅', '🦉', '🐝', '🐜', '🦋', '🕊️', '🐥', '🦢', '🐞', '🪰'] },
-        { memory: ['🌹', '🌻', '🌺', '🌸', '🌼', '🌷', '🥀', '🍀', '🍁', '🍂'], options: ['🌹', '🌻', '🌺', '🌸', '🌼', '🌷', '🥀', '🍀', '🍁', '🍂', '🌱', '🌿', '☘️', '🪴', '🌾'] },
-        { memory: ['⌚', '📱', '💻', '📷', '🎧', '🖨️', '🖥️', '⌨️', '🖱️', '💽'], options: ['⌚', '📱', '💻', '📷', '🎧', '🖨️', '🖥️', '⌨️', '🖱️', '💽', '📲', '💿', '📹', '🎙️', '🖲️'] },
-        { memory: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💖'], options: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💖', '♥️', '💘', '💝', '💓', '💞'] },
-        { memory: ['🥔', '🧅', '🥕', '🌽', '🥦', '🥒', '🍅', '🍆', '🥑', '🥬'], options: ['🥔', '🧅', '🥕', '🌽', '🥦', '🥒', '🍅', '🍆', '🥑', '🥬', '🧄', '🌶️', '🫑', '🫒', '🥯'] },
-        { memory: ['🐼', '🐺', '🦓', '🦒', '🦘', '🦬', '🦌', '🦏', '🦛', '🐘'], options: ['🐼', '🐺', '🦓', '🦒', '🦘', '🦬', '🦌', '🦏', '🦛', '🐘', '🦣', '🐪', '🫎', '🐐', '🦙'] },
-        { memory: ['🍞', '🥐', '🥖', '🥨', '🧀', '🥚', '🍳', '🥓', '🍗', '🍖'], options: ['🍞', '🥐', '🥖', '🥨', '🧀', '🥚', '🍳', '🥓', '🍗', '🍖', '🌭', '🥪', '🍔', '🧇', '🥞'] }
+        // 动物
+        { memory: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐨','🐯','🦁'], options: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐨','🐯','🦁','🐼','🐮','🐷','🐸','🐵'] },
+        { memory: ['🐵','🐸','🐷','🐮','🐼','🐔','🐧','🐦','🦆','🦉'], options: ['🐵','🐸','🐷','🐮','🐼','🐔','🐧','🐦','🦆','🦉','🦄','🐺','🐗','🐴','🐙'] },
+        { memory: ['🐺','🐗','🐴','🦌','🐮','🐷','🐑','🐐','🐪','🐫'], options: ['🐺','🐗','🐴','🦌','🐮','🐷','🐑','🐐','🐪','🐫','🦓','🐘','🦏','🦒','🦘'] },
+        { memory: ['🐔','🐧','🐦','🦆','🦉','🦅','🦜','🐤','🐣','🐥'], options: ['🐔','🐧','🐦','🦆','🦉','🦅','🦜','🐤','🐣','🐥','🕊️','🦢','🦚','🐓','🦩'] },
+
+        // 水果
+        { memory: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋'], options: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋','🍏','🍐','🍓','🥝','🍈'] },
+
+        // 蔬菜
+        { memory: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬'], options: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬','🧄','🌶️','🍄','🥜','🫘'] },
+
+        // 食物
+        { memory: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖'], options: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖','🍔','🌭','🥪','🍕','🍟'] },
+        { memory: ['🍚','🍜','🍝','🍣','🍤','🥟','🍛','🍲','🍢','🍱'], options: ['🍚','🍜','🍝','🍣','🍤','🥟','🍛','🍲','🍢','🍱','🍙','🍘','🍥','🥮','🍡'] },
+
+        // 运动
+        { memory: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸'], options: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🥋','⛳','🎳','🏒'] },
+
+        // 交通
+        { memory: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐'], options: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🚚','🚜','🛵','🏍️','🚲'] },
+        { memory: ['✈️','🚁','⛵','🚢','🚤','🚂','🚆','🚇','🚝','🚠'], options: ['✈️','🚁','⛵','🚢','🚤','🚂','🚆','🚇','🚝','🚠','🛶','🛳️','🚞','🚃','🚡'] },
+
+        // 天气自然
+        { memory: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧'], options: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧','🌞','🌩️','❄️','💨','🌫️'] },
+
+        // 植物
+        { memory: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂'], options: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂','🌱','🌿','☘️','🪴','🌾'] },
+
+        // 电子产品
+        { memory: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽'], options: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽','📲','💿','📹','🎙️','📻'] },
+
+        // 爱心
+        { memory: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖'], options: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖','♥️','💘','💝','💓','💞'] },
+
+        // 海洋生物
+        { memory: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐'], options: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐','🦑','🐚','🪼','🦞','🐢'] },
+
+        // 昆虫
+        { memory: ['🐝','🐞','🦋','🐜','🕷️','🦂','🪲','🪳','🦗','🐛'], options: ['🐝','🐞','🦋','🐜','🕷️','🦂','🪲','🪳','🦗','🐛','🪱','🦟','🐌','🦠','🕸️'] },
+
+        // 乐器
+        { memory: ['🎹','🥁','🎸','🎻','🎺','🎷','🪗','🪕','🎼','🎵'], options: ['🎹','🥁','🎸','🎻','🎺','🎷','🪗','🪕','🎼','🎵','🎶','🎤','🎧','📯','🔔'] },
+
+        // 文具
+        { memory: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚'], options: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚','📖','📝','📒','📕','📘'] },
+
+        // 服饰
+        { memory: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩'], options: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩','👒','🧣','🧤','👞','🥾'] },
+
+        // 建筑
+        { memory: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫'], options: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏬','🏭','⛪','🕌','🏛️'] },
+
+        // 表情
+        { memory: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊'], options: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😎','🤔','😭'] },
+
+        // 节日
+        { memory: ['🎄','🎁','🎂','🎃','🧨','🎆','🎇','🎈','🎉','🎊'], options: ['🎄','🎁','🎂','🎃','🧨','🎆','🎇','🎈','🎉','🎊','🕯️','🍰','🍬','👻','🌟'] }
     ];
 
     let questions = [];
     let currentIndex = 0;
-    let totalQuestions = 10;
-    const ANSWER_GRID_COUNT = 8;
-    const SCORE_PER_QUESTION = 1;
-
     let questionResults = [];
     let totalScore = 0;
-
-    let countdownTimer;
-    let remainingTime = 60;
-
+    let countdownTimer = null;
+    let remainingTime = COUNTDOWN_SECONDS;
     let isRestartMode = false;
     let draggedItem = null;
-
-    const lastQuestionTip = document.getElementById('lastQuestionTip');
 
     const memoryView = document.getElementById('memoryView');
     const quizView = document.getElementById('quizView');
@@ -453,6 +471,7 @@
     const quizMessage = document.getElementById('quizMessage');
     const countdownEl = document.getElementById('countdown');
     const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+    const lastQuestionTip = document.getElementById('lastQuestionTip');
 
     const goToQuizBtn = document.getElementById('goToQuizBtn');
     const backToMemoryBtn = document.getElementById('backToMemoryBtn');
@@ -469,10 +488,12 @@
     }
 
     function generateRandomQuestions() {
-        questions = shuffleArray(questionBank).slice(0, 10).map(q => ({
-            memory: [...q.memory],
-            options: shuffleArray([...q.options])
-        }));
+        questions = shuffleArray(questionBank)
+            .slice(0, TOTAL_QUESTIONS)
+            .map(q => ({
+                memory: [...q.memory],
+                options: shuffleArray([...q.options])
+            }));
     }
 
     function arraysAreEqual(arr1, arr2) {
@@ -493,30 +514,37 @@
 
     function initCountdown() {
         if (countdownTimer) clearInterval(countdownTimer);
-        remainingTime = 60;
+        remainingTime = COUNTDOWN_SECONDS;
         updateCountdownDisplay();
+
         countdownTimer = setInterval(() => {
             remainingTime--;
             updateCountdownDisplay();
+
             if (remainingTime <= 0) {
                 clearInterval(countdownTimer);
+
+                // 时间到自动保存当前题
+                saveCurrentQuestionResult();
+
                 if (isRestartMode) {
                     resetAll();
                 } else {
-                    nextQuestion();
+                    nextQuestion(true);
                 }
             }
         }, 1000);
     }
 
     function updateCounter() {
-        questionCounter.innerText = `第 ${currentIndex + 1} / ${totalQuestions} 题`;
-        lastQuestionTip.style.display = (currentIndex === totalQuestions - 1) ? 'block' : 'none';
+        questionCounter.innerText = `第 ${currentIndex + 1} / ${TOTAL_QUESTIONS} 题`;
+        lastQuestionTip.style.display = currentIndex === TOTAL_QUESTIONS - 1 ? 'block' : 'none';
     }
 
     function renderMemoryView() {
         const memItems = questions[currentIndex].memory;
         memoryGrid.innerHTML = '';
+
         memItems.forEach(emoji => {
             const container = document.createElement('div');
             container.className = 'pattern-container';
@@ -543,10 +571,9 @@
 
     function initQuizView() {
         createAnswerPlaceholders();
-
         optionsContainer.innerHTML = '';
-        const opts = shuffleArray([...questions[currentIndex].options]);
 
+        const opts = shuffleArray([...questions[currentIndex].options]);
         opts.forEach(emoji => {
             const container = document.createElement('div');
             container.className = 'pattern-container';
@@ -564,27 +591,34 @@
         quizMessage.innerHTML = '拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）';
     }
 
-    function resetCurrentQuiz() {
-        initQuizView();
+    function getUserAnswers() {
+        return [...answerContainer.querySelectorAll('.pattern-item')].map(el => el.textContent);
     }
 
-    function showScore() {
+    function getCorrectAnswers(question) {
+        return question.options.filter(emoji => !question.memory.includes(emoji));
+    }
+
+    // 关键修复：统一保存当前题记录
+    function saveCurrentQuestionResult() {
+        if (!questions[currentIndex]) return;
+
         const currentQuestion = questions[currentIndex];
-        const userAnswers = [...answerContainer.querySelectorAll('.pattern-item')].map(el => el.textContent);
-        const allUnusedAnswers = currentQuestion.options.filter(emoji => !currentQuestion.memory.includes(emoji));
+        const userAnswers = getUserAnswers();
+        const allUnusedAnswers = getCorrectAnswers(currentQuestion);
         const isCorrect = arraysAreEqual(userAnswers, allUnusedAnswers);
         const currentScore = isCorrect ? SCORE_PER_QUESTION : 0;
 
-        const existingIndex = questionResults.findIndex(item => item.questionIndex === currentIndex);
         const record = {
             questionIndex: currentIndex,
             questionNum: currentIndex + 1,
             isCorrect,
-            userAnswer: userAnswers,
-            allUnusedAnswers,
+            userAnswer: [...userAnswers],
+            allUnusedAnswers: [...allUnusedAnswers],
             score: currentScore
         };
 
+        const existingIndex = questionResults.findIndex(item => item.questionIndex === currentIndex);
         if (existingIndex > -1) {
             questionResults[existingIndex] = record;
         } else {
@@ -592,10 +626,18 @@
         }
 
         totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
+    }
+
+    function resetCurrentQuiz() {
+        initQuizView();
+    }
+
+    function buildScoreHtml() {
+        totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
 
         let scoreHtml = `
             <div style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">
-                📊 总分：${totalScore} / ${totalQuestions * SCORE_PER_QUESTION} 分
+                📊 总分：${totalScore} / ${TOTAL_QUESTIONS * SCORE_PER_QUESTION} 分
             </div>
             <div style="margin-bottom: 16px; font-size: 0.9rem; color: #c62828; font-weight: 500;">
                 ⚠️ 得分规则：必须选择出<strong>所有</strong>未出现的选项（且不能多选）才能得1分，少选/多选均不得分
@@ -604,19 +646,19 @@
                 <strong>📝 所有题目答题情况（所有未出现的选项高亮显示）：</strong>
         `;
 
-        for (let i = 0; i < totalQuestions; i++) {
+        for (let i = 0; i < TOTAL_QUESTIONS; i++) {
             const questionRecord = questionResults.find(item => item.questionIndex === i);
-            const questionAllUnused = questions[i].options.filter(emoji => !questions[i].memory.includes(emoji));
-            const correctAnswersHtml = questionAllUnused.map(ans =>
+            const correctList = getCorrectAnswers(questions[i]);
+            const correctAnswersHtml = correctList.map(ans =>
                 `<span class="correct-answer">${ans}</span>`
             ).join('');
 
             if (questionRecord) {
                 let errorReason = '';
                 if (!questionRecord.isCorrect) {
-                    if (questionRecord.userAnswer.length < questionAllUnused.length) {
+                    if (questionRecord.userAnswer.length < correctList.length) {
                         errorReason = '（错误原因：少选了部分未出现的选项）';
-                    } else if (questionRecord.userAnswer.length > questionAllUnused.length) {
+                    } else if (questionRecord.userAnswer.length > correctList.length) {
                         errorReason = '（错误原因：多选了已出现的选项）';
                     } else {
                         errorReason = '（错误原因：选择的选项有误）';
@@ -645,17 +687,22 @@
         }
 
         scoreHtml += `</div>`;
+        return scoreHtml;
+    }
 
+    function showScore() {
+        // 点击“我的得分”时也先保存当前题
+        saveCurrentQuestionResult();
         quizMessage.className = 'message';
-        quizMessage.innerHTML = scoreHtml;
+        quizMessage.innerHTML = buildScoreHtml();
     }
 
     function showMemoryView() {
         renderMemoryView();
         memoryView.classList.add('active');
         quizView.classList.remove('active');
-        initCountdown();
         updateCounter();
+        initCountdown();
     }
 
     function showQuizView() {
@@ -681,7 +728,7 @@
         quizMessage.innerHTML = '拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）';
     }
 
-    function nextQuestion() {
+    function nextQuestion(fromTimeout = false) {
         if (isRestartMode) {
             resetAll();
             return;
@@ -689,22 +736,31 @@
 
         if (countdownTimer) clearInterval(countdownTimer);
 
-        if (currentIndex === totalQuestions - 1) {
-            isRestartMode = true;
-            nextQuestionBtn.textContent = '重新答题';
-            showScore();
-            quizView.classList.add('active');
-            memoryView.classList.remove('active');
-        } else {
-            currentIndex += 1;
-            updateCounter();
-            showMemoryView();
+        // 关键修复：不管是否手动点击下一题，都先保存当前题
+        // 如果是倒计时触发，前面已经保存过，这里避免重复可不再保存
+        if (!fromTimeout && quizView.classList.contains('active')) {
+            saveCurrentQuestionResult();
         }
 
-        if (currentIndex < totalQuestions - 1) {
+        if (currentIndex === TOTAL_QUESTIONS - 1) {
+            // 最后一题结束时确保保存
+            if (quizView.classList.contains('active')) {
+                saveCurrentQuestionResult();
+            }
+
+            isRestartMode = true;
+            nextQuestionBtn.textContent = '重新答题';
             quizMessage.className = 'message';
-            quizMessage.innerHTML = '拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）';
+            quizMessage.innerHTML = buildScoreHtml();
+
+            quizView.classList.add('active');
+            memoryView.classList.remove('active');
+            return;
         }
+
+        currentIndex += 1;
+        updateCounter();
+        showMemoryView();
     }
 
     function initDragAndDrop() {
@@ -780,7 +836,7 @@
 
     goToQuizBtn.addEventListener('click', showQuizView);
     backToMemoryBtn.addEventListener('click', showMemoryView);
-    nextQuestionBtn.addEventListener('click', nextQuestion);
+    nextQuestionBtn.addEventListener('click', () => nextQuestion(false));
     resetQuizBtn.addEventListener('click', resetCurrentQuiz);
     checkAnswerBtn.addEventListener('click', showScore);
 
