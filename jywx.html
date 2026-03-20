@@ -104,7 +104,7 @@
       text-align: center;
     }
 
-    /* 记忆区：固定10个，两行，每行5个 */
+    /* 记忆区：固定10个，2行，每行5个 */
     .memory-grid {
       display: grid;
       grid-template-columns: repeat(5, var(--box-size));
@@ -113,7 +113,7 @@
       margin-bottom: 20px;
     }
 
-    /* 作答区：固定8个，两行，每行4个 */
+    /* 作答区：固定8个，2行，每行4个 */
     .answer-grid {
       display: grid;
       grid-template-columns: repeat(4, var(--box-size));
@@ -122,7 +122,7 @@
       margin-bottom: 30px;
     }
 
-    /* 选项区：固定12个，两行，每行6个 */
+    /* 选项区：固定12个，2行，每行6个 */
     .options-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
@@ -344,6 +344,7 @@
   const MAX_CORRECT = 8;
   const SCORE_PER_QUESTION = 1;
   const COUNTDOWN_SECONDS = 60;
+  const MAX_BUILD_ATTEMPTS = 100;
 
   const themeBank = [
     { theme: '动物', items: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐮','🐷','🐸','🐵','🐨','🐔','🐧','🐦','🦆','🦉'] },
@@ -401,52 +402,94 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  function validateQuestion(question) {
-    return (
-      question.memory.length === MEMORY_COUNT &&
-      question.options.length === OPTIONS_COUNT &&
-      question.distractors.length >= MIN_CORRECT &&
-      question.distractors.length <= MAX_CORRECT
-    );
-  }
-
-  function buildQuestionSet() {
-    const selectedThemes = shuffleArray(themeBank).slice(0, TOTAL_QUESTIONS);
-
-    questions = selectedThemes.map(themeObj => {
-      const allItems = shuffleArray(themeObj.items);
-      const memory = allItems.slice(0, MEMORY_COUNT);
-      const poolOutsideMemory = allItems.filter(item => !memory.includes(item));
-
-      const correctCount = randomInt(MIN_CORRECT, MAX_CORRECT);
-      const shownMemoryCount = OPTIONS_COUNT - correctCount;
-
-      const shownMemoryItems = shuffleArray([...memory]).slice(0, shownMemoryCount);
-      const distractors = shuffleArray(poolOutsideMemory).slice(0, correctCount);
-
-      const options = shuffleArray([...shownMemoryItems, ...distractors]);
-
-      const q = {
-        theme: themeObj.theme,
-        memory,
-        shownMemoryItems,
-        distractors,
-        options
-      };
-
-      if (!validateQuestion(q)) {
-        throw new Error(`题目生成失败：${themeObj.theme}`);
-      }
-
-      return q;
-    });
-  }
-
   function arraysAreEqual(arr1, arr2) {
     if (arr1.length !== arr2.length) return false;
     const a = [...arr1].sort();
     const b = [...arr2].sort();
     return a.every((item, index) => item === b[index]);
+  }
+
+  function validateQuestion(q) {
+    return (
+      q.memory.length === MEMORY_COUNT &&
+      q.options.length === OPTIONS_COUNT &&
+      q.distractors.length >= MIN_CORRECT &&
+      q.distractors.length <= MAX_CORRECT &&
+      q.shownMemoryItems.length + q.distractors.length === OPTIONS_COUNT
+    );
+  }
+
+  function createOneQuestion(themeObj) {
+    const allItems = shuffleArray([...new Set(themeObj.items)]);
+
+    if (allItems.length < MEMORY_COUNT + MIN_CORRECT) {
+      return null;
+    }
+
+    const memory = allItems.slice(0, MEMORY_COUNT);
+    const outsideMemory = allItems.filter(item => !memory.includes(item));
+
+    const dynamicMaxCorrect = Math.min(MAX_CORRECT, outsideMemory.length);
+    if (dynamicMaxCorrect < MIN_CORRECT) {
+      return null;
+    }
+
+    const correctCount = randomInt(MIN_CORRECT, dynamicMaxCorrect);
+    const shownMemoryCount = OPTIONS_COUNT - correctCount;
+
+    if (shownMemoryCount < 0 || shownMemoryCount > MEMORY_COUNT) {
+      return null;
+    }
+
+    const shownMemoryItems = shuffleArray([...memory]).slice(0, shownMemoryCount);
+    const distractors = shuffleArray([...outsideMemory]).slice(0, correctCount);
+    const options = shuffleArray([...shownMemoryItems, ...distractors]);
+
+    const q = {
+      theme: themeObj.theme,
+      memory,
+      shownMemoryItems,
+      distractors,
+      options
+    };
+
+    return validateQuestion(q) ? q : null;
+  }
+
+  function buildQuestionSet() {
+    const validThemes = themeBank.filter(t => [...new Set(t.items)].length >= MEMORY_COUNT + MIN_CORRECT);
+
+    if (validThemes.length === 0) {
+      throw new Error('没有足够素材的主题可用于生成题目');
+    }
+
+    const result = [];
+
+    let attempts = 0;
+    while (result.length < TOTAL_QUESTIONS && attempts < MAX_BUILD_ATTEMPTS) {
+      attempts++;
+
+      let themeObj;
+      if (validThemes.length >= TOTAL_QUESTIONS) {
+        themeObj = shuffleArray(validThemes)[0];
+        const usedThemes = result.map(q => q.theme);
+        const unusedThemes = validThemes.filter(t => !usedThemes.includes(t.theme));
+        themeObj = unusedThemes.length > 0 ? shuffleArray(unusedThemes)[0] : shuffleArray(validThemes)[0];
+      } else {
+        themeObj = shuffleArray(validThemes)[0];
+      }
+
+      const question = createOneQuestion(themeObj);
+      if (question) {
+        result.push(question);
+      }
+    }
+
+    if (result.length < TOTAL_QUESTIONS) {
+      throw new Error('题目生成失败：无法凑满10题');
+    }
+
+    questions = result;
   }
 
   function updateCountdownDisplay() {
@@ -480,8 +523,15 @@
   }
 
   function renderMemoryView() {
+    const currentQuestion = questions[currentIndex];
     memoryGrid.innerHTML = '';
-    questions[currentIndex].memory.forEach(emoji => {
+
+    if (!currentQuestion || currentQuestion.memory.length !== MEMORY_COUNT) {
+      memoryGrid.innerHTML = '<div style="grid-column:1/-1;color:red;">当前题目数据异常</div>';
+      return;
+    }
+
+    currentQuestion.memory.forEach(emoji => {
       const container = document.createElement('div');
       container.className = 'pattern-container';
 
@@ -506,12 +556,13 @@
   }
 
   function initQuizView() {
+    const currentQuestion = questions[currentIndex];
     createAnswerPlaceholders();
     optionsContainer.innerHTML = '';
 
-    const currentQuestion = questions[currentIndex];
-    if (currentQuestion.options.length !== OPTIONS_COUNT) {
-      quizMessage.textContent = '当前题目选项数量异常，请重新答题。';
+    if (!currentQuestion || currentQuestion.options.length !== OPTIONS_COUNT) {
+      quizMessage.className = 'message';
+      quizMessage.innerHTML = '<span style="color:red;">当前题目选项异常，请点击“重新答题”。</span>';
       return;
     }
 
@@ -540,6 +591,8 @@
 
   function saveCurrentQuestionResult() {
     const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return;
+
     const userAnswers = getUserAnswers();
     const correctAnswers = [...currentQuestion.distractors];
     const isCorrect = arraysAreEqual(userAnswers, correctAnswers);
