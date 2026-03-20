@@ -1,850 +1,894 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>序列-无序-拖曳</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>序列-无序-拖曳</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-        :root {
-            --box-size: 64px;
-            --box-gap: 10px;
-        }
+    :root {
+      --box-size: 64px;
+      --box-gap: 10px;
+    }
 
-        body {
-            background: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            margin: 0;
-            padding: 20px 16px 40px;
-        }
+    body {
+      background: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      margin: 0;
+      padding: 20px 16px 40px;
+    }
 
-        .card {
-            max-width: 1100px;
-            width: 100%;
-            background: white;
-            border: none;
-            box-shadow: none;
-            padding: 28px 24px 36px;
-            margin-top: 10px;
-        }
+    .card {
+      max-width: 1120px;
+      width: 100%;
+      background: #fff;
+      padding: 28px 24px 36px;
+      margin-top: 10px;
+    }
 
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
 
-        .title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #333;
-            letter-spacing: 0.02em;
-        }
+    .title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      letter-spacing: 0.02em;
+    }
 
-        .badge {
-            background: #f5f5f5;
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-weight: 500;
-            color: #666;
-            font-size: 0.95rem;
-        }
+    .badge {
+      background: #f5f5f5;
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-weight: 500;
+      color: #666;
+      font-size: 0.95rem;
+    }
 
-        #countdown {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #ff0000;
-            padding: 4px 10px;
-            border: 2px solid #ff0000;
-            border-radius: 8px;
-            min-width: 64px;
-            text-align: center;
-        }
+    #countdown {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ff0000;
+      padding: 4px 10px;
+      border: 2px solid #ff0000;
+      border-radius: 8px;
+      min-width: 70px;
+      text-align: center;
+    }
 
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
-        }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
 
-        .blink {
-            animation: blink 1s infinite;
-        }
+    .blink {
+      animation: blink 1s infinite;
+    }
 
-        .memory-tip {
-            padding: 16px 20px;
-            color: #333;
-            font-size: 1rem;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            text-align: center;
-            background: none;
-        }
+    .memory-tip {
+      padding: 16px 20px;
+      color: #333;
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-        .last-question-tip {
-            color: #d32f2f;
-            font-weight: 600;
-            margin-bottom: 12px;
-            text-align: center;
-        }
+    .last-question-tip {
+      color: #d32f2f;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-align: center;
+    }
 
-        .area-label {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin: 24px 0 12px;
-            color: #000;
-            display: block;
-        }
+    .area-label {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 24px 0 12px;
+      color: #000;
+      display: block;
+      text-align: center;
+    }
 
-        .memory-grid {
-            display: grid;
-            grid-template-columns: repeat(5, var(--box-size));
-            justify-content: center;
-            gap: var(--box-gap);
-            padding: 0;
-            margin-bottom: 20px;
-        }
+    /* 记忆区：10个，2行，每行5个 */
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(5, var(--box-size));
+      justify-content: center;
+      gap: var(--box-gap);
+      margin-bottom: 20px;
+    }
 
-        .answer-grid {
-            display: grid;
-            grid-template-columns: repeat(4, var(--box-size));
-            justify-content: center;
-            gap: var(--box-gap);
-            padding: 0;
-            margin-bottom: 30px;
-        }
+    /* 作答区：10个方框，2行，每行5个 */
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(5, var(--box-size));
+      justify-content: center;
+      gap: var(--box-gap);
+      margin-bottom: 30px;
+    }
 
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(8, var(--box-size));
-            justify-content: center;
-            gap: var(--box-gap);
-            padding: 0;
-            margin-bottom: 30px;
-        }
+    /* 选项区：15个，最多两行 */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(8, var(--box-size));
+      justify-content: center;
+      gap: var(--box-gap);
+      margin-bottom: 30px;
+    }
 
-        .answer-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #ffffff;
-            border: 1px solid #000000;
-            border-radius: 0;
-            aspect-ratio: 1 / 1;
-            width: var(--box-size);
-            min-height: var(--box-size);
-        }
+    .answer-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #000;
+      aspect-ratio: 1 / 1;
+      width: var(--box-size);
+      min-height: var(--box-size);
+    }
 
-        .pattern-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #ffffff;
-            border: 1px solid #000000;
-            border-radius: 0;
-            box-shadow: none;
-            aspect-ratio: 1 / 1;
-            width: var(--box-size);
-            min-height: var(--box-size);
-            padding: 4px;
-        }
+    .pattern-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px solid #000;
+      aspect-ratio: 1 / 1;
+      width: var(--box-size);
+      min-height: var(--box-size);
+      padding: 4px;
+    }
 
-        .pattern-item {
-            font-size: 2.4rem;
-            cursor: grab;
-            transition: none;
-            z-index: 10;
-            line-height: 1;
-        }
+    .pattern-item {
+      font-size: 2.35rem;
+      line-height: 1;
+      cursor: grab;
+    }
 
-        .pattern-item:active {
-            cursor: grabbing;
-        }
+    .pattern-item.dragging {
+      opacity: 0.7;
+    }
 
-        .pattern-item.dragging {
-            opacity: 0.7;
-            z-index: 100;
-            position: relative;
-        }
+    .memory-grid .pattern-item {
+      cursor: default;
+    }
 
-        .memory-grid .pattern-item {
-            cursor: default;
-        }
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
 
-        .button-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
+    .btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
 
-        .btn {
-            background: none;
-            border: none;
-            padding: 0;
-            cursor: pointer;
-        }
+    .btn-primary {
+      background: linear-gradient(#ffd700, #ffb800);
+      border: 1px solid #e6a800;
+      padding: 10px 30px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
 
-        .btn-primary {
-            background: linear-gradient(#ffd700, #ffb800);
-            border: 1px solid #e6a800;
-            padding: 10px 30px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #333;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
+    .btn-sm {
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      padding: 8px 18px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      color: #333;
+    }
 
-        .btn-primary:hover {
-            background: linear-gradient(#ffec8b, #ffd700);
-        }
+    .view { display: none; }
+    .view.active { display: block; }
 
-        .btn-sm {
-            background: #f5f5f5;
-            border: 1px solid #ccc;
-            padding: 8px 18px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            color: #333;
-        }
+    .message {
+      text-align: left;
+      font-size: 0.95rem;
+      padding: 16px;
+      margin: 16px 0;
+      font-weight: 500;
+      color: #333;
+      line-height: 1.8;
+      max-height: 420px;
+      overflow-y: auto;
+    }
 
-        .view {
-            display: none;
-        }
+    .question-result {
+      margin: 8px 0;
+      padding: 8px;
+      border-left: 3px solid #ccc;
+    }
 
-        .view.active {
-            display: block;
-        }
+    .question-result.correct {
+      border-left-color: #2e7d32;
+      background: #f1f8e9;
+    }
 
-        .message {
-            text-align: left;
-            font-size: 0.95rem;
-            padding: 16px;
-            margin: 16px 0;
-            font-weight: 500;
-            color: #333;
-            line-height: 1.8;
-            max-height: 420px;
-            overflow-y: auto;
-        }
+    .question-result.incorrect {
+      border-left-color: #c62828;
+      background: #ffebee;
+    }
 
-        .question-result {
-            margin: 8px 0;
-            padding: 8px;
-            border-left: 3px solid #ccc;
-        }
+    .question-result.unanswered {
+      border-left-color: #999;
+      background: #f8f8f8;
+    }
 
-        .question-result.correct {
-            border-left-color: #2e7d32;
-            background: #f1f8e9;
-        }
+    .correct-answer {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 1.05rem;
+      margin: 0 2px;
+      display: inline-block;
+    }
 
-        .question-result.incorrect {
-            border-left-color: #c62828;
-            background: #ffebee;
-        }
+    .action-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 16px;
+    }
 
-        .question-result.unanswered {
-            border-left-color: #999;
-            background: #f8f8f8;
-        }
+    @media (min-width: 768px) and (max-width: 1024px) {
+      :root {
+        --box-size: 68px;
+        --box-gap: 10px;
+      }
 
-        .correct-answer {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 1.05rem;
-            margin: 0 2px;
-            display: inline-block;
-        }
+      .card {
+        max-width: 980px;
+        padding: 28px 20px 32px;
+      }
 
-        .action-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 16px;
-        }
+      .pattern-item {
+        font-size: 2.4rem;
+      }
+    }
 
-        @media (min-width: 768px) and (max-width: 1024px) {
-            :root {
-                --box-size: 68px;
-                --box-gap: 10px;
-            }
+    @media (max-width: 767px) {
+      :root {
+        --box-size: 54px;
+        --box-gap: 8px;
+      }
 
-            .card {
-                max-width: 960px;
-                padding: 28px 20px 32px;
-            }
+      .card {
+        padding: 20px 12px 28px;
+      }
 
-            .pattern-item {
-                font-size: 2.4rem;
-            }
-        }
+      .memory-grid,
+      .answer-grid {
+        grid-template-columns: repeat(5, var(--box-size));
+      }
 
-        @media (max-width: 767px) {
-            :root {
-                --box-size: 54px;
-                --box-gap: 8px;
-            }
+      .options-grid {
+        grid-template-columns: repeat(5, var(--box-size));
+      }
 
-            .card {
-                padding: 20px 12px 28px;
-            }
+      .pattern-item {
+        font-size: 1.95rem;
+      }
 
-            .memory-grid {
-                grid-template-columns: repeat(5, var(--box-size));
-            }
+      #countdown {
+        font-size: 1.1rem;
+        padding: 2px 8px;
+      }
 
-            .answer-grid {
-                grid-template-columns: repeat(4, var(--box-size));
-            }
-
-            .options-grid {
-                grid-template-columns: repeat(5, var(--box-size));
-            }
-
-            .pattern-item {
-                font-size: 1.95rem;
-            }
-
-            #countdown {
-                font-size: 1.1rem;
-                padding: 2px 8px;
-            }
-
-            .title {
-                font-size: 1.25rem;
-            }
-        }
-    </style>
+      .title {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
 </head>
 <body>
 <div class="card" id="app">
-    <div class="header">
-        <span class="title">序列-无序-拖曳</span>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="badge" id="questionCounter">第 1 / 10 题</span>
-            <span id="countdown">60</span>
-        </div>
+  <div class="header">
+    <span class="title">序列-无序-拖曳</span>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="badge" id="questionCounter">第 1 / 10 题</span>
+      <span id="countdown">60</span>
+    </div>
+  </div>
+
+  <div id="memoryView" class="view active">
+    <div id="lastQuestionTip" class="last-question-tip" style="display:none;">
+      ⚠️ 这是最后一题，答题完成后可查看总分！
     </div>
 
-    <div id="memoryView" class="view active">
-        <div id="lastQuestionTip" class="last-question-tip" style="display: none;">
-            ⚠️ 这是最后一题，答题完成后可查看总分！
-        </div>
-
-        <div class="memory-tip">
-            请记住当前图片，并在下一页找出没有出现过的图片。
-        </div>
-
-        <div class="area-label">记忆图片</div>
-        <div id="memoryGrid" class="memory-grid"></div>
-
-        <div class="button-row">
-            <button class="btn btn-primary" id="goToQuizBtn">请选择</button>
-        </div>
+    <div class="memory-tip">
+      请记住当前图片，并在下一页找出没有出现过的图片。
     </div>
 
-    <div id="quizView" class="view">
-        <div class="area-label">作答区</div>
-        <div id="answerContainer" class="answer-grid"></div>
+    <div class="area-label">记忆图片</div>
+    <div id="memoryGrid" class="memory-grid"></div>
 
-        <div class="area-label">选项区</div>
-        <div id="optionsContainer" class="options-grid"></div>
-
-        <div id="quizMessage" class="message">
-            拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）
-        </div>
-
-        <div class="action-group">
-            <button class="btn btn-sm" id="resetQuizBtn">重置</button>
-            <button class="btn btn-sm" id="checkAnswerBtn">我的得分</button>
-            <button class="btn btn-sm" id="backToMemoryBtn">返回记忆</button>
-        </div>
-        <div class="button-row" style="margin-top: 10px;">
-            <button class="btn btn-primary" id="nextQuestionBtn">下一题</button>
-        </div>
+    <div class="button-row">
+      <button class="btn btn-primary" id="goToQuizBtn">请选择</button>
     </div>
+  </div>
+
+  <div id="quizView" class="view">
+    <div class="area-label">作答区</div>
+    <div id="answerContainer" class="answer-grid"></div>
+
+    <div class="area-label">选项区</div>
+    <div id="optionsContainer" class="options-grid"></div>
+
+    <div id="quizMessage" class="message">
+      拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）
+    </div>
+
+    <div class="action-group">
+      <button class="btn btn-sm" id="resetQuizBtn">重置</button>
+      <button class="btn btn-sm" id="checkAnswerBtn">我的得分</button>
+      <button class="btn btn-sm" id="backToMemoryBtn">返回记忆</button>
+    </div>
+
+    <div class="button-row" style="margin-top:10px;">
+      <button class="btn btn-primary" id="nextQuestionBtn">下一题</button>
+    </div>
+  </div>
 </div>
 
 <script>
-(function() {
-    const SCORE_PER_QUESTION = 1;
-    const TOTAL_QUESTIONS = 10;
-    const ANSWER_GRID_COUNT = 8;
-    const COUNTDOWN_SECONDS = 60;
+(function () {
+  const SCORE_PER_QUESTION = 1;
+  const TOTAL_QUESTIONS = 10;
+  const ANSWER_GRID_COUNT = 10;
+  const COUNTDOWN_SECONDS = 60;
 
-    // 兼容性更好的 emoji 题库
-    const questionBank = [
-        // 动物
-        { memory: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐨','🐯','🦁'], options: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐨','🐯','🦁','🐼','🐮','🐷','🐸','🐵'] },
-        { memory: ['🐵','🐸','🐷','🐮','🐼','🐔','🐧','🐦','🦆','🦉'], options: ['🐵','🐸','🐷','🐮','🐼','🐔','🐧','🐦','🦆','🦉','🦄','🐺','🐗','🐴','🐙'] },
-        { memory: ['🐺','🐗','🐴','🦌','🐮','🐷','🐑','🐐','🐪','🐫'], options: ['🐺','🐗','🐴','🦌','🐮','🐷','🐑','🐐','🐪','🐫','🦓','🐘','🦏','🦒','🦘'] },
-        { memory: ['🐔','🐧','🐦','🦆','🦉','🦅','🦜','🐤','🐣','🐥'], options: ['🐔','🐧','🐦','🦆','🦉','🦅','🦜','🐤','🐣','🐥','🕊️','🦢','🦚','🐓','🦩'] },
+  // 严格同主题题库：每题 memory 和 distractors 都属于同一主题
+  // 使用兼容性较高 emoji，避免横条纹/异常显示
+  const questionBank = [
+    {
+      theme: '动物',
+      memory: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁'],
+      distractors: ['🐮','🐷','🐸','🐵','🐨']
+    },
+    {
+      theme: '动物',
+      memory: ['🐵','🐸','🐷','🐮','🐨','🐔','🐧','🐦','🦆','🦉'],
+      distractors: ['🐺','🐗','🐴','🐢','🐙']
+    },
+    {
+      theme: '动物',
+      memory: ['🐺','🐗','🐴','🐮','🐷','🐑','🐐','🐪','🐫','🐘'],
+      distractors: ['🦒','🦓','🦏','🦘','🦌']
+    },
+    {
+      theme: '动物',
+      memory: ['🐔','🐧','🐦','🦆','🦉','🦅','🦜','🐤','🐣','🐥'],
+      distractors: ['🕊️','🐓','🦚','🦢','🦩']
+    },
+    {
+      theme: '水果',
+      memory: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋'],
+      distractors: ['🍏','🍐','🍓','🥝','🍈']
+    },
+    {
+      theme: '蔬菜',
+      memory: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬'],
+      distractors: ['🧄','🌶️','🍄','🥜','🫘']
+    },
+    {
+      theme: '食物',
+      memory: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖'],
+      distractors: ['🍔','🌭','🥪','🍕','🍟']
+    },
+    {
+      theme: '食物',
+      memory: ['🍚','🍜','🍝','🍣','🍤','🥟','🍛','🍲','🍢','🍱'],
+      distractors: ['🍙','🍘','🍥','🥮','🍡']
+    },
+    {
+      theme: '运动',
+      memory: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸'],
+      distractors: ['🥊','🥋','⛳','🎳','🏒']
+    },
+    {
+      theme: '交通',
+      memory: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐'],
+      distractors: ['🚚','🚜','🛵','🏍️','🚲']
+    },
+    {
+      theme: '交通',
+      memory: ['✈️','🚁','⛵','🚢','🚤','🚂','🚆','🚇','🚝','🚠'],
+      distractors: ['🛶','🛳️','🚞','🚃','🚡']
+    },
+    {
+      theme: '天气',
+      memory: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧'],
+      distractors: ['🌞','🌩️','❄️','💨','🌫️']
+    },
+    {
+      theme: '植物',
+      memory: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂'],
+      distractors: ['🌱','🌿','☘️','🪴','🌾']
+    },
+    {
+      theme: '电子产品',
+      memory: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽'],
+      distractors: ['📲','💿','📹','🎙️','📻']
+    },
+    {
+      theme: '爱心',
+      memory: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖'],
+      distractors: ['♥️','💘','💝','💓','💞']
+    },
+    {
+      theme: '海洋生物',
+      memory: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐'],
+      distractors: ['🦑','🐚','🦞','🐢','🐊']
+    },
+    {
+      theme: '昆虫',
+      memory: ['🐝','🐞','🦋','🐜','🕷️','🦂','🐛','🐌','🦗','🦟'],
+      distractors: ['🕸️','🪱','🦠','🐜','🐞']
+    },
+    {
+      theme: '乐器',
+      memory: ['🎹','🥁','🎸','🎻','🎺','🎷','🎼','🎵','🎶','🎤'],
+      distractors: ['🎧','📯','🔔','🪘','🪇']
+    },
+    {
+      theme: '文具',
+      memory: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚'],
+      distractors: ['📖','📝','📒','📕','📘']
+    },
+    {
+      theme: '服饰',
+      memory: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩'],
+      distractors: ['👒','🧣','🧤','👞','🥾']
+    },
+    {
+      theme: '建筑',
+      memory: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫'],
+      distractors: ['🏬','🏭','⛪','🕌','🏛️']
+    },
+    {
+      theme: '表情',
+      memory: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊'],
+      distractors: ['😍','😘','😎','🤔','😭']
+    },
+    {
+      theme: '节日',
+      memory: ['🎄','🎁','🎂','🎃','🧨','🎆','🎇','🎈','🎉','🎊'],
+      distractors: ['🕯️','🍰','🍬','👻','🌟']
+    }
+  ];
 
-        // 水果
-        { memory: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋'], options: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋','🍏','🍐','🍓','🥝','🍈'] },
+  let questions = [];
+  let currentIndex = 0;
+  let questionResults = [];
+  let totalScore = 0;
+  let countdownTimer = null;
+  let remainingTime = COUNTDOWN_SECONDS;
+  let isRestartMode = false;
+  let draggedItem = null;
 
-        // 蔬菜
-        { memory: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬'], options: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬','🧄','🌶️','🍄','🥜','🫘'] },
+  const memoryView = document.getElementById('memoryView');
+  const quizView = document.getElementById('quizView');
+  const memoryGrid = document.getElementById('memoryGrid');
+  const optionsContainer = document.getElementById('optionsContainer');
+  const answerContainer = document.getElementById('answerContainer');
+  const questionCounter = document.getElementById('questionCounter');
+  const quizMessage = document.getElementById('quizMessage');
+  const countdownEl = document.getElementById('countdown');
+  const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+  const lastQuestionTip = document.getElementById('lastQuestionTip');
 
-        // 食物
-        { memory: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖'], options: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖','🍔','🌭','🥪','🍕','🍟'] },
-        { memory: ['🍚','🍜','🍝','🍣','🍤','🥟','🍛','🍲','🍢','🍱'], options: ['🍚','🍜','🍝','🍣','🍤','🥟','🍛','🍲','🍢','🍱','🍙','🍘','🍥','🥮','🍡'] },
+  const goToQuizBtn = document.getElementById('goToQuizBtn');
+  const backToMemoryBtn = document.getElementById('backToMemoryBtn');
+  const resetQuizBtn = document.getElementById('resetQuizBtn');
+  const checkAnswerBtn = document.getElementById('checkAnswerBtn');
 
-        // 运动
-        { memory: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸'], options: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🥋','⛳','🎳','🏒'] },
+  function shuffleArray(arr) {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
 
-        // 交通
-        { memory: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐'], options: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🚚','🚜','🛵','🏍️','🚲'] },
-        { memory: ['✈️','🚁','⛵','🚢','🚤','🚂','🚆','🚇','🚝','🚠'], options: ['✈️','🚁','⛵','🚢','🚤','🚂','🚆','🚇','🚝','🚠','🛶','🛳️','🚞','🚃','🚡'] },
+  function uniqueArray(arr) {
+    return [...new Set(arr)];
+  }
 
-        // 天气自然
-        { memory: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧'], options: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧','🌞','🌩️','❄️','💨','🌫️'] },
+  function buildQuestionSet() {
+    const selected = shuffleArray(questionBank).slice(0, TOTAL_QUESTIONS);
+    questions = selected.map(q => {
+      const memory = [...q.memory];
+      const distractors = uniqueArray(q.distractors).filter(x => !memory.includes(x)).slice(0, 5);
+      const options = shuffleArray([...memory, ...distractors]);
+      return {
+        theme: q.theme,
+        memory,
+        distractors,
+        options
+      };
+    });
+  }
 
-        // 植物
-        { memory: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂'], options: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂','🌱','🌿','☘️','🪴','🌾'] },
+  function arraysAreEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    const a = [...arr1].sort();
+    const b = [...arr2].sort();
+    return a.every((item, i) => item === b[i]);
+  }
 
-        // 电子产品
-        { memory: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽'], options: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽','📲','💿','📹','🎙️','📻'] },
+  function updateCountdownDisplay() {
+    countdownEl.textContent = remainingTime;
+    if (remainingTime < 10) countdownEl.classList.add('blink');
+    else countdownEl.classList.remove('blink');
+  }
 
-        // 爱心
-        { memory: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖'], options: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖','♥️','💘','💝','💓','💞'] },
+  function initCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    remainingTime = COUNTDOWN_SECONDS;
+    updateCountdownDisplay();
 
-        // 海洋生物
-        { memory: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐'], options: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐','🦑','🐚','🪼','🦞','🐢'] },
-
-        // 昆虫
-        { memory: ['🐝','🐞','🦋','🐜','🕷️','🦂','🪲','🪳','🦗','🐛'], options: ['🐝','🐞','🦋','🐜','🕷️','🦂','🪲','🪳','🦗','🐛','🪱','🦟','🐌','🦠','🕸️'] },
-
-        // 乐器
-        { memory: ['🎹','🥁','🎸','🎻','🎺','🎷','🪗','🪕','🎼','🎵'], options: ['🎹','🥁','🎸','🎻','🎺','🎷','🪗','🪕','🎼','🎵','🎶','🎤','🎧','📯','🔔'] },
-
-        // 文具
-        { memory: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚'], options: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚','📖','📝','📒','📕','📘'] },
-
-        // 服饰
-        { memory: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩'], options: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩','👒','🧣','🧤','👞','🥾'] },
-
-        // 建筑
-        { memory: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫'], options: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏬','🏭','⛪','🕌','🏛️'] },
-
-        // 表情
-        { memory: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊'], options: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😎','🤔','😭'] },
-
-        // 节日
-        { memory: ['🎄','🎁','🎂','🎃','🧨','🎆','🎇','🎈','🎉','🎊'], options: ['🎄','🎁','🎂','🎃','🧨','🎆','🎇','🎈','🎉','🎊','🕯️','🍰','🍬','👻','🌟'] }
-    ];
-
-    let questions = [];
-    let currentIndex = 0;
-    let questionResults = [];
-    let totalScore = 0;
-    let countdownTimer = null;
-    let remainingTime = COUNTDOWN_SECONDS;
-    let isRestartMode = false;
-    let draggedItem = null;
-
-    const memoryView = document.getElementById('memoryView');
-    const quizView = document.getElementById('quizView');
-    const memoryGrid = document.getElementById('memoryGrid');
-    const optionsContainer = document.getElementById('optionsContainer');
-    const answerContainer = document.getElementById('answerContainer');
-    const questionCounter = document.getElementById('questionCounter');
-    const quizMessage = document.getElementById('quizMessage');
-    const countdownEl = document.getElementById('countdown');
-    const nextQuestionBtn = document.getElementById('nextQuestionBtn');
-    const lastQuestionTip = document.getElementById('lastQuestionTip');
-
-    const goToQuizBtn = document.getElementById('goToQuizBtn');
-    const backToMemoryBtn = document.getElementById('backToMemoryBtn');
-    const resetQuizBtn = document.getElementById('resetQuizBtn');
-    const checkAnswerBtn = document.getElementById('checkAnswerBtn');
-
-    function shuffleArray(arr) {
-        const copy = [...arr];
-        for (let i = copy.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [copy[i], copy[j]] = [copy[j], copy[i]];
+    countdownTimer = setInterval(() => {
+      remainingTime--;
+      updateCountdownDisplay();
+      if (remainingTime <= 0) {
+        clearInterval(countdownTimer);
+        if (quizView.classList.contains('active')) {
+          saveCurrentQuestionResult();
         }
-        return copy;
+        nextQuestion(true);
+      }
+    }, 1000);
+  }
+
+  function updateCounter() {
+    questionCounter.innerText = `第 ${currentIndex + 1} / ${TOTAL_QUESTIONS} 题`;
+    lastQuestionTip.style.display = currentIndex === TOTAL_QUESTIONS - 1 ? 'block' : 'none';
+  }
+
+  function renderMemoryView() {
+    memoryGrid.innerHTML = '';
+    const memItems = questions[currentIndex].memory;
+    memItems.forEach(emoji => {
+      const container = document.createElement('div');
+      container.className = 'pattern-container';
+
+      const item = document.createElement('div');
+      item.className = 'pattern-item';
+      item.textContent = emoji;
+      item.draggable = false;
+
+      container.appendChild(item);
+      memoryGrid.appendChild(container);
+    });
+  }
+
+  function createAnswerPlaceholders() {
+    answerContainer.innerHTML = '';
+    for (let i = 0; i < ANSWER_GRID_COUNT; i++) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'answer-placeholder';
+      placeholder.dataset.index = i;
+      answerContainer.appendChild(placeholder);
+    }
+  }
+
+  function initQuizView() {
+    createAnswerPlaceholders();
+    optionsContainer.innerHTML = '';
+
+    // 只使用当前题的选项，杜绝跨主题混入
+    const currentOptions = shuffleArray([...questions[currentIndex].options]);
+
+    currentOptions.forEach(emoji => {
+      const container = document.createElement('div');
+      container.className = 'pattern-container';
+
+      const item = document.createElement('div');
+      item.className = 'pattern-item';
+      item.textContent = emoji;
+      item.draggable = true;
+
+      container.appendChild(item);
+      optionsContainer.appendChild(container);
+    });
+
+    quizMessage.className = 'message';
+    quizMessage.innerHTML =
+      `当前主题：<strong>${questions[currentIndex].theme}</strong><br>` +
+      `拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）`;
+  }
+
+  function getUserAnswers() {
+    return [...answerContainer.querySelectorAll('.pattern-item')].map(el => el.textContent);
+  }
+
+  function getCorrectAnswers(question) {
+    return [...question.distractors];
+  }
+
+  function saveCurrentQuestionResult() {
+    if (!questions[currentIndex]) return;
+
+    const currentQuestion = questions[currentIndex];
+    const userAnswers = getUserAnswers();
+    const correctAnswers = getCorrectAnswers(currentQuestion);
+    const isCorrect = arraysAreEqual(userAnswers, correctAnswers);
+    const currentScore = isCorrect ? SCORE_PER_QUESTION : 0;
+
+    const record = {
+      questionIndex: currentIndex,
+      questionNum: currentIndex + 1,
+      theme: currentQuestion.theme,
+      isCorrect,
+      userAnswer: [...userAnswers],
+      allUnusedAnswers: [...correctAnswers],
+      score: currentScore
+    };
+
+    const existingIndex = questionResults.findIndex(item => item.questionIndex === currentIndex);
+    if (existingIndex > -1) {
+      questionResults[existingIndex] = record;
+    } else {
+      questionResults.push(record);
     }
 
-    function generateRandomQuestions() {
-        questions = shuffleArray(questionBank)
-            .slice(0, TOTAL_QUESTIONS)
-            .map(q => ({
-                memory: [...q.memory],
-                options: shuffleArray([...q.options])
-            }));
-    }
+    totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
+  }
 
-    function arraysAreEqual(arr1, arr2) {
-        if (arr1.length !== arr2.length) return false;
-        const sortedArr1 = [...arr1].sort();
-        const sortedArr2 = [...arr2].sort();
-        return sortedArr1.every((item, index) => item === sortedArr2[index]);
-    }
+  function buildScoreHtml() {
+    totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
 
-    function updateCountdownDisplay() {
-        countdownEl.textContent = remainingTime;
-        if (remainingTime < 10) {
-            countdownEl.classList.add('blink');
-        } else {
-            countdownEl.classList.remove('blink');
-        }
-    }
+    let scoreHtml = `
+      <div style="font-size:1rem; font-weight:600; margin-bottom:12px;">
+        📊 总分：${totalScore} / ${TOTAL_QUESTIONS * SCORE_PER_QUESTION} 分
+      </div>
+      <div style="margin-bottom:16px; font-size:0.9rem; color:#c62828; font-weight:500;">
+        ⚠️ 得分规则：必须选择出<strong>所有</strong>未出现的选项（且不能多选）才能得1分，少选/多选均不得分
+      </div>
+      <div style="border-top:1px solid #eee; padding-top:12px;">
+        <strong>📝 所有题目答题情况：</strong>
+    `;
 
-    function initCountdown() {
-        if (countdownTimer) clearInterval(countdownTimer);
-        remainingTime = COUNTDOWN_SECONDS;
-        updateCountdownDisplay();
+    for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+      const record = questionResults.find(item => item.questionIndex === i);
+      const question = questions[i];
+      const correctList = getCorrectAnswers(question);
+      const correctAnswersHtml = correctList.map(ans =>
+        `<span class="correct-answer">${ans}</span>`
+      ).join('');
 
-        countdownTimer = setInterval(() => {
-            remainingTime--;
-            updateCountdownDisplay();
-
-            if (remainingTime <= 0) {
-                clearInterval(countdownTimer);
-
-                // 时间到自动保存当前题
-                saveCurrentQuestionResult();
-
-                if (isRestartMode) {
-                    resetAll();
-                } else {
-                    nextQuestion(true);
-                }
-            }
-        }, 1000);
-    }
-
-    function updateCounter() {
-        questionCounter.innerText = `第 ${currentIndex + 1} / ${TOTAL_QUESTIONS} 题`;
-        lastQuestionTip.style.display = currentIndex === TOTAL_QUESTIONS - 1 ? 'block' : 'none';
-    }
-
-    function renderMemoryView() {
-        const memItems = questions[currentIndex].memory;
-        memoryGrid.innerHTML = '';
-
-        memItems.forEach(emoji => {
-            const container = document.createElement('div');
-            container.className = 'pattern-container';
-
-            const item = document.createElement('div');
-            item.className = 'pattern-item';
-            item.textContent = emoji;
-            item.draggable = false;
-
-            container.appendChild(item);
-            memoryGrid.appendChild(container);
-        });
-    }
-
-    function createAnswerPlaceholders() {
-        answerContainer.innerHTML = '';
-        for (let i = 0; i < ANSWER_GRID_COUNT; i++) {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'answer-placeholder';
-            placeholder.dataset.index = i;
-            answerContainer.appendChild(placeholder);
-        }
-    }
-
-    function initQuizView() {
-        createAnswerPlaceholders();
-        optionsContainer.innerHTML = '';
-
-        const opts = shuffleArray([...questions[currentIndex].options]);
-        opts.forEach(emoji => {
-            const container = document.createElement('div');
-            container.className = 'pattern-container';
-
-            const item = document.createElement('div');
-            item.className = 'pattern-item';
-            item.textContent = emoji;
-            item.draggable = true;
-
-            container.appendChild(item);
-            optionsContainer.appendChild(container);
-        });
-
-        quizMessage.className = 'message';
-        quizMessage.innerHTML = '拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）';
-    }
-
-    function getUserAnswers() {
-        return [...answerContainer.querySelectorAll('.pattern-item')].map(el => el.textContent);
-    }
-
-    function getCorrectAnswers(question) {
-        return question.options.filter(emoji => !question.memory.includes(emoji));
-    }
-
-    // 关键修复：统一保存当前题记录
-    function saveCurrentQuestionResult() {
-        if (!questions[currentIndex]) return;
-
-        const currentQuestion = questions[currentIndex];
-        const userAnswers = getUserAnswers();
-        const allUnusedAnswers = getCorrectAnswers(currentQuestion);
-        const isCorrect = arraysAreEqual(userAnswers, allUnusedAnswers);
-        const currentScore = isCorrect ? SCORE_PER_QUESTION : 0;
-
-        const record = {
-            questionIndex: currentIndex,
-            questionNum: currentIndex + 1,
-            isCorrect,
-            userAnswer: [...userAnswers],
-            allUnusedAnswers: [...allUnusedAnswers],
-            score: currentScore
-        };
-
-        const existingIndex = questionResults.findIndex(item => item.questionIndex === currentIndex);
-        if (existingIndex > -1) {
-            questionResults[existingIndex] = record;
-        } else {
-            questionResults.push(record);
+      if (record) {
+        let errorReason = '';
+        if (!record.isCorrect) {
+          if (record.userAnswer.length < correctList.length) {
+            errorReason = '（错误原因：少选）';
+          } else if (record.userAnswer.length > correctList.length) {
+            errorReason = '（错误原因：多选）';
+          } else {
+            errorReason = '（错误原因：选错）';
+          }
         }
 
-        totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
-    }
-
-    function resetCurrentQuiz() {
-        initQuizView();
-    }
-
-    function buildScoreHtml() {
-        totalScore = questionResults.reduce((sum, item) => sum + item.score, 0);
-
-        let scoreHtml = `
-            <div style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">
-                📊 总分：${totalScore} / ${TOTAL_QUESTIONS * SCORE_PER_QUESTION} 分
-            </div>
-            <div style="margin-bottom: 16px; font-size: 0.9rem; color: #c62828; font-weight: 500;">
-                ⚠️ 得分规则：必须选择出<strong>所有</strong>未出现的选项（且不能多选）才能得1分，少选/多选均不得分
-            </div>
-            <div style="border-top: 1px solid #eee; padding-top: 12px;">
-                <strong>📝 所有题目答题情况（所有未出现的选项高亮显示）：</strong>
+        scoreHtml += `
+          <div class="question-result ${record.isCorrect ? 'correct' : 'incorrect'}">
+            <strong>第${i + 1}题</strong>【${question.theme}】：
+            ${record.isCorrect ? '✅ 回答正确' : '❌ 回答错误'}
+            (得分：${record.score}分) ${errorReason}<br>
+            • 正确答案：${correctAnswersHtml}<br>
+            • 你的选择：${record.userAnswer.length ? record.userAnswer.join('、') : '未选择'}
+          </div>
         `;
-
-        for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-            const questionRecord = questionResults.find(item => item.questionIndex === i);
-            const correctList = getCorrectAnswers(questions[i]);
-            const correctAnswersHtml = correctList.map(ans =>
-                `<span class="correct-answer">${ans}</span>`
-            ).join('');
-
-            if (questionRecord) {
-                let errorReason = '';
-                if (!questionRecord.isCorrect) {
-                    if (questionRecord.userAnswer.length < correctList.length) {
-                        errorReason = '（错误原因：少选了部分未出现的选项）';
-                    } else if (questionRecord.userAnswer.length > correctList.length) {
-                        errorReason = '（错误原因：多选了已出现的选项）';
-                    } else {
-                        errorReason = '（错误原因：选择的选项有误）';
-                    }
-                }
-
-                scoreHtml += `
-                    <div class="question-result ${questionRecord.isCorrect ? 'correct' : 'incorrect'}">
-                        <strong>第${i + 1}题：</strong>
-                        ${questionRecord.isCorrect ? '✅ 回答正确' : '❌ 回答错误'}
-                        (得分：${questionRecord.score}分) ${errorReason}<br>
-                        • 所有未出现的选项：${correctAnswersHtml}<br>
-                        • 你的选择：${questionRecord.userAnswer.length > 0 ? questionRecord.userAnswer.join('、') : '未选择'}
-                    </div>
-                `;
-            } else {
-                scoreHtml += `
-                    <div class="question-result unanswered">
-                        <strong>第${i + 1}题：</strong>
-                        ⚪ 未作答 (得分：0分)<br>
-                        • 所有未出现的选项：${correctAnswersHtml}<br>
-                        • 你的选择：未作答
-                    </div>
-                `;
-            }
-        }
-
-        scoreHtml += `</div>`;
-        return scoreHtml;
+      } else {
+        scoreHtml += `
+          <div class="question-result unanswered">
+            <strong>第${i + 1}题</strong>【${question.theme}】：
+            ⚪ 未作答 (得分：0分)<br>
+            • 正确答案：${correctAnswersHtml}<br>
+            • 你的选择：未作答
+          </div>
+        `;
+      }
     }
 
-    function showScore() {
-        // 点击“我的得分”时也先保存当前题
-        saveCurrentQuestionResult();
-        quizMessage.className = 'message';
-        quizMessage.innerHTML = buildScoreHtml();
+    scoreHtml += `</div>`;
+    return scoreHtml;
+  }
+
+  function showScore() {
+    if (quizView.classList.contains('active')) {
+      saveCurrentQuestionResult();
     }
+    quizMessage.className = 'message';
+    quizMessage.innerHTML = buildScoreHtml();
+  }
 
-    function showMemoryView() {
-        renderMemoryView();
-        memoryView.classList.add('active');
-        quizView.classList.remove('active');
-        updateCounter();
-        initCountdown();
-    }
-
-    function showQuizView() {
-        initQuizView();
-        memoryView.classList.remove('active');
-        quizView.classList.add('active');
-        initCountdown();
-    }
-
-    function resetAll() {
-        isRestartMode = false;
-        currentIndex = 0;
-        questionResults = [];
-        totalScore = 0;
-        nextQuestionBtn.textContent = '下一题';
-
-        generateRandomQuestions();
-        updateCounter();
-        renderMemoryView();
-        showMemoryView();
-
-        quizMessage.className = 'message';
-        quizMessage.innerHTML = '拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）';
-    }
-
-    function nextQuestion(fromTimeout = false) {
-        if (isRestartMode) {
-            resetAll();
-            return;
-        }
-
-        if (countdownTimer) clearInterval(countdownTimer);
-
-        // 关键修复：不管是否手动点击下一题，都先保存当前题
-        // 如果是倒计时触发，前面已经保存过，这里避免重复可不再保存
-        if (!fromTimeout && quizView.classList.contains('active')) {
-            saveCurrentQuestionResult();
-        }
-
-        if (currentIndex === TOTAL_QUESTIONS - 1) {
-            // 最后一题结束时确保保存
-            if (quizView.classList.contains('active')) {
-                saveCurrentQuestionResult();
-            }
-
-            isRestartMode = true;
-            nextQuestionBtn.textContent = '重新答题';
-            quizMessage.className = 'message';
-            quizMessage.innerHTML = buildScoreHtml();
-
-            quizView.classList.add('active');
-            memoryView.classList.remove('active');
-            return;
-        }
-
-        currentIndex += 1;
-        updateCounter();
-        showMemoryView();
-    }
-
-    function initDragAndDrop() {
-        document.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('pattern-item') && e.target.draggable) {
-                draggedItem = e.target;
-                e.target.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', e.target.textContent);
-                e.dataTransfer.effectAllowed = 'move';
-            }
-        });
-
-        document.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('pattern-item')) {
-                e.target.classList.remove('dragging');
-                draggedItem = null;
-            }
-        });
-
-        document.addEventListener('dragover', (e) => {
-            if (!draggedItem) return;
-
-            const targetPlaceholder = e.target.closest('.answer-placeholder');
-            const targetGrid = e.target.closest('.options-grid');
-
-            if (targetPlaceholder || targetGrid) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-
-                document.querySelectorAll('.answer-placeholder').forEach(ph => {
-                    ph.style.border = '1px solid #000';
-                });
-
-                if (targetPlaceholder) {
-                    targetPlaceholder.style.border = '2px solid #000';
-                }
-            }
-        });
-
-        document.addEventListener('drop', (e) => {
-            e.preventDefault();
-            if (!draggedItem) return;
-
-            document.querySelectorAll('.answer-placeholder').forEach(ph => {
-                ph.style.border = '1px solid #000';
-            });
-
-            const targetPlaceholder = e.target.closest('.answer-placeholder');
-            if (targetPlaceholder) {
-                const existingItem = targetPlaceholder.querySelector('.pattern-item');
-                if (existingItem) {
-                    const container = document.createElement('div');
-                    container.className = 'pattern-container';
-                    container.appendChild(existingItem);
-                    optionsContainer.appendChild(container);
-                }
-                targetPlaceholder.innerHTML = '';
-                targetPlaceholder.appendChild(draggedItem);
-                draggedItem.classList.remove('dragging');
-            } else if (e.target.closest('.options-grid')) {
-                if (!draggedItem.closest('.options-grid')) {
-                    const container = document.createElement('div');
-                    container.className = 'pattern-container';
-                    container.appendChild(draggedItem);
-                    optionsContainer.appendChild(container);
-                    draggedItem.classList.remove('dragging');
-                }
-            }
-
-            draggedItem = null;
-        });
-    }
-
-    goToQuizBtn.addEventListener('click', showQuizView);
-    backToMemoryBtn.addEventListener('click', showMemoryView);
-    nextQuestionBtn.addEventListener('click', () => nextQuestion(false));
-    resetQuizBtn.addEventListener('click', resetCurrentQuiz);
-    checkAnswerBtn.addEventListener('click', showScore);
-
-    initDragAndDrop();
-    generateRandomQuestions();
+  function showMemoryView() {
     renderMemoryView();
+    memoryView.classList.add('active');
+    quizView.classList.remove('active');
     updateCounter();
     initCountdown();
+  }
+
+  function showQuizView() {
+    initQuizView();
+    memoryView.classList.remove('active');
+    quizView.classList.add('active');
+    initCountdown();
+  }
+
+  function resetCurrentQuiz() {
+    initQuizView();
+  }
+
+  function resetAll() {
+    if (countdownTimer) clearInterval(countdownTimer);
+
+    currentIndex = 0;
+    questionResults = [];
+    totalScore = 0;
+    isRestartMode = false;
+    draggedItem = null;
+    nextQuestionBtn.textContent = '下一题';
+
+    buildQuestionSet();
+    renderMemoryView();
+    updateCounter();
+
+    memoryView.classList.add('active');
+    quizView.classList.remove('active');
+
+    quizMessage.className = 'message';
+    quizMessage.innerHTML =
+      '拖拽<strong>所有</strong>未出现过的图片到作答区（多选/少选均不得分）';
+
+    initCountdown();
+  }
+
+  function nextQuestion(fromTimeout = false) {
+    if (isRestartMode) {
+      resetAll();
+      return;
+    }
+
+    if (countdownTimer) clearInterval(countdownTimer);
+
+    // 只要当前在答题页，且不是已经由 timeout 保存过，就自动记录
+    if (!fromTimeout && quizView.classList.contains('active')) {
+      saveCurrentQuestionResult();
+    }
+
+    if (currentIndex === TOTAL_QUESTIONS - 1) {
+      if (quizView.classList.contains('active')) {
+        saveCurrentQuestionResult();
+      }
+      isRestartMode = true;
+      nextQuestionBtn.textContent = '重新答题';
+      quizView.classList.add('active');
+      memoryView.classList.remove('active');
+      quizMessage.className = 'message';
+      quizMessage.innerHTML = buildScoreHtml();
+      return;
+    }
+
+    currentIndex += 1;
+    updateCounter();
+    showMemoryView();
+  }
+
+  function initDragAndDrop() {
+    document.addEventListener('dragstart', (e) => {
+      if (e.target.classList.contains('pattern-item') && e.target.draggable) {
+        draggedItem = e.target;
+        e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', e.target.textContent);
+        e.dataTransfer.effectAllowed = 'move';
+      }
+    });
+
+    document.addEventListener('dragend', (e) => {
+      if (e.target.classList.contains('pattern-item')) {
+        e.target.classList.remove('dragging');
+        draggedItem = null;
+      }
+    });
+
+    document.addEventListener('dragover', (e) => {
+      if (!draggedItem) return;
+
+      const targetPlaceholder = e.target.closest('.answer-placeholder');
+      const targetGrid = e.target.closest('.options-grid');
+
+      if (targetPlaceholder || targetGrid) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        document.querySelectorAll('.answer-placeholder').forEach(ph => {
+          ph.style.border = '1px solid #000';
+        });
+
+        if (targetPlaceholder) {
+          targetPlaceholder.style.border = '2px solid #000';
+        }
+      }
+    });
+
+    document.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!draggedItem) return;
+
+      document.querySelectorAll('.answer-placeholder').forEach(ph => {
+        ph.style.border = '1px solid #000';
+      });
+
+      const targetPlaceholder = e.target.closest('.answer-placeholder');
+
+      if (targetPlaceholder) {
+        const existingItem = targetPlaceholder.querySelector('.pattern-item');
+        if (existingItem) {
+          const container = document.createElement('div');
+          container.className = 'pattern-container';
+          container.appendChild(existingItem);
+          optionsContainer.appendChild(container);
+        }
+        targetPlaceholder.innerHTML = '';
+        targetPlaceholder.appendChild(draggedItem);
+        draggedItem.classList.remove('dragging');
+      } else if (e.target.closest('.options-grid')) {
+        if (!draggedItem.closest('.options-grid')) {
+          const container = document.createElement('div');
+          container.className = 'pattern-container';
+          container.appendChild(draggedItem);
+          optionsContainer.appendChild(container);
+          draggedItem.classList.remove('dragging');
+        }
+      }
+
+      draggedItem = null;
+    });
+  }
+
+  goToQuizBtn.addEventListener('click', showQuizView);
+  backToMemoryBtn.addEventListener('click', showMemoryView);
+  resetQuizBtn.addEventListener('click', resetCurrentQuiz);
+  checkAnswerBtn.addEventListener('click', showScore);
+  nextQuestionBtn.addEventListener('click', () => nextQuestion(false));
+
+  initDragAndDrop();
+  buildQuestionSet();
+  renderMemoryView();
+  updateCounter();
+  initCountdown();
 })();
 </script>
 </body>
