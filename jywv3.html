@@ -1,0 +1,1145 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>序列-无序-拖曳-护眼混合主题版</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      overscroll-behavior: none;
+      overflow-x: hidden;
+      touch-action: none;
+      background: #eef8ee;
+    }
+
+    :root {
+      --box-size: 98px;
+      --box-gap: 16px;
+      --emoji-size: 3.5rem;
+      --card-max-width: 1500px;
+      --transition-fast: 0.12s ease;
+      --transition-mid: 0.18s ease;
+      --shadow-soft: 0 8px 18px rgba(90, 130, 90, 0.12);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 18px 14px 36px;
+      background: #eef8ee;
+    }
+
+    .card {
+      max-width: var(--card-max-width);
+      width: 100%;
+      background: #f8fff8;
+      padding: 28px 20px 36px;
+      margin-top: 4px;
+      touch-action: none;
+      position: relative;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(90, 130, 90, 0.12);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #2f4f2f;
+      letter-spacing: 0.02em;
+    }
+
+    .badge {
+      background: #e8f5e8;
+      padding: 9px 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      color: #4f6b4f;
+      font-size: 1.06rem;
+      border: 1px solid #cfe6cf;
+    }
+
+    #countdown {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #d32f2f;
+      padding: 6px 14px;
+      border: 2px solid #d32f2f;
+      border-radius: 10px;
+      min-width: 82px;
+      text-align: center;
+      line-height: 1.2;
+      background: #fff8f8;
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.45; }
+      100% { opacity: 1; }
+    }
+
+    .blink {
+      animation: blink 1s infinite;
+    }
+
+    .memory-tip {
+      padding: 16px 12px;
+      color: #314631;
+      font-size: 1.1rem;
+      line-height: 1.65;
+      margin-bottom: 18px;
+      text-align: center;
+      background: #f3fbf3;
+      border-radius: 12px;
+    }
+
+    .last-question-tip {
+      color: #c62828;
+      font-weight: 800;
+      margin-bottom: 12px;
+      text-align: center;
+      font-size: 1.02rem;
+    }
+
+    .area-label {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin: 26px 0 14px;
+      color: #2f4f2f;
+      text-align: center;
+    }
+
+    /* 记忆区：9张，3行排列 */
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(3, var(--box-size));
+      justify-content: center;
+      gap: var(--box-gap);
+      margin-bottom: 22px;
+    }
+
+    /* 作答区：12个方框，2行排列 */
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(6, var(--box-size));
+      justify-content: center;
+      gap: var(--box-gap);
+      margin-bottom: 30px;
+    }
+
+    /* 选项区：18个选项，3行排列 */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(6, var(--box-size));
+      justify-content: center;
+      gap: var(--box-gap);
+      margin-bottom: 28px;
+    }
+
+    .answer-placeholder,
+    .pattern-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fcfffc;
+      border: 2.5px solid #4e684e;
+      width: var(--box-size);
+      min-height: var(--box-size);
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      position: relative;
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        border-color var(--transition-fast),
+        background-color var(--transition-fast);
+      will-change: transform, box-shadow, border-color, background-color;
+    }
+
+    .pattern-container {
+      padding: 4px;
+      box-shadow: 0 2px 6px rgba(90,130,90,0.08);
+    }
+
+    .answer-placeholder {
+      padding: 0;
+      background: #fcfffc;
+    }
+
+    .pattern-item {
+      font-size: var(--emoji-size);
+      line-height: 1;
+      touch-action: none;
+      transition:
+        transform var(--transition-fast),
+        filter var(--transition-fast),
+        opacity var(--transition-fast);
+      will-change: transform, opacity, filter;
+    }
+
+    .memory-grid .pattern-item {
+      cursor: default;
+    }
+
+    .pattern-container:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .press-feedback {
+      transform: scale(0.95) !important;
+      background: #f6fff1 !important;
+      border-color: #7cb342 !important;
+      box-shadow: inset 0 0 0 3px rgba(124, 179, 66, 0.18);
+    }
+
+    .drag-source {
+      opacity: 0.25 !important;
+      transform: scale(0.96) !important;
+    }
+
+    .drop-target {
+      border: 3px solid #7cb342 !important;
+      background: #f4ffe6 !important;
+      box-shadow: 0 0 0 5px rgba(124, 179, 66, 0.16), 0 10px 20px rgba(90,130,90,0.12) !important;
+      transform: scale(1.05) !important;
+    }
+
+    .filled {
+      background: #fafff6 !important;
+    }
+
+    @keyframes dropSuccess {
+      0% {
+        transform: scale(1.08);
+        background: #f0ffd2;
+        box-shadow: 0 0 0 8px rgba(139,195,74,0.22);
+      }
+      100% {
+        transform: scale(1);
+        background: #fafff6;
+        box-shadow: none;
+      }
+    }
+
+    .drop-success {
+      animation: dropSuccess 0.28s ease;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+      touch-action: manipulation;
+    }
+
+    .btn:active {
+      transform: scale(0.985);
+    }
+
+    .btn-primary {
+      background: linear-gradient(#dcedc8, #aed581);
+      border: 1px solid #7cb342;
+      padding: 14px 38px;
+      border-radius: 10px;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #2f4f2f;
+      box-shadow: 0 4px 10px rgba(90,130,90,0.16);
+    }
+
+    .btn-sm {
+      background: #eef7ee;
+      border: 1px solid #b8d3b8;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 0.96rem;
+      color: #355035;
+      font-weight: 600;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .message {
+      text-align: left;
+      font-size: 1rem;
+      padding: 16px;
+      margin: 18px 0;
+      color: #314631;
+      line-height: 1.9;
+      max-height: 440px;
+      overflow-y: auto;
+      background: #f3fbf3;
+      border-radius: 12px;
+      border: 1px solid #d7ead7;
+    }
+
+    .question-result {
+      margin: 10px 0;
+      padding: 10px;
+      border-left: 3px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .question-result.correct {
+      border-left-color: #2e7d32;
+      background: #edf8ed;
+    }
+
+    .question-result.incorrect {
+      border-left-color: #c62828;
+      background: #fff1f1;
+    }
+
+    .question-result.unanswered {
+      border-left-color: #999;
+      background: #f7faf7;
+    }
+
+    .correct-answer {
+      background-color: #dff0df;
+      color: #205520;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      display: inline-block;
+      margin: 2px 3px;
+      font-size: 1rem;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--box-size);
+      height: var(--box-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2.5px solid #7cb342;
+      border-radius: 10px;
+      background: rgba(248, 255, 248, 0.97);
+      box-shadow: 0 16px 30px rgba(90,130,90,0.22);
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate3d(-9999px, -9999px, 0) scale(1.12);
+      transition: transform 0.03s linear;
+      backdrop-filter: blur(2px);
+    }
+
+    .drag-ghost .ghost-emoji {
+      font-size: var(--emoji-size);
+      line-height: 1;
+      filter: drop-shadow(0 5px 10px rgba(90,130,90,0.18));
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      :root {
+        --box-size: 72px;
+        --box-gap: 10px;
+        --emoji-size: 2.8rem;
+        --card-max-width: 960px;
+      }
+
+      .card {
+        padding: 20px 10px 26px;
+      }
+
+      .title {
+        font-size: 1.5rem;
+      }
+
+      .memory-tip {
+        font-size: 0.96rem;
+      }
+
+      .area-label {
+        font-size: 1.06rem;
+      }
+
+      .btn-primary {
+        padding: 11px 24px;
+        font-size: 0.96rem;
+      }
+
+      .btn-sm {
+        padding: 8px 12px;
+        font-size: 0.88rem;
+      }
+    }
+
+    @media (max-width: 767px) {
+      :root {
+        --box-size: 56px;
+        --box-gap: 8px;
+        --emoji-size: 2.1rem;
+        --card-max-width: 100%;
+      }
+
+      body {
+        padding: 12px 8px 24px;
+      }
+
+      .card {
+        padding: 14px 6px 22px;
+      }
+
+      .title {
+        font-size: 1.18rem;
+      }
+
+      .badge {
+        font-size: 0.82rem;
+        padding: 5px 10px;
+      }
+
+      #countdown {
+        font-size: 1rem;
+        min-width: 58px;
+        padding: 3px 8px;
+      }
+
+      .memory-tip {
+        font-size: 0.9rem;
+        padding: 10px 6px;
+      }
+
+      .memory-grid {
+        grid-template-columns: repeat(3, var(--box-size));
+      }
+
+      .answer-grid {
+        grid-template-columns: repeat(4, var(--box-size));
+      }
+
+      .options-grid {
+        grid-template-columns: repeat(4, var(--box-size));
+      }
+
+      .btn-primary {
+        padding: 9px 16px;
+        font-size: 0.92rem;
+      }
+
+      .btn-sm {
+        padding: 7px 10px;
+        font-size: 0.82rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="card" id="app">
+  <div class="header">
+    <span class="title">序列-无序-拖曳</span>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="badge" id="questionCounter">第 1 / 10 题</span>
+      <span id="countdown">60</span>
+    </div>
+  </div>
+
+  <div id="memoryView" class="view active">
+    <div id="lastQuestionTip" class="last-question-tip" style="display:none;">
+      ⚠️ 这是最后一题，答题完成后可查看总分！
+    </div>
+
+    <div class="memory-tip">
+      请记住当前 9 张图片，并在下一页找出所有没有出现过的图片。<br>
+      本题为<strong>混合 2 个主题</strong>。
+    </div>
+
+    <div class="area-label">记忆图片区</div>
+    <div id="memoryGrid" class="memory-grid"></div>
+
+    <div class="button-row">
+      <button class="btn btn-primary" id="goToQuizBtn">请选择</button>
+    </div>
+  </div>
+
+  <div id="quizView" class="view">
+    <div class="area-label">作答区</div>
+    <div id="answerContainer" class="answer-grid"></div>
+
+    <div class="area-label">选项区</div>
+    <div id="optionsContainer" class="options-grid"></div>
+
+    <div id="quizMessage" class="message">
+      拖拽所有未出现过的图片到作答区（必须全对才得分）
+    </div>
+
+    <div class="action-group">
+      <button class="btn btn-sm" id="resetQuizBtn">重置</button>
+      <button class="btn btn-sm" id="checkAnswerBtn">我的得分</button>
+      <button class="btn btn-sm" id="backToMemoryBtn">返回记忆</button>
+    </div>
+
+    <div class="button-row" style="margin-top:10px;">
+      <button class="btn btn-primary" id="nextQuestionBtn">下一题</button>
+    </div>
+  </div>
+</div>
+
+<div id="dragGhost" class="drag-ghost" style="display:none;">
+  <div class="ghost-emoji" id="dragGhostEmoji"></div>
+</div>
+
+<script>
+(function () {
+  const TOTAL_QUESTIONS = 10;
+  const MEMORY_COUNT = 9;
+  const ANSWER_GRID_COUNT = 12;
+  const OPTIONS_COUNT = 18;
+  const MIN_CORRECT = 3;
+  const MAX_CORRECT = 12;
+  const SCORE_PER_QUESTION = 1;
+  const COUNTDOWN_SECONDS = 60;
+  const MAX_BUILD_ATTEMPTS = 300;
+
+  const themeBank = [
+    { theme: '动物', items: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐮','🐷','🐸','🐵','🐨','🐔','🐧','🐦','🦆','🦉'] },
+    { theme: '水果', items: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋','🍏','🍐','🍓','🥝','🍈','🫐'] },
+    { theme: '蔬菜', items: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬','🧄','🍄','🌶️','🌰','🥜'] },
+    { theme: '食物', items: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖','🍔','🌭','🥪','🍕','🍟','🍚','🍜','🍝','🍣','🍤'] },
+    { theme: '运动', items: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🎳','⛳','🏒','🥋'] },
+    { theme: '交通', items: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🚚','🚜','🛵','🏍️','🚲','✈️','🚁','⛵','🚢','🚤'] },
+    { theme: '天气', items: ['☀️','☁️','🌧️','⛄','🌪️','🌈','🌊','🌋','🔥','💧','❄️','🌫️','🌞','🌩️','💨'] },
+    { theme: '植物', items: ['🌹','🌻','🌺','🌸','🌼','🌷','🥀','🍀','🍁','🍂','🌱','🌿','☘️','🪴','🌾'] },
+    { theme: '电子产品', items: ['⌚','📱','💻','📷','🎧','🖨️','🖥️','⌨️','🖱️','💽','📲','📻','💿','📹','🎙️'] },
+    { theme: '爱心', items: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💖','💘','💝','💓','💞','♥️'] },
+    { theme: '海洋生物', items: ['🐠','🐟','🐡','🦈','🐬','🐳','🐋','🐙','🦀','🦐','🦑','🐚','🦞','🐢','🐊'] },
+    { theme: '文具', items: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚','📖','📝','📒','📕','📘'] },
+    { theme: '服饰', items: ['👕','👖','🧥','👗','👚','👔','👟','👠','🧢','🎩','👒','🧣','🧤','👞','🥾'] },
+    { theme: '建筑', items: ['🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏪','🏫','🏬','⛪','🕌','🏛️','🏭'] },
+    { theme: '表情', items: ['😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😎','🤔','😭'] }
+  ];
+
+  let questions = [];
+  let currentIndex = 0;
+  let questionResults = [];
+  let totalScore = 0;
+  let countdownTimer = null;
+  let remainingTime = COUNTDOWN_SECONDS;
+  let isRestartMode = false;
+
+  let dragState = {
+    active: false,
+    item: null,
+    sourceArea: null,
+    sourceContainer: null,
+    sourcePlaceholder: null,
+    pointerId: null,
+    offsetX: 0,
+    offsetY: 0,
+    currentTargetPlaceholder: null
+  };
+
+  const app = document.getElementById('app');
+  const memoryView = document.getElementById('memoryView');
+  const quizView = document.getElementById('quizView');
+  const memoryGrid = document.getElementById('memoryGrid');
+  const optionsContainer = document.getElementById('optionsContainer');
+  const answerContainer = document.getElementById('answerContainer');
+  const questionCounter = document.getElementById('questionCounter');
+  const quizMessage = document.getElementById('quizMessage');
+  const countdownEl = document.getElementById('countdown');
+  const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+  const lastQuestionTip = document.getElementById('lastQuestionTip');
+
+  const goToQuizBtn = document.getElementById('goToQuizBtn');
+  const backToMemoryBtn = document.getElementById('backToMemoryBtn');
+  const resetQuizBtn = document.getElementById('resetQuizBtn');
+  const checkAnswerBtn = document.getElementById('checkAnswerBtn');
+
+  const dragGhost = document.getElementById('dragGhost');
+  const dragGhostEmoji = document.getElementById('dragGhostEmoji');
+
+  function shuffleArray(arr) {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function sample(arr, count) {
+    return shuffleArray(arr).slice(0, count);
+  }
+
+  function arraysAreEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    const a = [...arr1].sort();
+    const b = [...arr2].sort();
+    return a.every((item, index) => item === b[index]);
+  }
+
+  function validateQuestion(q) {
+    return (
+      q.memory.length === MEMORY_COUNT &&
+      q.options.length === OPTIONS_COUNT &&
+      q.distractors.length >= MIN_CORRECT &&
+      q.distractors.length <= MAX_CORRECT &&
+      q.shownMemoryItems.length + q.distractors.length === OPTIONS_COUNT
+    );
+  }
+
+  function createOneMixedQuestion() {
+    const validThemes = themeBank.filter(t => [...new Set(t.items)].length >= 10);
+    if (validThemes.length < 2) return null;
+
+    const [themeA, themeB] = sample(validThemes, 2);
+
+    // 记忆区9张：主题A 5张 + 主题B 4张
+    const memoryA = sample([...new Set(themeA.items)], 5);
+    const memoryB = sample([...new Set(themeB.items)], 4);
+    const memory = shuffleArray([...memoryA, ...memoryB]);
+
+    const correctCount = randomInt(MIN_CORRECT, MAX_CORRECT);
+    const shownMemoryCount = OPTIONS_COUNT - correctCount;
+
+    if (shownMemoryCount < 0 || shownMemoryCount > MEMORY_COUNT) return null;
+
+    const shownMemoryItems = sample(memory, shownMemoryCount);
+
+    const poolA = themeA.items.filter(x => !memoryA.includes(x) && !memoryB.includes(x));
+    const poolB = themeB.items.filter(x => !memoryA.includes(x) && !memoryB.includes(x));
+    let outsidePool = [...new Set([...poolA, ...poolB])];
+
+    // 如果混合后素材还不够，则从其他主题补足，但仍尽量保持主题一致性
+    if (outsidePool.length < correctCount) {
+      const others = themeBank
+        .filter(t => t.theme !== themeA.theme && t.theme !== themeB.theme)
+        .flatMap(t => t.items);
+      outsidePool = [...new Set([...outsidePool, ...others.filter(x => !memory.includes(x))])];
+    }
+
+    if (outsidePool.length < correctCount) return null;
+
+    const distractors = sample(outsidePool, correctCount);
+    const options = shuffleArray([...shownMemoryItems, ...distractors]);
+
+    const q = {
+      theme: `${themeA.theme} + ${themeB.theme}`,
+      themes: [themeA.theme, themeB.theme],
+      memory,
+      shownMemoryItems,
+      distractors,
+      options
+    };
+
+    return validateQuestion(q) ? q : null;
+  }
+
+  function buildQuestionSet() {
+    const result = [];
+    let attempts = 0;
+
+    while (result.length < TOTAL_QUESTIONS && attempts < MAX_BUILD_ATTEMPTS) {
+      attempts++;
+      const q = createOneMixedQuestion();
+      if (q) result.push(q);
+    }
+
+    if (result.length < TOTAL_QUESTIONS) {
+      throw new Error('题目生成失败：无法凑满10题');
+    }
+
+    questions = result;
+  }
+
+  function updateCountdownDisplay() {
+    countdownEl.textContent = remainingTime;
+    if (remainingTime < 10) countdownEl.classList.add('blink');
+    else countdownEl.classList.remove('blink');
+  }
+
+  function initCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    remainingTime = COUNTDOWN_SECONDS;
+    updateCountdownDisplay();
+
+    countdownTimer = setInterval(() => {
+      remainingTime--;
+      updateCountdownDisplay();
+
+      if (remainingTime <= 0) {
+        clearInterval(countdownTimer);
+        if (quizView.classList.contains('active')) {
+          saveCurrentQuestionResult();
+        }
+        nextQuestion(true);
+      }
+    }, 1000);
+  }
+
+  function updateCounter() {
+    questionCounter.innerText = `第 ${currentIndex + 1} / ${TOTAL_QUESTIONS} 题`;
+    lastQuestionTip.style.display = currentIndex === TOTAL_QUESTIONS - 1 ? 'block' : 'none';
+  }
+
+  function clearDropTargets() {
+    document.querySelectorAll('.answer-placeholder').forEach(ph => {
+      ph.classList.remove('drop-target');
+    });
+    dragState.currentTargetPlaceholder = null;
+  }
+
+  function updateFilledState() {
+    document.querySelectorAll('.answer-placeholder').forEach(ph => {
+      if (ph.querySelector('.pattern-item')) ph.classList.add('filled');
+      else ph.classList.remove('filled');
+    });
+  }
+
+  function pulseElement(el) {
+    if (!el) return;
+    el.classList.remove('drop-success');
+    void el.offsetWidth;
+    el.classList.add('drop-success');
+  }
+
+  function addPressFeedback(container) {
+    if (!container) return;
+    container.classList.add('press-feedback');
+    setTimeout(() => container.classList.remove('press-feedback'), 110);
+  }
+
+  function renderMemoryView() {
+    const currentQuestion = questions[currentIndex];
+    memoryGrid.innerHTML = '';
+
+    if (!currentQuestion || currentQuestion.memory.length !== MEMORY_COUNT) {
+      memoryGrid.innerHTML = '<div style="grid-column:1/-1;color:red;">当前题目数据异常</div>';
+      return;
+    }
+
+    currentQuestion.memory.forEach(emoji => {
+      const container = document.createElement('div');
+      container.className = 'pattern-container';
+
+      const item = document.createElement('div');
+      item.className = 'pattern-item';
+      item.textContent = emoji;
+
+      container.appendChild(item);
+      memoryGrid.appendChild(container);
+    });
+  }
+
+  function createAnswerPlaceholders() {
+    answerContainer.innerHTML = '';
+    for (let i = 0; i < ANSWER_GRID_COUNT; i++) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'answer-placeholder';
+      placeholder.dataset.index = i;
+      answerContainer.appendChild(placeholder);
+    }
+    updateFilledState();
+  }
+
+  function createDraggableOption(emoji) {
+    const container = document.createElement('div');
+    container.className = 'pattern-container';
+
+    const item = document.createElement('div');
+    item.className = 'pattern-item';
+    item.textContent = emoji;
+    item.dataset.draggable = 'true';
+
+    container.appendChild(item);
+    return container;
+  }
+
+  function initQuizView() {
+    const currentQuestion = questions[currentIndex];
+    createAnswerPlaceholders();
+    optionsContainer.innerHTML = '';
+
+    if (!currentQuestion || currentQuestion.options.length !== OPTIONS_COUNT) {
+      quizMessage.className = 'message';
+      quizMessage.innerHTML = '<span style="color:red;">当前题目选项异常，请点击“重新答题”。</span>';
+      return;
+    }
+
+    currentQuestion.options.forEach(emoji => {
+      optionsContainer.appendChild(createDraggableOption(emoji));
+    });
+
+    updateFilledState();
+
+    quizMessage.className = 'message';
+    quizMessage.innerHTML =
+      `当前混合主题：<strong>${currentQuestion.theme}</strong><br>` +
+      `记忆区固定 9 张图片（混合2个主题），作答区 12 个方框，选项区 18 个选项。请拖拽所有未出现过的图片到作答区。`;
+  }
+
+  function getUserAnswers() {
+    return [...answerContainer.querySelectorAll('.pattern-item')].map(el => el.textContent);
+  }
+
+  function saveCurrentQuestionResult() {
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return;
+
+    const userAnswers = getUserAnswers();
+    const correctAnswers = [...currentQuestion.distractors];
+    const isCorrect = arraysAreEqual(userAnswers, correctAnswers);
+    const score = isCorrect ? SCORE_PER_QUESTION : 0;
+
+    const record = {
+      questionIndex: currentIndex,
+      questionNum: currentIndex + 1,
+      theme: currentQuestion.theme,
+      isCorrect,
+      userAnswer: [...userAnswers],
+      allUnusedAnswers: [...correctAnswers],
+      score
+    };
+
+    const existingIndex = questionResults.findIndex(r => r.questionIndex === currentIndex);
+    if (existingIndex > -1) questionResults[existingIndex] = record;
+    else questionResults.push(record);
+
+    totalScore = questionResults.reduce((sum, r) => sum + r.score, 0);
+  }
+
+  function buildScoreHtml() {
+    totalScore = questionResults.reduce((sum, r) => sum + r.score, 0);
+
+    let html = `
+      <div style="font-size:1.05rem;font-weight:700;margin-bottom:12px;">
+        📊 总分：${totalScore} / ${TOTAL_QUESTIONS * SCORE_PER_QUESTION} 分
+      </div>
+      <div style="margin-bottom:16px;font-size:0.98rem;color:#c62828;font-weight:600;">
+        ⚠️ 得分规则：必须完整选出所有未出现的图片，且不能多选，才得1分
+      </div>
+      <div style="border-top:1px solid #d7ead7;padding-top:12px;">
+        <strong>📝 所有题目答题情况：</strong>
+    `;
+
+    for (let i = 0; i < TOTAL_QUESTIONS; i++) {
+      const q = questions[i];
+      const record = questionResults.find(r => r.questionIndex === i);
+      const correctHtml = q.distractors.map(ans => `<span class="correct-answer">${ans}</span>`).join('');
+
+      if (record) {
+        html += `
+          <div class="question-result ${record.isCorrect ? 'correct' : 'incorrect'}">
+            <strong>第${i + 1}题</strong>【${q.theme}】：
+            ${record.isCorrect ? '✅ 回答正确' : '❌ 回答错误'}（得分：${record.score}分）<br>
+            • 正确答案数量：${q.distractors.length}<br>
+            • 正确答案：${correctHtml}<br>
+            • 你的选择：${record.userAnswer.length ? record.userAnswer.join('、') : '未选择'}
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="question-result unanswered">
+            <strong>第${i + 1}题</strong>【${q.theme}】：
+            ⚪ 未作答（得分：0分）<br>
+            • 正确答案数量：${q.distractors.length}<br>
+            • 正确答案：${correctHtml}<br>
+            • 你的选择：未作答
+          </div>
+        `;
+      }
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  function showScore() {
+    if (quizView.classList.contains('active')) {
+      saveCurrentQuestionResult();
+    }
+    quizMessage.className = 'message';
+    quizMessage.innerHTML = buildScoreHtml();
+  }
+
+  function showMemoryView() {
+    renderMemoryView();
+    memoryView.classList.add('active');
+    quizView.classList.remove('active');
+    updateCounter();
+    initCountdown();
+  }
+
+  function showQuizView() {
+    initQuizView();
+    memoryView.classList.remove('active');
+    quizView.classList.add('active');
+    initCountdown();
+  }
+
+  function resetCurrentQuiz() {
+    initQuizView();
+  }
+
+  function resetAll() {
+    if (countdownTimer) clearInterval(countdownTimer);
+
+    currentIndex = 0;
+    questionResults = [];
+    totalScore = 0;
+    isRestartMode = false;
+    clearDragState();
+
+    nextQuestionBtn.textContent = '下一题';
+
+    buildQuestionSet();
+    updateCounter();
+    renderMemoryView();
+
+    memoryView.classList.add('active');
+    quizView.classList.remove('active');
+
+    quizMessage.className = 'message';
+    quizMessage.innerHTML = '拖拽所有未出现过的图片到作答区（必须全对才得分）';
+
+    initCountdown();
+  }
+
+  function nextQuestion(fromTimeout = false) {
+    if (isRestartMode) {
+      resetAll();
+      return;
+    }
+
+    if (countdownTimer) clearInterval(countdownTimer);
+
+    if (!fromTimeout && quizView.classList.contains('active')) {
+      saveCurrentQuestionResult();
+    }
+
+    if (currentIndex === TOTAL_QUESTIONS - 1) {
+      if (quizView.classList.contains('active')) {
+        saveCurrentQuestionResult();
+      }
+      isRestartMode = true;
+      nextQuestionBtn.textContent = '重新答题';
+      quizView.classList.add('active');
+      memoryView.classList.remove('active');
+      quizMessage.className = 'message';
+      quizMessage.innerHTML = buildScoreHtml();
+      return;
+    }
+
+    currentIndex++;
+    updateCounter();
+    showMemoryView();
+  }
+
+  function clearDragState() {
+    dragState.active = false;
+    dragState.item = null;
+    dragState.sourceArea = null;
+    dragState.sourceContainer = null;
+    dragState.sourcePlaceholder = null;
+    dragState.pointerId = null;
+    dragState.offsetX = 0;
+    dragState.offsetY = 0;
+    dragState.currentTargetPlaceholder = null;
+
+    dragGhost.style.display = 'none';
+    clearDropTargets();
+
+    document.querySelectorAll('.drag-source').forEach(el => el.classList.remove('drag-source'));
+    document.querySelectorAll('.press-feedback').forEach(el => el.classList.remove('press-feedback'));
+  }
+
+  function startCustomDrag(item, clientX, clientY, pointerId) {
+    const parent = item.closest('.pattern-container, .answer-placeholder');
+    if (!parent) return;
+
+    const rect = item.getBoundingClientRect();
+
+    dragState.active = true;
+    dragState.item = item;
+    dragState.pointerId = pointerId;
+    dragState.sourceContainer = parent;
+    dragState.sourcePlaceholder = parent.classList.contains('answer-placeholder') ? parent : null;
+    dragState.sourceArea = parent.closest('.options-grid') ? 'options' : 'answer';
+    dragState.offsetX = clientX - rect.left;
+    dragState.offsetY = clientY - rect.top;
+
+    parent.classList.add('drag-source');
+
+    dragGhostEmoji.textContent = item.textContent;
+    dragGhost.style.display = 'flex';
+    moveGhost(clientX, clientY);
+  }
+
+  function moveGhost(clientX, clientY) {
+    const x = clientX - dragState.offsetX;
+    const y = clientY - dragState.offsetY;
+    dragGhost.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.08)`;
+  }
+
+  function getElementFromPointSafe(x, y) {
+    dragGhost.style.visibility = 'hidden';
+    const el = document.elementFromPoint(x, y);
+    dragGhost.style.visibility = 'visible';
+    return el;
+  }
+
+  function updateDropTarget(clientX, clientY) {
+    clearDropTargets();
+    const el = getElementFromPointSafe(clientX, clientY);
+    const placeholder = el ? el.closest('.answer-placeholder') : null;
+    if (placeholder) {
+      placeholder.classList.add('drop-target');
+      dragState.currentTargetPlaceholder = placeholder;
+    }
+  }
+
+  function sendItemBackToOptions(item) {
+    const container = createDraggableOption(item.textContent);
+    optionsContainer.appendChild(container);
+    pulseElement(container);
+  }
+
+  function placeItemIntoPlaceholder(item, placeholder) {
+    const existingItem = placeholder.querySelector('.pattern-item');
+    if (existingItem) {
+      sendItemBackToOptions(existingItem);
+    }
+
+    placeholder.innerHTML = '';
+    placeholder.appendChild(item);
+    pulseElement(placeholder);
+  }
+
+  function endCustomDrag(clientX, clientY) {
+    if (!dragState.active || !dragState.item) {
+      clearDragState();
+      return;
+    }
+
+    const item = dragState.item;
+    const el = getElementFromPointSafe(clientX, clientY);
+    const targetPlaceholder = el ? el.closest('.answer-placeholder') : null;
+    const targetOptionsGrid = el ? el.closest('.options-grid') : null;
+
+    if (targetPlaceholder) {
+      if (dragState.sourceArea === 'options') {
+        dragState.sourceContainer.remove();
+      }
+      placeItemIntoPlaceholder(item, targetPlaceholder);
+    } else if (targetOptionsGrid) {
+      if (dragState.sourceArea === 'answer') {
+        dragState.sourcePlaceholder.innerHTML = '';
+        sendItemBackToOptions(item);
+      }
+    }
+
+    updateFilledState();
+    clearDragState();
+  }
+
+  function initPointerDrag() {
+    ['gesturestart', 'gesturechange', 'gestureend', 'selectstart', 'contextmenu', 'dragstart'].forEach(type => {
+      document.addEventListener(type, (e) => {
+        e.preventDefault();
+      }, { passive: false });
+    });
+
+    app.addEventListener('pointerdown', (e) => {
+      if (!quizView.classList.contains('active')) return;
+
+      const item = e.target.closest('.pattern-item');
+      if (!item) return;
+
+      const parent = item.closest('.pattern-container, .answer-placeholder');
+      if (!parent) return;
+
+      if (parent.closest('.memory-grid')) return;
+
+      addPressFeedback(parent);
+
+      e.preventDefault();
+      try { item.setPointerCapture(e.pointerId); } catch (_) {}
+
+      startCustomDrag(item, e.clientX, e.clientY, e.pointerId);
+    });
+
+    app.addEventListener('pointermove', (e) => {
+      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
+      e.preventDefault();
+      moveGhost(e.clientX, e.clientY);
+      updateDropTarget(e.clientX, e.clientY);
+    });
+
+    app.addEventListener('pointerup', (e) => {
+      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
+      e.preventDefault();
+      endCustomDrag(e.clientX, e.clientY);
+    });
+
+    app.addEventListener('pointercancel', (e) => {
+      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
+      e.preventDefault();
+      clearDragState();
+    });
+  }
+
+  goToQuizBtn.addEventListener('click', showQuizView);
+  backToMemoryBtn.addEventListener('click', showMemoryView);
+  resetQuizBtn.addEventListener('click', resetCurrentQuiz);
+  checkAnswerBtn.addEventListener('click', showScore);
+  nextQuestionBtn.addEventListener('click', () => nextQuestion(false));
+
+  initPointerDrag();
+  buildQuestionSet();
+  updateCounter();
+  renderMemoryView();
+  initCountdown();
+})();
+</script>
+</body>
+</html>
+```
