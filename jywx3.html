@@ -1,3 +1,18 @@
+下面是按你要求调整后的**完整代码**，已修改：
+
+1. **去掉规则说明文案**
+   - 记忆页提示精简
+   - 答题页不再显示规则说明
+   - 得分页也去掉“得分规则”提示文案
+
+2. **“下一题”按钮排列到“我的得分”上面**
+   - 现在顺序是：
+     - 下一题
+     - 重置 / 我的得分 / 返回记忆
+
+你可以直接整体替换：
+
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -130,7 +145,6 @@
       text-align: center;
     }
 
-    /* 记忆区：9张，3行排列 */
     .memory-grid {
       display: grid;
       grid-template-columns: repeat(3, var(--box-size));
@@ -139,7 +153,6 @@
       margin-bottom: 22px;
     }
 
-    /* 作答区：12个方框，2行排列 */
     .answer-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
@@ -148,7 +161,6 @@
       margin-bottom: 30px;
     }
 
-    /* 选项区：18个选项，3行排列 */
     .options-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
@@ -343,7 +355,7 @@
       gap: 12px;
       flex-wrap: wrap;
       justify-content: center;
-      margin-top: 18px;
+      margin-top: 10px;
     }
 
     .drag-ghost {
@@ -479,12 +491,11 @@
 
   <div id="memoryView" class="view active">
     <div id="lastQuestionTip" class="last-question-tip" style="display:none;">
-      ⚠️ 这是最后一题，答题完成后可查看总分！
+      ⚠️ 这是最后一题
     </div>
 
     <div class="memory-tip">
-      请记住当前 9 张图片，并在下一页找出所有没有出现过的图片。<br>
-      本题为<strong>混合 2 个主题</strong>。
+      请记住当前 9 张图片。
     </div>
 
     <div class="area-label">记忆图片区</div>
@@ -502,18 +513,17 @@
     <div class="area-label">选项区</div>
     <div id="optionsContainer" class="options-grid"></div>
 
-    <div id="quizMessage" class="message">
-      拖拽所有未出现过的图片到作答区（必须全对才得分）
+    <div id="quizMessage" class="message"></div>
+
+    <!-- 下一题按钮放到我的得分上面 -->
+    <div class="button-row" style="margin-top:10px;">
+      <button class="btn btn-primary" id="nextQuestionBtn">下一题</button>
     </div>
 
     <div class="action-group">
       <button class="btn btn-sm" id="resetQuizBtn">重置</button>
       <button class="btn btn-sm" id="checkAnswerBtn">我的得分</button>
       <button class="btn btn-sm" id="backToMemoryBtn">返回记忆</button>
-    </div>
-
-    <div class="button-row" style="margin-top:10px;">
-      <button class="btn btn-primary" id="nextQuestionBtn">下一题</button>
     </div>
   </div>
 </div>
@@ -632,7 +642,6 @@
 
     const [themeA, themeB] = sample(validThemes, 2);
 
-    // 记忆区9张：主题A 5张 + 主题B 4张
     const memoryA = sample([...new Set(themeA.items)], 5);
     const memoryB = sample([...new Set(themeB.items)], 4);
     const memory = shuffleArray([...memoryA, ...memoryB]);
@@ -648,7 +657,6 @@
     const poolB = themeB.items.filter(x => !memoryA.includes(x) && !memoryB.includes(x));
     let outsidePool = [...new Set([...poolA, ...poolB])];
 
-    // 如果混合后素材还不够，则从其他主题补足，但仍尽量保持主题一致性
     if (outsidePool.length < correctCount) {
       const others = themeBank
         .filter(t => t.theme !== themeA.theme && t.theme !== themeB.theme)
@@ -809,11 +817,7 @@
     });
 
     updateFilledState();
-
-    quizMessage.className = 'message';
-    quizMessage.innerHTML =
-      `当前混合主题：<strong>${currentQuestion.theme}</strong><br>` +
-      `记忆区固定 9 张图片（混合2个主题），作答区 12 个方框，选项区 18 个选项。请拖拽所有未出现过的图片到作答区。`;
+    quizMessage.innerHTML = '';
   }
 
   function getUserAnswers() {
@@ -853,9 +857,6 @@
       <div style="font-size:1.05rem;font-weight:700;margin-bottom:12px;">
         📊 总分：${totalScore} / ${TOTAL_QUESTIONS * SCORE_PER_QUESTION} 分
       </div>
-      <div style="margin-bottom:16px;font-size:0.98rem;color:#c62828;font-weight:600;">
-        ⚠️ 得分规则：必须完整选出所有未出现的图片，且不能多选，才得1分
-      </div>
       <div style="border-top:1px solid #d7ead7;padding-top:12px;">
         <strong>📝 所有题目答题情况：</strong>
     `;
@@ -870,7 +871,6 @@
           <div class="question-result ${record.isCorrect ? 'correct' : 'incorrect'}">
             <strong>第${i + 1}题</strong>【${q.theme}】：
             ${record.isCorrect ? '✅ 回答正确' : '❌ 回答错误'}（得分：${record.score}分）<br>
-            • 正确答案数量：${q.distractors.length}<br>
             • 正确答案：${correctHtml}<br>
             • 你的选择：${record.userAnswer.length ? record.userAnswer.join('、') : '未选择'}
           </div>
@@ -880,7 +880,6 @@
           <div class="question-result unanswered">
             <strong>第${i + 1}题</strong>【${q.theme}】：
             ⚪ 未作答（得分：0分）<br>
-            • 正确答案数量：${q.distractors.length}<br>
             • 正确答案：${correctHtml}<br>
             • 你的选择：未作答
           </div>
@@ -937,9 +936,7 @@
     memoryView.classList.add('active');
     quizView.classList.remove('active');
 
-    quizMessage.className = 'message';
-    quizMessage.innerHTML = '拖拽所有未出现过的图片到作答区（必须全对才得分）';
-
+    quizMessage.innerHTML = '';
     initCountdown();
   }
 
