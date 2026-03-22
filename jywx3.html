@@ -103,15 +103,17 @@
       animation: blink 1s infinite;
     }
 
+    /* 去掉方框样式，仅保留纯文字 */
     .memory-tip {
-      padding: 16px 12px;
+      padding: 0;
+      margin: 0 0 18px 0;
       color: #314631;
       font-size: 1.1rem;
       line-height: 1.65;
-      margin-bottom: 18px;
       text-align: center;
-      background: #f3fbf3;
-      border-radius: 12px;
+      background: none;
+      border: none;
+      border-radius: 0;
     }
 
     .last-question-tip {
@@ -288,18 +290,20 @@
     .view { display: none; }
     .view.active { display: block; }
 
+    /* 去掉规则说明方框，仅保留空容器给得分结果用 */
     .message {
       text-align: left;
       font-size: 1rem;
-      padding: 16px;
-      margin: 18px 0;
+      padding: 0;
+      margin: 12px 0 18px;
       color: #314631;
       line-height: 1.9;
       max-height: 440px;
       overflow-y: auto;
-      background: #f3fbf3;
-      border-radius: 12px;
-      border: 1px solid #d7ead7;
+      background: none;
+      border: none;
+      border-radius: 0;
+      min-height: 0;
     }
 
     .question-result {
@@ -437,7 +441,7 @@
 
       .memory-tip {
         font-size: 0.9rem;
-        padding: 10px 6px;
+        padding: 0;
       }
 
       .memory-grid {
@@ -497,9 +501,9 @@
 
     <div class="area-label">选项区</div>
     <div id="optionsContainer" class="options-grid"></div>
+
     <div id="quizMessage" class="message"></div>
 
-    <!-- 下一题按钮放到我的得分上面 -->
     <div class="button-row" style="margin-top:10px;">
       <button class="btn btn-primary" id="nextQuestionBtn">下一题</button>
     </div>
