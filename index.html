@@ -13,460 +13,190 @@
     }
 
     body {
-      background: linear-gradient(180deg, #eefaf1 0%, #f8fff8 100%);
+      background: #eef8ee;
       color: #2f4f2f;
       min-height: 100vh;
-      padding: 20px 16px 40px;
+      padding: 20px 16px 32px;
     }
 
     .page {
-      max-width: 1100px;
+      max-width: 960px;
       margin: 0 auto;
     }
 
-    .hero {
-      background: linear-gradient(135deg, #dff4dc, #f3fff1);
-      border-radius: 24px;
-      padding: 28px 24px;
-      box-shadow: 0 8px 24px rgba(120, 170, 120, 0.12);
-      margin-bottom: 24px;
+    .header {
+      background: #f8fff8;
+      border-radius: 18px;
+      padding: 24px 20px;
+      box-shadow: 0 4px 14px rgba(120, 170, 120, 0.12);
+      margin-bottom: 22px;
+      text-align: center;
     }
 
-    .hero-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+    .title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #2f4f2f;
+      margin-bottom: 10px;
+    }
+
+    .desc {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: #567056;
       margin-bottom: 18px;
     }
 
-    .logo-wrap {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .logo {
-      width: 68px;
-      height: 68px;
-      border-radius: 18px;
-      background: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      box-shadow: 0 4px 12px rgba(120, 170, 120, 0.12);
-    }
-
-    .hero-title {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #2d5a2d;
-      line-height: 1.2;
-    }
-
-    .hero-subtitle {
-      margin-top: 6px;
-      font-size: 1rem;
-      color: #527252;
-      line-height: 1.6;
-    }
-
-    .hero-badge {
-      background: #ffffff;
-      color: #4f7c4f;
-      border: 1px solid #d4ead4;
-      border-radius: 999px;
-      padding: 10px 18px;
-      font-size: 0.98rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
     .btn {
-      border: none;
-      border-radius: 14px;
-      padding: 14px 24px;
+      display: inline-block;
+      background: linear-gradient(#dcedc8, #aed581);
+      color: #2f4f2f;
+      border: 1px solid #7cb342;
+      border-radius: 12px;
+      padding: 12px 28px;
       font-size: 1rem;
       font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-primary {
-      background: linear-gradient(180deg, #ffd95c, #ffbf1f);
-      color: #5b4200;
-      box-shadow: 0 6px 14px rgba(255, 191, 31, 0.25);
-    }
-
-    .btn-secondary {
-      background: #ffffff;
-      color: #406640;
-      border: 1px solid #d4ead4;
-      box-shadow: 0 4px 12px rgba(120, 170, 120, 0.10);
-    }
-
-    .section {
-      margin-top: 26px;
+      text-decoration: none;
     }
 
     .section-title {
-      font-size: 1.35rem;
+      font-size: 1.2rem;
       font-weight: 800;
       color: #2f4f2f;
-      margin-bottom: 16px;
-      padding-left: 4px;
+      margin: 8px 0 14px;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .card {
-      background: #fcfffc;
-      border: 2px solid #dcefdc;
-      border-radius: 20px;
-      padding: 20px 18px;
-      box-shadow: 0 6px 16px rgba(120, 170, 120, 0.08);
-      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 22px rgba(120, 170, 120, 0.12);
-      border-color: #c6e3c6;
-    }
-
-    .card-icon {
-      width: 58px;
-      height: 58px;
-      border-radius: 16px;
-      background: #eef8ee;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.9rem;
-      margin-bottom: 14px;
-    }
-
-    .card-title {
-      font-size: 1.16rem;
-      font-weight: 800;
-      color: #315731;
-      margin-bottom: 8px;
-    }
-
-    .card-desc {
-      font-size: 0.95rem;
-      color: #5b755b;
-      line-height: 1.7;
-      min-height: 52px;
-    }
-
-    .card-meta {
-      margin-top: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .tag {
-      background: #eef8ee;
-      border: 1px solid #d7ead7;
-      color: #4d6b4d;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 0.82rem;
-      font-weight: 600;
-    }
-
-    .quick-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
     }
 
-    .quick-card {
-      background: #ffffff;
-      border: 2px solid #dcefdc;
-      border-radius: 18px;
-      padding: 18px 14px;
+    .card {
+      background: #f8fff8;
+      border: 1px solid #d7ead7;
+      border-radius: 16px;
+      padding: 18px 16px;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(120, 170, 120, 0.08);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 4px 10px rgba(120, 170, 120, 0.08);
     }
 
-    .quick-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 18px rgba(120, 170, 120, 0.12);
-    }
-
-    .quick-icon {
-      font-size: 1.8rem;
+    .icon {
+      font-size: 2rem;
       margin-bottom: 10px;
     }
 
-    .quick-title {
+    .card-title {
       font-size: 1rem;
       font-weight: 700;
       color: #355735;
+      margin-bottom: 6px;
     }
 
-    .footer-box {
-      margin-top: 30px;
-      background: #f4fbf4;
-      border: 1px solid #d7ead7;
-      border-radius: 18px;
-      padding: 18px 20px;
-      color: #557055;
-      line-height: 1.8;
-      font-size: 0.95rem;
+    .card-desc {
+      font-size: 0.88rem;
+      color: #637b63;
+      line-height: 1.7;
     }
 
-    /* iPad 优化 */
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #6a826a;
+    }
+
+    /* iPad */
     @media (min-width: 768px) and (max-width: 1024px) {
       .page {
-        max-width: 960px;
+        max-width: 900px;
       }
 
-      .hero {
-        padding: 24px 20px;
-      }
-
-      .hero-title {
+      .title {
         font-size: 1.8rem;
       }
 
       .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .quick-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
-
-      .card {
-        padding: 18px 16px;
+        grid-template-columns: repeat(3, 1fr);
       }
     }
 
-    /* 手机适配 */
+    /* 手机 */
     @media (max-width: 767px) {
       body {
         padding: 14px 10px 24px;
       }
 
-      .hero {
-        padding: 20px 16px;
-        border-radius: 18px;
+      .header {
+        padding: 20px 14px;
       }
 
-      .hero-title {
+      .title {
         font-size: 1.45rem;
       }
 
-      .hero-subtitle {
+      .desc {
         font-size: 0.92rem;
-      }
-
-      .hero-actions {
-        flex-direction: column;
-      }
-
-      .btn {
-        width: 100%;
       }
 
       .grid {
         grid-template-columns: 1fr;
-      }
-
-      .quick-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .card-desc {
-        min-height: auto;
       }
     }
   </style>
 </head>
 <body>
   <div class="page">
+    <div class="header">
+      <div class="title">幼升小图形推理题库</div>
+      <div class="desc">
+        通过图形观察、规律发现、分类比较和空间想象练习，
+        帮助孩子提升逻辑思维与专注力。
+      </div>
+      <a href="#" class="btn">开始练习</a>
+    </div>
 
-    <section class="hero">
-      <div class="hero-top">
-        <div class="logo-wrap">
-          <div class="logo">🧩</div>
-          <div>
-            <div class="hero-title">幼升小图形推理题库</div>
-            <div class="hero-subtitle">
-              通过有趣的图形观察、规律发现、分类配对和空间推理练习，
-              帮助孩子提升专注力、观察力、逻辑力与思维能力。
-            </div>
-          </div>
-        </div>
-        <div class="hero-badge">适合 5-7 岁儿童</div>
+    <div class="section-title">题库分类</div>
+    <div class="grid">
+      <div class="card">
+        <div class="icon">🔷</div>
+        <div class="card-title">图形规律</div>
+        <div class="card-desc">观察图形变化，找出排列规律。</div>
       </div>
 
-      <div class="hero-actions">
-        <button class="btn btn-primary">开始练习</button>
-        <button class="btn btn-secondary">模拟测试</button>
-        <button class="btn btn-secondary">错题回顾</button>
+      <div class="card">
+        <div class="icon">🟡</div>
+        <div class="card-title">分类归纳</div>
+        <div class="card-desc">找出相同特征，学习分类整理。</div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="section-title">题库分类</div>
-      <div class="grid">
-        <div class="card">
-          <div class="card-icon">🔷</div>
-          <div class="card-title">图形规律</div>
-          <div class="card-desc">
-            观察图形的变化顺序，找出排列规律，训练孩子发现变化关系的能力。
-          </div>
-          <div class="card-meta">
-            <span class="tag">基础</span>
-            <span class="tag">序列推理</span>
-            <span class="tag">高频</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">🟡</div>
-          <div class="card-title">分类与归纳</div>
-          <div class="card-desc">
-            从多个图形中找出相同特征，判断哪些属于同一类，培养归纳能力。
-          </div>
-          <div class="card-meta">
-            <span class="tag">分类</span>
-            <span class="tag">比较</span>
-            <span class="tag">思维训练</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">🧠</div>
-          <div class="card-title">图形推理</div>
-          <div class="card-desc">
-            根据已知图形关系推断缺失图形，锻炼逻辑判断和综合分析能力。
-          </div>
-          <div class="card-meta">
-            <span class="tag">进阶</span>
-            <span class="tag">逻辑</span>
-            <span class="tag">综合</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">🪞</div>
-          <div class="card-title">镜像与旋转</div>
-          <div class="card-desc">
-            识别图形左右翻转、上下翻转和旋转后的变化，提高空间感知能力。
-          </div>
-          <div class="card-meta">
-            <span class="tag">空间</span>
-            <span class="tag">旋转</span>
-            <span class="tag">方向</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">🧱</div>
-          <div class="card-title">拼图与组合</div>
-          <div class="card-desc">
-            判断图形如何拼合、拆分与组合，帮助孩子建立整体与局部的联系。
-          </div>
-          <div class="card-meta">
-            <span class="tag">拼图</span>
-            <span class="tag">组合</span>
-            <span class="tag">空间想象</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">👀</div>
-          <div class="card-title">观察辨别</div>
-          <div class="card-desc">
-            找不同、找相同、快速判断细节差异，提高专注与视觉辨识能力。
-          </div>
-          <div class="card-meta">
-            <span class="tag">观察</span>
-            <span class="tag">细节</span>
-            <span class="tag">专注力</span>
-          </div>
-        </div>
+      <div class="card">
+        <div class="icon">🧠</div>
+        <div class="card-title">图形推理</div>
+        <div class="card-desc">根据线索推断缺失图形。</div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="section-title">快捷入口</div>
-      <div class="quick-grid">
-        <div class="quick-card">
-          <div class="quick-icon">⭐</div>
-          <div class="quick-title">每日一练</div>
-        </div>
-        <div class="quick-card">
-          <div class="quick-icon">📝</div>
-          <div class="quick-title">模拟卷</div>
-        </div>
-        <div class="quick-card">
-          <div class="quick-icon">📊</div>
-          <div class="quick-title">学习报告</div>
-        </div>
-        <div class="quick-card">
-          <div class="quick-icon">📚</div>
-          <div class="quick-title">全部题库</div>
-        </div>
+      <div class="card">
+        <div class="icon">🪞</div>
+        <div class="card-title">镜像旋转</div>
+        <div class="card-desc">练习方向变化和空间感知。</div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="section-title">推荐练习路径</div>
-      <div class="grid">
-        <div class="card">
-          <div class="card-icon">1️⃣</div>
-          <div class="card-title">第一步：图形观察</div>
-          <div class="card-desc">
-            先从找相同、找不同开始，让孩子熟悉图形特征和细节观察。
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">2️⃣</div>
-          <div class="card-title">第二步：规律发现</div>
-          <div class="card-desc">
-            练习顺序、变化、重复和位置移动等规律题，建立推理基础。
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-icon">3️⃣</div>
-          <div class="card-title">第三步：综合推理</div>
-          <div class="card-desc">
-            结合分类、旋转、组合等题型，逐步完成更完整的图形推理训练。
-          </div>
-        </div>
+      <div class="card">
+        <div class="icon">🧩</div>
+        <div class="card-title">拼图组合</div>
+        <div class="card-desc">判断图形拼接与拆分关系。</div>
       </div>
-    </section>
 
-    <div class="footer-box">
-      温馨提示：建议每次练习 10-15 分钟，循序渐进完成。<br />
-      首页可继续扩展为：登录入口、题目收藏、练习记录、家长中心、错题本等模块。
+      <div class="card">
+        <div class="icon">👀</div>
+        <div class="card-title">观察辨别</div>
+        <div class="card-desc">找不同、找相同，训练细节观察。</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      适合 5-7 岁儿童 · 支持 iPad 显示
     </div>
   </div>
 </body>
