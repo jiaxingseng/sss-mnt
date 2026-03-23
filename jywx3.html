@@ -157,23 +157,12 @@
       cursor: pointer;
     }
 
-    .pattern-container.empty {
-      background: #f5f8f5;
-      border-color: #b4c4b4;
-      opacity: 0.6;
-      cursor: default;
-    }
-
     .pattern-container {
       padding: 4px;
       box-shadow: 0 2px 6px rgba(90,130,90,0.08);
     }
 
-    .pattern-container:hover:not(.empty) {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-soft);
-    }
-
+    .pattern-container:hover,
     .answer-placeholder:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-soft);
@@ -185,10 +174,6 @@
       cursor: pointer;
     }
 
-    .filled {
-      background: #fafff6 !important;
-    }
-
     @keyframes dropSuccess {
       0% {
         transform: scale(1.08);
@@ -197,7 +182,7 @@
       }
       100% {
         transform: scale(1);
-        background: #fafff6;
+        background: #fcfffc;
         box-shadow: none;
       }
     }
@@ -395,6 +380,21 @@
   let remainingTime = COUNTDOWN_SECONDS;
   let isRestartMode = false;
 
+  const memoryView = document.getElementById('memoryView');
+  const quizView = document.getElementById('quizView');
+  const memoryGrid = document.getElementById('memoryGrid');
+  const optionsContainer = document.getElementById('optionsContainer');
+  const answerContainer = document.getElementById('answerContainer');
+  const questionCounter = document.getElementById('questionCounter');
+  const quizMessage = document.getElementById('quizMessage');
+  const countdownEl = document.getElementById('countdown');
+  const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+
+  const goToQuizBtn = document.getElementById('goToQuizBtn');
+  const backToMemoryBtn = document.getElementById('backToMemoryBtn');
+  const resetQuizBtn = document.getElementById('resetQuizBtn');
+  const checkAnswerBtn = document.getElementById('checkAnswerBtn');
+
   function shuffleArray(arr) {
     const copy = [...arr];
     for (let i = copy.length - 1; i > 0; i--) {
@@ -449,7 +449,7 @@
 
   function buildQuestionSet() {
     questions = [];
-    for(let i=0; i<TOTAL_QUESTIONS; i++) {
+    for (let i = 0; i < TOTAL_QUESTIONS; i++) {
       questions.push(createOneMixedQuestion());
     }
   }
@@ -468,7 +468,6 @@
     countdownTimer = setInterval(() => {
       remainingTime--;
       updateCountdownDisplay();
-
       if (remainingTime <= 0) {
         clearInterval(countdownTimer);
         nextQuestion(true);
@@ -477,7 +476,7 @@
   }
 
   function updateCounter() {
-    questionCounter.innerText = `第$ \({currentIndex + 1} / \){TOTAL_QUESTIONS} 题`;
+    questionCounter.innerText = `第 ${currentIndex + 1} / ${TOTAL_QUESTIONS} 题`;
   }
 
   function pulseElement(el) {
@@ -489,10 +488,8 @@
 
   function findFirstEmptyAnswerSlot() {
     const slots = document.querySelectorAll('.answer-placeholder');
-    for(let i=0; i<slots.length; i++) {
-      if (!slots[i].querySelector('.pattern-item')) {
-        return slots[i];
-      }
+    for (let i = 0; i < slots.length; i++) {
+      if (!slots[i].querySelector('.pattern-item')) return slots[i];
     }
     return null;
   }
@@ -526,15 +523,15 @@
     createAnswerPlaceholders();
     optionsContainer.innerHTML = '';
 
-    currentQuestion.options.forEach(emoji => {
+    currentQuestion.options.forEach((emoji, index) => {
       const container = document.createElement('div');
       container.className = 'pattern-container';
+      container.dataset.homeId = `home-${currentIndex}-${index}`;
+
       const item = document.createElement('div');
       item.className = 'pattern-item';
       item.textContent = emoji;
-
-      // 记录这个图片原来的家
-      item.dataset.originalHome = container;
+      item.dataset.homeId = container.dataset.homeId;
 
       container.appendChild(item);
       optionsContainer.appendChild(container);
@@ -554,7 +551,8 @@
     const isCorrect = arraysAreEqual(userAnswers, correctAnswers);
     const score = isCorrect ? SCORE_PER_QUESTION : 0;
 
-    questionResults.push({
+    const existing = questionResults.findIndex(r => r.questionIndex === currentIndex);
+    const record = {
       questionIndex: currentIndex,
       questionNum: currentIndex + 1,
       theme: currentQuestion.theme,
@@ -562,7 +560,10 @@
       userAnswer: [...userAnswers],
       allUnusedAnswers: [...correctAnswers],
       score
-    });
+    };
+
+    if (existing > -1) questionResults[existing] = record;
+    else questionResults.push(record);
 
     totalScore = questionResults.reduce((sum, r) => sum + r.score, 0);
   }
@@ -580,14 +581,23 @@
 
     for (let i = 0; i < TOTAL_QUESTIONS; i++) {
       const q = questions[i];
-      const $record = questionResults.find(r => r.questionIndex === i);
-      const correctHtml = q.distractors.map(ans => `<span class="correct-answer">\({ans}</span>`).join('');
+      const record = questionResults.find(r => r.questionIndex === i);
+      const correctHtml = q.distractors.map(ans => `<span class="correct-answer">${ans}</span>`).join('');
 
       if (record) {
         html += `
-          <div class="question-result \){record.isCorrect ? 'correct' : 'incorrect'}">
+          <div class="question-result ${record.isCorrect ? 'correct' : 'incorrect'}">
             <strong>第${i + 1}题</strong>【${q.theme}】：
             ${record.isCorrect ? '✅ 回答正确' : '❌ 回答错误'}（得分：${record.score}分）<br>
+            • 正确答案：${correctHtml}<br>
+            • 你的选择：${record.userAnswer.length ? record.userAnswer.join('、') : '未选择'}
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="question-result">
+            <strong>第${i + 1}题</strong>【${q.theme}】：
+            未作答<br>
             • 正确答案：${correctHtml}
           </div>
         `;
@@ -629,7 +639,7 @@
     questionResults = [];
     totalScore = 0;
     isRestartMode = false;
-    nextQuestionBtn.textContent = '下$一题';
+    nextQuestionBtn.textContent = '下一题';
 
     buildQuestionSet();
     updateCounter();
@@ -671,35 +681,27 @@
       const optionItem = e.target.closest('.options-grid .pattern-item');
       const answerItem = e.target.closest('.answer-grid .pattern-item');
 
-      // 点击选项区的图片
+      // 点击选项区图片 → 放到作答区第一个空位
       if (optionItem) {
-        const originalContainer = optionItem.closest('.pattern-container');
-        if (originalContainer.classList.contains('empty')) return;
-
         const targetSlot = findFirstEmptyAnswerSlot();
         if (!targetSlot) return;
 
-        // 只移动图片，容器留在原地
         optionItem.remove();
         targetSlot.appendChild(optionItem);
-
-        // 原来的容器标记为空
-        originalContainer.classList.add('empty');
-
         pulseElement(targetSlot);
         return;
       }
 
-      // 点击作答区的图片，放回原来的家
+      // 点击作答区图片 → 放回原来的选项区方框
       if (answerItem) {
-        const originalHome = answerItem.dataset.originalHome;
-        if (!originalHome) return;
+        const homeId = answerItem.dataset.homeId;
+        if (!homeId) return;
+
+        const homeContainer = optionsContainer.querySelector(`[data-home-id="${homeId}"]`);
+        if (!homeContainer) return;
 
         answerItem.remove();
-        originalHome.appendChild(answerItem);
-        originalHome.classList.remove('empty');
-
-        return;
+        homeContainer.appendChild(answerItem);
       }
     });
   }
