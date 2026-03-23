@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>序列-无序-拖曳-护眼混合主题版</title>
+  <title>序列-无序-点击答题-护眼混合主题版</title>
   <style>
     * {
       box-sizing: border-box;
@@ -19,7 +19,6 @@
       padding: 0;
       overscroll-behavior: none;
       overflow-x: hidden;
-      touch-action: none;
       background: #eef8ee;
     }
 
@@ -29,7 +28,6 @@
       --emoji-size: 3.5rem;
       --card-max-width: 1500px;
       --transition-fast: 0.12s ease;
-      --transition-mid: 0.18s ease;
       --shadow-soft: 0 8px 18px rgba(90, 130, 90, 0.12);
     }
 
@@ -48,8 +46,6 @@
       background: #f8fff8;
       padding: 28px 20px 36px;
       margin-top: 4px;
-      touch-action: none;
-      position: relative;
       border-radius: 16px;
       box-shadow: 0 4px 16px rgba(90, 130, 90, 0.12);
     }
@@ -103,7 +99,6 @@
       animation: blink 1s infinite;
     }
 
-    /* 去掉方框样式，仅保留纯文字 */
     .memory-tip {
       padding: 0;
       margin: 0 0 18px 0;
@@ -179,31 +174,52 @@
     .pattern-container {
       padding: 4px;
       box-shadow: 0 2px 6px rgba(90,130,90,0.08);
+      cursor: pointer;
     }
 
     .answer-placeholder {
       padding: 0;
       background: #fcfffc;
+      cursor: pointer;
     }
 
     .pattern-item {
       font-size: var(--emoji-size);
       line-height: 1;
-      touch-action: none;
       transition:
         transform var(--transition-fast),
         filter var(--transition-fast),
         opacity var(--transition-fast);
       will-change: transform, opacity, filter;
+      cursor: pointer;
     }
 
-    .memory-grid .pattern-item {
+    .memory-grid .pattern-item,
+    .memory-grid .pattern-container {
       cursor: default;
     }
 
-    .pattern-container:hover {
+    .pattern-container:hover,
+    .answer-placeholder:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-soft);
+    }
+
+    .selected-option {
+      border: 3px solid #7cb342 !important;
+      background: #f4ffe6 !important;
+      box-shadow: 0 0 0 5px rgba(124,179,66,0.16), 0 10px 20px rgba(90,130,90,0.12) !important;
+      transform: scale(1.05) !important;
+    }
+
+    .answer-target {
+      border: 3px solid #7cb342 !important;
+      background: #f4ffe6 !important;
+      transform: scale(1.04) !important;
+    }
+
+    .filled {
+      background: #fafff6 !important;
     }
 
     .press-feedback {
@@ -211,22 +227,6 @@
       background: #f6fff1 !important;
       border-color: #7cb342 !important;
       box-shadow: inset 0 0 0 3px rgba(124, 179, 66, 0.18);
-    }
-
-    .drag-source {
-      opacity: 0.25 !important;
-      transform: scale(0.96) !important;
-    }
-
-    .drop-target {
-      border: 3px solid #7cb342 !important;
-      background: #f4ffe6 !important;
-      box-shadow: 0 0 0 5px rgba(124, 179, 66, 0.16), 0 10px 20px rgba(90,130,90,0.12) !important;
-      transform: scale(1.05) !important;
-    }
-
-    .filled {
-      background: #fafff6 !important;
     }
 
     @keyframes dropSuccess {
@@ -290,7 +290,6 @@
     .view { display: none; }
     .view.active { display: block; }
 
-    /* 去掉规则说明方框，仅保留空容器给得分结果用 */
     .message {
       text-align: left;
       font-size: 1rem;
@@ -345,32 +344,6 @@
       flex-wrap: wrap;
       justify-content: center;
       margin-top: 10px;
-    }
-
-    .drag-ghost {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: var(--box-size);
-      height: var(--box-size);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2.5px solid #7cb342;
-      border-radius: 10px;
-      background: rgba(248, 255, 248, 0.97);
-      box-shadow: 0 16px 30px rgba(90,130,90,0.22);
-      pointer-events: none;
-      z-index: 99999;
-      transform: translate3d(-9999px, -9999px, 0) scale(1.12);
-      transition: transform 0.03s linear;
-      backdrop-filter: blur(2px);
-    }
-
-    .drag-ghost .ghost-emoji {
-      font-size: var(--emoji-size);
-      line-height: 1;
-      filter: drop-shadow(0 5px 10px rgba(90,130,90,0.18));
     }
 
     @media (min-width: 768px) and (max-width: 1024px) {
@@ -471,7 +444,7 @@
 <body>
 <div class="card" id="app">
   <div class="header">
-    <span class="title">序列-无序-拖曳</span>
+    <span class="title">序列-无序-点击答题</span>
     <div style="display:flex; align-items:center; gap:12px;">
       <span class="badge" id="questionCounter">第 1 / 10 题</span>
       <span id="countdown">60</span>
@@ -516,10 +489,6 @@
   </div>
 </div>
 
-<div id="dragGhost" class="drag-ghost" style="display:none;">
-  <div class="ghost-emoji" id="dragGhostEmoji"></div>
-</div>
-
 <script>
 (function () {
   const TOTAL_QUESTIONS = 10;
@@ -557,20 +526,8 @@
   let countdownTimer = null;
   let remainingTime = COUNTDOWN_SECONDS;
   let isRestartMode = false;
+  let selectedOptionItem = null;
 
-  let dragState = {
-    active: false,
-    item: null,
-    sourceArea: null,
-    sourceContainer: null,
-    sourcePlaceholder: null,
-    pointerId: null,
-    offsetX: 0,
-    offsetY: 0,
-    currentTargetPlaceholder: null
-  };
-
-  const app = document.getElementById('app');
   const memoryView = document.getElementById('memoryView');
   const quizView = document.getElementById('quizView');
   const memoryGrid = document.getElementById('memoryGrid');
@@ -586,9 +543,6 @@
   const backToMemoryBtn = document.getElementById('backToMemoryBtn');
   const resetQuizBtn = document.getElementById('resetQuizBtn');
   const checkAnswerBtn = document.getElementById('checkAnswerBtn');
-
-  const dragGhost = document.getElementById('dragGhost');
-  const dragGhostEmoji = document.getElementById('dragGhostEmoji');
 
   function shuffleArray(arr) {
     const copy = [...arr];
@@ -716,13 +670,6 @@
     lastQuestionTip.style.display = currentIndex === TOTAL_QUESTIONS - 1 ? 'block' : 'none';
   }
 
-  function clearDropTargets() {
-    document.querySelectorAll('.answer-placeholder').forEach(ph => {
-      ph.classList.remove('drop-target');
-    });
-    dragState.currentTargetPlaceholder = null;
-  }
-
   function updateFilledState() {
     document.querySelectorAll('.answer-placeholder').forEach(ph => {
       if (ph.querySelector('.pattern-item')) ph.classList.add('filled');
@@ -737,10 +684,21 @@
     el.classList.add('drop-success');
   }
 
-  function addPressFeedback(container) {
-    if (!container) return;
-    container.classList.add('press-feedback');
-    setTimeout(() => container.classList.remove('press-feedback'), 110);
+  function clearSelectedOption() {
+    document.querySelectorAll('.selected-option').forEach(el => {
+      el.classList.remove('selected-option');
+    });
+    document.querySelectorAll('.answer-target').forEach(el => {
+      el.classList.remove('answer-target');
+    });
+    selectedOptionItem = null;
+  }
+
+  function highlightEmptyAnswerSlots() {
+    if (!selectedOptionItem) return;
+    document.querySelectorAll('.answer-placeholder').forEach(ph => {
+      ph.classList.add('answer-target');
+    });
   }
 
   function renderMemoryView() {
@@ -783,7 +741,6 @@
     const item = document.createElement('div');
     item.className = 'pattern-item';
     item.textContent = emoji;
-    item.dataset.draggable = 'true';
 
     container.appendChild(item);
     return container;
@@ -793,6 +750,7 @@
     const currentQuestion = questions[currentIndex];
     createAnswerPlaceholders();
     optionsContainer.innerHTML = '';
+    clearSelectedOption();
 
     if (!currentQuestion || currentQuestion.options.length !== OPTIONS_COUNT) {
       quizMessage.className = 'message';
@@ -913,8 +871,7 @@
     questionResults = [];
     totalScore = 0;
     isRestartMode = false;
-    clearDragState();
-
+    selectedOptionItem = null;
     nextQuestionBtn.textContent = '下一题';
 
     buildQuestionSet();
@@ -958,156 +915,65 @@
     showMemoryView();
   }
 
-  function clearDragState() {
-    dragState.active = false;
-    dragState.item = null;
-    dragState.sourceArea = null;
-    dragState.sourceContainer = null;
-    dragState.sourcePlaceholder = null;
-    dragState.pointerId = null;
-    dragState.offsetX = 0;
-    dragState.offsetY = 0;
-    dragState.currentTargetPlaceholder = null;
-
-    dragGhost.style.display = 'none';
-    clearDropTargets();
-
-    document.querySelectorAll('.drag-source').forEach(el => el.classList.remove('drag-source'));
-    document.querySelectorAll('.press-feedback').forEach(el => el.classList.remove('press-feedback'));
-  }
-
-  function startCustomDrag(item, clientX, clientY, pointerId) {
-    const parent = item.closest('.pattern-container, .answer-placeholder');
-    if (!parent) return;
-
-    const rect = item.getBoundingClientRect();
-
-    dragState.active = true;
-    dragState.item = item;
-    dragState.pointerId = pointerId;
-    dragState.sourceContainer = parent;
-    dragState.sourcePlaceholder = parent.classList.contains('answer-placeholder') ? parent : null;
-    dragState.sourceArea = parent.closest('.options-grid') ? 'options' : 'answer';
-    dragState.offsetX = clientX - rect.left;
-    dragState.offsetY = clientY - rect.top;
-
-    parent.classList.add('drag-source');
-
-    dragGhostEmoji.textContent = item.textContent;
-    dragGhost.style.display = 'flex';
-    moveGhost(clientX, clientY);
-  }
-
-  function moveGhost(clientX, clientY) {
-    const x = clientX - dragState.offsetX;
-    const y = clientY - dragState.offsetY;
-    dragGhost.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.08)`;
-  }
-
-  function getElementFromPointSafe(x, y) {
-    dragGhost.style.visibility = 'hidden';
-    const el = document.elementFromPoint(x, y);
-    dragGhost.style.visibility = 'visible';
-    return el;
-  }
-
-  function updateDropTarget(clientX, clientY) {
-    clearDropTargets();
-    const el = getElementFromPointSafe(clientX, clientY);
-    const placeholder = el ? el.closest('.answer-placeholder') : null;
-    if (placeholder) {
-      placeholder.classList.add('drop-target');
-      dragState.currentTargetPlaceholder = placeholder;
-    }
-  }
-
-  function sendItemBackToOptions(item) {
+  function moveAnswerItemBackToOptions(item) {
     const container = createDraggableOption(item.textContent);
     optionsContainer.appendChild(container);
     pulseElement(container);
   }
 
-  function placeItemIntoPlaceholder(item, placeholder) {
-    const existingItem = placeholder.querySelector('.pattern-item');
-    if (existingItem) {
-      sendItemBackToOptions(existingItem);
-    }
-
-    placeholder.innerHTML = '';
-    placeholder.appendChild(item);
-    pulseElement(placeholder);
-  }
-
-  function endCustomDrag(clientX, clientY) {
-    if (!dragState.active || !dragState.item) {
-      clearDragState();
-      return;
-    }
-
-    const item = dragState.item;
-    const el = getElementFromPointSafe(clientX, clientY);
-    const targetPlaceholder = el ? el.closest('.answer-placeholder') : null;
-    const targetOptionsGrid = el ? el.closest('.options-grid') : null;
-
-    if (targetPlaceholder) {
-      if (dragState.sourceArea === 'options') {
-        dragState.sourceContainer.remove();
-      }
-      placeItemIntoPlaceholder(item, targetPlaceholder);
-    } else if (targetOptionsGrid) {
-      if (dragState.sourceArea === 'answer') {
-        dragState.sourcePlaceholder.innerHTML = '';
-        sendItemBackToOptions(item);
-      }
-    }
-
-    updateFilledState();
-    clearDragState();
-  }
-
-  function initPointerDrag() {
-    ['gesturestart', 'gesturechange', 'gestureend', 'selectstart', 'contextmenu', 'dragstart'].forEach(type => {
-      document.addEventListener(type, (e) => {
-        e.preventDefault();
-      }, { passive: false });
-    });
-
-    app.addEventListener('pointerdown', (e) => {
+  function initClickAnswerMode() {
+    document.addEventListener('click', (e) => {
       if (!quizView.classList.contains('active')) return;
 
-      const item = e.target.closest('.pattern-item');
-      if (!item) return;
+      const optionContainer = e.target.closest('.options-grid .pattern-container');
+      const answerPlaceholder = e.target.closest('.answer-placeholder');
+      const answerItem = e.target.closest('.answer-grid .pattern-item');
 
-      const parent = item.closest('.pattern-container, .answer-placeholder');
-      if (!parent) return;
+      // 点选项区：选中/取消选中
+      if (optionContainer) {
+        if (selectedOptionItem === optionContainer) {
+          clearSelectedOption();
+          return;
+        }
+        clearSelectedOption();
+        selectedOptionItem = optionContainer;
+        optionContainer.classList.add('selected-option');
+        highlightEmptyAnswerSlots();
+        return;
+      }
 
-      if (parent.closest('.memory-grid')) return;
+      // 点作答区中的图片：放回选项区
+      if (answerItem) {
+        const parentPlaceholder = answerItem.closest('.answer-placeholder');
+        if (parentPlaceholder) {
+          parentPlaceholder.innerHTML = '';
+          moveAnswerItemBackToOptions(answerItem);
+          updateFilledState();
+          clearSelectedOption();
+        }
+        return;
+      }
 
-      addPressFeedback(parent);
+      // 点作答区空格：将已选中的选项放进去
+      if (answerPlaceholder) {
+        if (!selectedOptionItem) return;
 
-      e.preventDefault();
-      try { item.setPointerCapture(e.pointerId); } catch (_) {}
+        const selectedItem = selectedOptionItem.querySelector('.pattern-item');
+        if (!selectedItem) return;
 
-      startCustomDrag(item, e.clientX, e.clientY, e.pointerId);
-    });
+        const existingItem = answerPlaceholder.querySelector('.pattern-item');
+        if (existingItem) {
+          moveAnswerItemBackToOptions(existingItem);
+        }
 
-    app.addEventListener('pointermove', (e) => {
-      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
-      e.preventDefault();
-      moveGhost(e.clientX, e.clientY);
-      updateDropTarget(e.clientX, e.clientY);
-    });
+        answerPlaceholder.innerHTML = '';
+        answerPlaceholder.appendChild(selectedItem);
+        selectedOptionItem.remove();
+        pulseElement(answerPlaceholder);
 
-    app.addEventListener('pointerup', (e) => {
-      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
-      e.preventDefault();
-      endCustomDrag(e.clientX, e.clientY);
-    });
-
-    app.addEventListener('pointercancel', (e) => {
-      if (!dragState.active || dragState.pointerId !== e.pointerId) return;
-      e.preventDefault();
-      clearDragState();
+        updateFilledState();
+        clearSelectedOption();
+      }
     });
   }
 
@@ -1117,7 +983,7 @@
   checkAnswerBtn.addEventListener('click', showScore);
   nextQuestionBtn.addEventListener('click', () => nextQuestion(false));
 
-  initPointerDrag();
+  initClickAnswerMode();
   buildQuestionSet();
   updateCounter();
   renderMemoryView();
@@ -1126,4 +992,3 @@
 </script>
 </body>
 </html>
-```
