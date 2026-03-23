@@ -20,6 +20,7 @@
       overscroll-behavior: none;
       overflow-x: hidden;
       background: #eef8ee;
+      touch-action: manipulation;
     }
 
     :root {
@@ -379,6 +380,7 @@
   let countdownTimer = null;
   let remainingTime = COUNTDOWN_SECONDS;
   let isRestartMode = false;
+  let lastTapTime = 0;
 
   const memoryView = document.getElementById('memoryView');
   const quizView = document.getElementById('quizView');
@@ -394,6 +396,22 @@
   const backToMemoryBtn = document.getElementById('backToMemoryBtn');
   const resetQuizBtn = document.getElementById('resetQuizBtn');
   const checkAnswerBtn = document.getElementById('checkAnswerBtn');
+
+  // 禁止双击放大
+  document.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    if (now - lastTapTime < 300) {
+      e.preventDefault();
+    }
+    lastTapTime = now;
+  }, { passive: false });
+
+  // 禁止 gesture 放大
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
+    document.addEventListener(type, function(e) {
+      e.preventDefault();
+    }, { passive: false });
+  });
 
   function shuffleArray(arr) {
     const copy = [...arr];
@@ -492,6 +510,15 @@
       if (!slots[i].querySelector('.pattern-item')) return slots[i];
     }
     return null;
+  }
+
+  function compactAnswerArea() {
+    const answerItems = [...answerContainer.querySelectorAll('.pattern-item')];
+    const slots = [...answerContainer.querySelectorAll('.answer-placeholder')];
+    slots.forEach(slot => slot.innerHTML = '');
+    answerItems.forEach((item, index) => {
+      if (slots[index]) slots[index].appendChild(item);
+    });
   }
 
   function renderMemoryView() {
@@ -681,7 +708,6 @@
       const optionItem = e.target.closest('.options-grid .pattern-item');
       const answerItem = e.target.closest('.answer-grid .pattern-item');
 
-      // 点击选项区图片 → 放到作答区第一个空位
       if (optionItem) {
         const targetSlot = findFirstEmptyAnswerSlot();
         if (!targetSlot) return;
@@ -692,7 +718,6 @@
         return;
       }
 
-      // 点击作答区图片 → 放回原来的选项区方框
       if (answerItem) {
         const homeId = answerItem.dataset.homeId;
         if (!homeId) return;
@@ -702,6 +727,9 @@
 
         answerItem.remove();
         homeContainer.appendChild(answerItem);
+
+        // 自动紧凑回填
+        compactAnswerArea();
       }
     });
   }
