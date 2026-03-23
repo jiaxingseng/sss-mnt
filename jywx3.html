@@ -29,6 +29,7 @@
       --emoji-size: 3.5rem;
       --card-max-width: 1500px;
       --transition-fast: 0.12s ease;
+      --transition-mid: 0.2s ease;
       --shadow-soft: 0 8px 18px rgba(90, 130, 90, 0.12);
     }
 
@@ -49,6 +50,7 @@
       margin-top: 4px;
       border-radius: 16px;
       box-shadow: 0 4px 16px rgba(90, 130, 90, 0.12);
+      touch-action: manipulation;
     }
 
     .header {
@@ -153,9 +155,15 @@
       aspect-ratio: 1 / 1;
       border-radius: 8px;
       position: relative;
-      transition: all var(--transition-fast);
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        background-color var(--transition-fast),
+        border-color var(--transition-fast),
+        opacity var(--transition-fast);
       will-change: transform, box-shadow, opacity;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     .pattern-container {
@@ -173,6 +181,14 @@
       font-size: var(--emoji-size);
       line-height: 1;
       cursor: pointer;
+      transition: transform var(--transition-fast), opacity var(--transition-fast), filter var(--transition-fast);
+    }
+
+    .press-feedback {
+      transform: scale(0.95) !important;
+      background: #f2ffe8 !important;
+      border-color: #7cb342 !important;
+      box-shadow: inset 0 0 0 3px rgba(124,179,66,0.16);
     }
 
     @keyframes dropSuccess {
@@ -189,7 +205,7 @@
     }
 
     .drop-success {
-      animation: dropSuccess 0.28s ease;
+      animation: dropSuccess 0.26s ease;
     }
 
     .button-row {
@@ -380,7 +396,7 @@
   let countdownTimer = null;
   let remainingTime = COUNTDOWN_SECONDS;
   let isRestartMode = false;
-  let lastTapTime = 0;
+  let lastTouchEnd = 0;
 
   const memoryView = document.getElementById('memoryView');
   const quizView = document.getElementById('quizView');
@@ -398,20 +414,29 @@
   const checkAnswerBtn = document.getElementById('checkAnswerBtn');
 
   // 禁止双击放大
-  document.addEventListener('touchend', function(e) {
-    const now = Date.now();
-    if (now - lastTapTime < 300) {
-      e.preventDefault();
-    }
-    lastTapTime = now;
+  document.addEventListener('dblclick', function(e) {
+    e.preventDefault();
   }, { passive: false });
 
-  // 禁止 gesture 放大
+  document.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
     document.addEventListener(type, function(e) {
       e.preventDefault();
     }, { passive: false });
   });
+
+  function addPressFeedback(el) {
+    if (!el) return;
+    el.classList.add('press-feedback');
+    setTimeout(() => el.classList.remove('press-feedback'), 100);
+  }
 
   function shuffleArray(arr) {
     const copy = [...arr];
@@ -513,11 +538,17 @@
   }
 
   function compactAnswerArea() {
-    const answerItems = [...answerContainer.querySelectorAll('.pattern-item')];
     const slots = [...answerContainer.querySelectorAll('.answer-placeholder')];
+    const items = slots
+      .map(slot => slot.querySelector('.pattern-item'))
+      .filter(Boolean);
+
     slots.forEach(slot => slot.innerHTML = '');
-    answerItems.forEach((item, index) => {
-      if (slots[index]) slots[index].appendChild(item);
+
+    items.forEach((item, index) => {
+      if (slots[index]) {
+        slots[index].appendChild(item);
+      }
     });
   }
 
@@ -709,6 +740,7 @@
       const answerItem = e.target.closest('.answer-grid .pattern-item');
 
       if (optionItem) {
+        addPressFeedback(optionItem.parentElement);
         const targetSlot = findFirstEmptyAnswerSlot();
         if (!targetSlot) return;
 
@@ -719,6 +751,7 @@
       }
 
       if (answerItem) {
+        addPressFeedback(answerItem.closest('.answer-placeholder'));
         const homeId = answerItem.dataset.homeId;
         if (!homeId) return;
 
@@ -727,8 +760,8 @@
 
         answerItem.remove();
         homeContainer.appendChild(answerItem);
+        pulseElement(homeContainer);
 
-        // 自动紧凑回填
         compactAnswerArea();
       }
     });
