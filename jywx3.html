@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>序列-无序-点击答题</title>
+  <title>序列-无序-点击答题-最终稳定版</title>
   <style>
     * {
       box-sizing: border-box;
@@ -29,7 +29,6 @@
       --emoji-size: 3.5rem;
       --card-max-width: 1500px;
       --transition-fast: 0.12s ease;
-      --transition-mid: 0.2s ease;
       --shadow-soft: 0 8px 18px rgba(90, 130, 90, 0.12);
     }
 
@@ -119,6 +118,7 @@
       text-align: center;
     }
 
+    /* 记忆区：9张，3行 */
     .memory-grid {
       display: grid;
       grid-template-columns: repeat(3, var(--box-size));
@@ -127,6 +127,7 @@
       margin-bottom: 22px;
     }
 
+    /* 作答区：12个方框，2行 */
     .answer-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
@@ -135,6 +136,7 @@
       margin-bottom: 30px;
     }
 
+    /* 选项区：18个，固定3行 */
     .options-grid {
       display: grid;
       grid-template-columns: repeat(6, var(--box-size));
@@ -280,6 +282,11 @@
       background: #fff1f1;
     }
 
+    .question-result.unanswered {
+      border-left-color: #999;
+      background: #f7faf7;
+    }
+
     .correct-answer {
       background-color: #dff0df;
       color: #205520;
@@ -316,12 +323,20 @@
         --card-max-width: 100%;
       }
 
+      .memory-grid {
+        grid-template-columns: repeat(3, var(--box-size));
+      }
+
       .answer-grid {
         grid-template-columns: repeat(4, var(--box-size));
       }
 
+      /* 手机下若强制6列太窄，可改成3行6列只适合大屏/iPad；
+         这里为了“固定3行”要求，仍保留6列 */
       .options-grid {
-        grid-template-columns: repeat(4, var(--box-size));
+        grid-template-columns: repeat(6, var(--box-size));
+        transform: scale(0.92);
+        transform-origin: top center;
       }
     }
   </style>
@@ -380,13 +395,17 @@
   const MAX_CORRECT = 12;
   const SCORE_PER_QUESTION = 1;
   const COUNTDOWN_SECONDS = 60;
+  const MAX_BUILD_ATTEMPTS = 400;
 
+  // 为了稳定生成18选项，扩充每个主题素材
   const themeBank = [
-    { theme: '动物', items: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐮','🐷','🐸','🐵','🐨','🐔','🐧','🐦','🦆','🦉'] },
-    { theme: '水果', items: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋','🍏','🍐','🍓','🥝','🍈','🫐'] },
-    { theme: '蔬菜', items: ['🥔','🧅','🥕','🌽','🥦','🥒','🍅','🍆','🥑','🥬','🧄','🍄','🌶️','🌰','🥜'] },
-    { theme: '食物', items: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖','🍔','🌭','🥪','🍕','🍟'] },
-    { theme: '运动', items: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🎳','⛳','🏒','🥋'] }
+    { theme: '动物', items: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐯','🦁','🐮','🐷','🐸','🐵','🐨','🐔','🐧','🐦','🦆','🦉','🐺','🐗','🐴','🐢'] },
+    { theme: '水果', items: ['🍎','🍌','🍇','🍊','🍉','🍒','🍑','🍍','🥭','🍋','🍏','🍐','🍓','🥝','🍈','🫐','🍅','🥥'] },
+    { theme: '蔬菜', items: ['🥔','🧅','🥕','🌽','🥦','🥒','🍆','🥑','🥬','🧄','🍄','🌶️','🌰','🥜','🫑','🫒','🫛','🍠'] },
+    { theme: '食物', items: ['🍞','🥐','🥖','🥨','🧀','🥚','🍳','🥓','🍗','🍖','🍔','🌭','🥪','🍕','🍟','🍚','🍜','🍝','🍣','🍤','🥟','🍿'] },
+    { theme: '运动', items: ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🎳','⛳','🏒','🥋','🏹','🥅','🛹'] },
+    { theme: '交通', items: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🚚','🚜','🛵','🏍️','🚲','✈️','🚁','🚤','⛵','🚢'] },
+    { theme: '文具', items: ['✏️','🖊️','🖋️','✒️','📏','📐','✂️','📎','📌','📚','📖','📝','📒','📕','📘','📙','📗','📓'] }
   ];
 
   let questions = [];
@@ -413,16 +432,13 @@
   const resetQuizBtn = document.getElementById('resetQuizBtn');
   const checkAnswerBtn = document.getElementById('checkAnswerBtn');
 
-  // 禁止双击放大
   document.addEventListener('dblclick', function(e) {
     e.preventDefault();
   }, { passive: false });
 
   document.addEventListener('touchend', function(e) {
     const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-      e.preventDefault();
-    }
+    if (now - lastTouchEnd <= 300) e.preventDefault();
     lastTouchEnd = now;
   }, { passive: false });
 
@@ -463,37 +479,53 @@
   }
 
   function createOneMixedQuestion() {
-    const validThemes = shuffleArray(themeBank);
-    const [themeA, themeB] = validThemes.slice(0, 2);
+    const themes = sample(themeBank, 2);
+    const themeA = themes[0];
+    const themeB = themes[1];
 
     const memoryA = sample([...new Set(themeA.items)], 5);
     const memoryB = sample([...new Set(themeB.items)], 4);
     const memory = shuffleArray([...memoryA, ...memoryB]);
 
-    const correctCount = randomInt(MIN_CORRECT, MAX_CORRECT);
+    const poolA = themeA.items.filter(x => !memory.includes(x));
+    const poolB = themeB.items.filter(x => !memory.includes(x));
+    let outsidePool = [...new Set([...poolA, ...poolB])];
+
+    const dynamicMaxCorrect = Math.min(MAX_CORRECT, outsidePool.length);
+    if (dynamicMaxCorrect < MIN_CORRECT) return null;
+
+    const correctCount = randomInt(MIN_CORRECT, dynamicMaxCorrect);
     const shownMemoryCount = OPTIONS_COUNT - correctCount;
 
+    if (shownMemoryCount < 0 || shownMemoryCount > MEMORY_COUNT) return null;
+
     const shownMemoryItems = sample(memory, shownMemoryCount);
-
-    const poolA = themeA.items.filter(x => !memoryA.includes(x) && !memoryB.includes(x));
-    const poolB = themeB.items.filter(x => !memoryA.includes(x) && !memoryB.includes(x));
-    const outsidePool = [...new Set([...poolA, ...poolB])];
-
     const distractors = sample(outsidePool, correctCount);
-    const options = shuffleArray([...shownMemoryItems, ...distractors]);
+
+    if (shownMemoryItems.length + distractors.length !== OPTIONS_COUNT) return null;
 
     return {
       theme: `${themeA.theme} + ${themeB.theme}`,
       memory,
       distractors,
-      options
+      options: shuffleArray([...shownMemoryItems, ...distractors])
     };
   }
 
   function buildQuestionSet() {
     questions = [];
-    for (let i = 0; i < TOTAL_QUESTIONS; i++) {
-      questions.push(createOneMixedQuestion());
+    let attempts = 0;
+
+    while (questions.length < TOTAL_QUESTIONS && attempts < MAX_BUILD_ATTEMPTS) {
+      attempts++;
+      const q = createOneMixedQuestion();
+      if (q && q.options.length === OPTIONS_COUNT) {
+        questions.push(q);
+      }
+    }
+
+    if (questions.length < TOTAL_QUESTIONS) {
+      throw new Error('题目生成失败：无法稳定生成10题18选项数据');
     }
   }
 
@@ -530,25 +562,17 @@
   }
 
   function findFirstEmptyAnswerSlot() {
-    const slots = document.querySelectorAll('.answer-placeholder');
-    for (let i = 0; i < slots.length; i++) {
-      if (!slots[i].querySelector('.pattern-item')) return slots[i];
-    }
-    return null;
+    const slots = [...answerContainer.querySelectorAll('.answer-placeholder')];
+    return slots.find(slot => !slot.querySelector('.pattern-item')) || null;
   }
 
   function compactAnswerArea() {
     const slots = [...answerContainer.querySelectorAll('.answer-placeholder')];
-    const items = slots
-      .map(slot => slot.querySelector('.pattern-item'))
-      .filter(Boolean);
+    const items = slots.map(slot => slot.querySelector('.pattern-item')).filter(Boolean);
 
     slots.forEach(slot => slot.innerHTML = '');
-
     items.forEach((item, index) => {
-      if (slots[index]) {
-        slots[index].appendChild(item);
-      }
+      if (slots[index]) slots[index].appendChild(item);
     });
   }
 
@@ -609,7 +633,7 @@
     const isCorrect = arraysAreEqual(userAnswers, correctAnswers);
     const score = isCorrect ? SCORE_PER_QUESTION : 0;
 
-    const existing = questionResults.findIndex(r => r.questionIndex === currentIndex);
+    const existingIndex = questionResults.findIndex(r => r.questionIndex === currentIndex);
     const record = {
       questionIndex: currentIndex,
       questionNum: currentIndex + 1,
@@ -620,7 +644,7 @@
       score
     };
 
-    if (existing > -1) questionResults[existing] = record;
+    if (existingIndex > -1) questionResults[existingIndex] = record;
     else questionResults.push(record);
 
     totalScore = questionResults.reduce((sum, r) => sum + r.score, 0);
@@ -653,7 +677,7 @@
         `;
       } else {
         html += `
-          <div class="question-result">
+          <div class="question-result unanswered">
             <strong>第${i + 1}题</strong>【${q.theme}】：
             未作答<br>
             • 正确答案：${correctHtml}
@@ -692,7 +716,6 @@
 
   function resetAll() {
     if (countdownTimer) clearInterval(countdownTimer);
-
     currentIndex = 0;
     questionResults = [];
     totalScore = 0;
@@ -773,8 +796,8 @@
   checkAnswerBtn.addEventListener('click', showScore);
   nextQuestionBtn.addEventListener('click', () => nextQuestion(false));
 
-  initClickAnswerMode();
   buildQuestionSet();
+  initClickAnswerMode();
   updateCounter();
   renderMemoryView();
   initCountdown();
