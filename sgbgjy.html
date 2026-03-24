@@ -1,1 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>序列题多题版（iPad适配）</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f4f8ee;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      color: #333;
+    }
 
+    .page {
+      width: min(100%, 1100px);
+      margin: 0 auto;
+      padding: 18px 20px 32px;
+      display: none;
+    }
+    .page.active { display: block; }
+
+    .question-desc {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .puzzle-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 8px 0 22px;
+      overflow-x: auto;
+    }
+    .puzzle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 170px);
+      gap: 14px 26px;
+    }
+    .mini-grid {
+      width: 170px;
+      height: 170px;
+      border: 2px solid #8f8f8f;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      background: #fff;
+    }
+    .cell {
+      border: 1px solid #a9a9a9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .num-cell {
+      background: #43a843;
+      color: #fff;
+      font-size: 42px;
+      font-weight: 500;
+    }
+
+    .question-btn-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3b252;
+      color: #fff;
+      border-radius: 18px;
+      padding: 8px 18px;
+      font-size: 22px;
+      font-weight: 700;
+      min-width: 92px;
+    }
+    .timer-box {
+      background: #79c843;
+      color: #fff;
+      border-radius: 4px;
+      padding: 9px 20px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+      min-width: 118px;
+      text-align: center;
+    }
+
+    .progress-wrap {
+      margin-bottom: 14px;
+    }
+    .progress-line {
+      height: 6px;
+      background: #d6dccf;
+      border-radius: 999px;
+      position: relative;
+      overflow: visible;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #79c843;
+      border-radius: 999px;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+    .rocket {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px;
+      height: 22px;
+      background: #79c843;
+      clip-path: polygon(100% 50%, 35% 0, 35% 30%, 0 50%, 35% 70%, 35% 100%);
+    }
+    .rocket::after {
+      content: "";
+      position: absolute;
+      right: 7px;
+      top: 6px;
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    .page-index {
+      margin-bottom: 10px;
+      color: #7b7b7b;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .section-title {
+      font-size: 18px;
+      color: #666;
+      font-weight: 700;
+      margin: 14px 0 10px;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(90px, 110px));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .answer-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 2px solid #d9d9d9;
+      border-radius: 6px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .answer-box.active {
+      border-color: #79c843;
+      box-shadow: 0 0 0 3px rgba(121,200,67,.14);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(90px, 110px));
+      gap: 12px;
+    }
+    .option-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 2px solid #d9d9d9;
+      border-radius: 6px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .option-box:hover {
+      border-color: #8e97ff;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .tip-text {
+      color: #888;
+      font-size: 14px;
+      flex: 1 1 220px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .main-btn {
+      border: none;
+      border-radius: 8px;
+      background: #79c843;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 12px 24px;
+      cursor: pointer;
+    }
+    .sub-btn {
+      border: none;
+      border-radius: 8px;
+      background: #dfe8d3;
+      color: #56614a;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 12px 24px;
+      cursor: pointer;
+    }
+
+    .icon-wrap {
+      width: 76px;
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .transform-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+    }
+
+    .emoji-icon {
+      font-size: 46px;
+      line-height: 1;
+      user-select: none;
+    }
+    .emoji-small {
+      font-size: 32px;
+    }
+    .emoji-big {
+      font-size: 58px;
+    }
+
+    .empty-pic {
+      width: 64px;
+      height: 64px;
+      border: 3px solid #c7c7c7;
+      background: #fff;
+      position: relative;
+    }
+    .empty-pic .sun-dot {
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      border: 3px solid #a9a9a9;
+      border-radius: 50%;
+      left: 8px;
+      top: 8px;
+      background: transparent;
+    }
+    .empty-pic svg {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 6px;
+      width: 50px;
+      height: 36px;
+    }
+
+    .result-box {
+      padding-top: 40px;
+    }
+    .result-box h2 {
+      font-size: 34px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .result-box p {
+      font-size: 22px;
+      color: #666;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .result-detail,
+    .analysis-box {
+      margin: 20px auto 0;
+      width: min(100%, 900px);
+      text-align: left;
+      background: #fff;
+      border: 1px solid #d9e2cf;
+      border-radius: 10px;
+      padding: 16px 18px;
+      line-height: 1.8;
+      font-size: 17px;
+    }
+    .analysis-box {
+      margin-top: 18px;
+      background: #fcfff8;
+    }
+    .analysis-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #516247;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        padding: 14px 12px 26px;
+      }
+      .puzzle-grid {
+        grid-template-columns: repeat(3, 150px);
+        gap: 12px 18px;
+      }
+      .mini-grid {
+        width: 150px;
+        height: 150px;
+      }
+      .answer-grid,
+      .options-grid {
+        grid-template-columns: repeat(3, minmax(84px, 1fr));
+      }
+      .icon-wrap {
+        width: 68px;
+        height: 68px;
+      }
+      .emoji-icon { font-size: 40px; }
+      .emoji-small { font-size: 28px; }
+      .emoji-big { font-size: 50px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page active" id="question-page">
+    <div class="page-index" id="question-index"></div>
+    <div class="question-desc">
+      [序列-右序-拖曳【家长指导语：根据每行田字格内图形的变化规律，右下角绿色背景数字格子内的图形是什么？记住它们，并在下一页按数字顺序选择出来】]
+    </div>
+
+    <div class="puzzle-wrap">
+      <div class="puzzle-grid" id="puzzle-grid"></div>
+    </div>
+
+    <div class="question-btn-row">
+      <button class="main-btn" onclick="enterAnswerPage()">请选择</button>
+    </div>
+  </div>
+
+  <div class="page" id="answer-page">
+    <div class="page-index" id="answer-index"></div>
+
+    <div class="top-bar">
+      <div class="pill">序列题</div>
+      <div class="timer-box" id="timer">03:00</div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-line" id="progress-line">
+        <div class="progress-fill" id="progress-fill"></div>
+        <div class="rocket" id="rocket"></div>
+      </div>
+    </div>
+
+    <div class="section-title">作答区</div>
+    <div class="answer-grid" id="answer-grid"></div>
+
+    <div class="section-title">选项区</div>
+    <div class="options-grid" id="options-grid"></div>
+
+    <div class="footer-actions">
+      <div class="tip-text">点击作答区中的图片，可清空该位置并重新选择</div>
+      <div class="btn-group">
+        <button class="sub-btn" onclick="backToQuestion()">返回题目</button>
+        <button class="main-btn" id="next-btn" onclick="submitCurrentAnswer()">下一题</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="result-page">
+    <div class="result-box">
+      <h2>作答完成</h2>
+      <p id="result-text"></p>
+      <div class="result-detail" id="result-detail"></div>
+      <div class="analysis-box" id="analysis-box" style="display:none;"></div>
+      <div style="margin-top:24px; text-align:center;">
+        <button class="main-btn" onclick="restartAll()">重新开始</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const EMPTY_ICON = "empty-pic";
+    const QUESTION_COUNT = 5;
+    const TOTAL_SECONDS = 180;
+
+    const themePools = {
+      animalA: ["🐟", "🐦", "🐢", "🦋", "🦆", "🐬"],
+      animalB: ["🦊", "🐓", "🦉", "🐧", "🦜", "🐇"],
+      ocean: ["🐠", "🐙", "🐚", "⛵", "🛶", "⚓"],
+      transport: ["✈️", "🚗", "🚲", "🚀", "🚤", "🚁"],
+      weather: ["☀️", "🌙", "⭐", "🌈", "☁️", "⛅"],
+      plant: ["🍀", "🌿", "🌵", "🍁", "🌷", "🌻"],
+      direction: ["➡️", "⬆️", "↗️", "↘️", "🔺", "🔻"],
+      stationery: ["✏️", "🖍️", "📏", "✂️", "📌", "🖊️"],
+      toy: ["🪁", "🎈", "🧸", "🎮", "🪀", "🛹"],
+      sports: ["🏸", "🏒", "⛳", "🏹", "🥅", "🎯"],
+      food: ["🍕", "🍓", "🍉", "🌽", "🥕", "🍤"],
+      festival: ["🎁", "🎀", "🎏", "🎐", "🎎", "🪔"],
+      travel: ["🧭", "🗺️", "🏕️", "🛶", "🎣", "📍"],
+      tool: ["🔧", "🪓", "🔨", "🪛", "⚙️", "🔩"],
+      home: ["🔔", "🪑", "🛏️", "🚪", "🪞", "🪟"]
+    };
+
+    const directionalSet = new Set([
+      "🐟","🐦","🦋","🦆","🐬","🦊","🐓","🦉","🦜",
+      "⛵","🛶","⚓","✈️","🚗","🚲","🚀","🚤","🚁",
+      "🌙","🌈","🍁","➡️","⬆️","↗️","↘️","🔺","🔻",
+      "✏️","🖍️","📏","✂️","📌","🖊️","🪁","🎈","🪀","🛹",
+      "🏸","🏒","⛳","🏹","🎯","🥕","🍤","🎏","🎐","🧭","🗺️","🎣","📍",
+      "🔧","🪓","🔨","🪛","🔔","🚪","🪞"
+    ]);
+
+    const allEmojis = Object.values(themePools).flat();
+
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let timer = null;
+    let remain = TOTAL_SECONDS;
+    let activeIndex = 0;
+
+    function showPage(id) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function createEmptyPic() {
+      const wrap = document.createElement("div");
+      wrap.className = "empty-pic";
+      wrap.innerHTML = `
+        <div class="sun-dot"></div>
+        <svg viewBox="0 0 58 42" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 34 L2 18 L14 18 L24 8 L33 18 L40 6 L56 24 L56 34 Z"
+                fill="none" stroke="#9f9f9f" stroke-width="3" />
+        </svg>
+      `;
+      return wrap;
+    }
+
+    function getTransformStyle(mode) {
+      switch (mode) {
+        case "small": return "transform: scale(0.72);";
+        case "big": return "transform: scale(1.2);";
+        case "flip": return "transform: scaleX(-1);";
+        case "mirror": return "transform: scaleX(-1);";
+        case "rot90": return "transform: rotate(90deg);";
+        case "rot180": return "transform: rotate(180deg);";
+        default: return "";
+      }
+    }
+
+    function modeLabel(mode) {
+      const map = {
+        keep: "保持原样",
+        small: "缩小",
+        big: "变大",
+        flip: "翻转/镜像",
+        mirror: "镜像",
+        rot90: "旋转90°",
+        rot180: "旋转180°",
+        empty: "变为空白图片"
+      };
+      return map[mode] || mode;
+    }
+
+    function createGraphic(data) {
+      const wrap = document.createElement("div");
+      wrap.className = "icon-wrap";
+
+      if (data === EMPTY_ICON || (typeof data === "object" && data.type === EMPTY_ICON)) {
+        wrap.appendChild(createEmptyPic());
+        return wrap;
+      }
+
+      let type = data;
+      let mode = "keep";
+      if (typeof data === "object") {
+        type = data.type;
+        mode = data.mode || "keep";
+      }
+
+      const holder = document.createElement("div");
+      holder.className = "transform-box";
+      holder.style = getTransformStyle(mode);
+
+      const span = document.createElement("div");
+      span.className = "emoji-icon";
+      if (mode === "small") span.classList.add("emoji-small");
+      if (mode === "big") span.classList.add("emoji-big");
+      span.textContent = type;
+
+      holder.appendChild(span);
+      wrap.appendChild(holder);
+      return wrap;
+    }
+
+    function createMiniGrid(cells) {
+      const grid = document.createElement("div");
+      grid.className = "mini-grid";
+      cells.forEach(item => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        if (item && item.type === "num") {
+          cell.classList.add("num-cell");
+          cell.textContent = item.value;
+        } else if (item) {
+          cell.appendChild(createGraphic(item));
+        }
+        grid.appendChild(cell);
+      });
+      return grid;
+    }
+
+    function differentFrom(base, pool) {
+      for (const x of pool) {
+        if (x !== base) return x;
+      }
+      return pool[0];
+    }
+
+    function pickTwoOrThreeThemes() {
+      const keys = shuffle(Object.keys(themePools));
+      const count = Math.random() < 0.5 ? 2 : 3;
+      return keys.slice(0, count);
+    }
+
+    function buildThemeRows() {
+      const availableThemes = pickTwoOrThreeThemes();
+      return shuffle(
+        availableThemes.length === 2
+          ? [availableThemes[0], availableThemes[1], availableThemes[0]]
+          : availableThemes
+      );
+    }
+
+    function canTransform(emoji, mode) {
+      if (mode === "empty" || mode === "keep" || mode === "small" || mode === "big") return true;
+      return directionalSet.has(emoji);
+    }
+
+    function buildAnswerResult(base, mode) {
+      if (mode === "empty") return EMPTY_ICON;
+      return { type: base, mode };
+    }
+
+    function sameAnswer(a, b) {
+      if (a === EMPTY_ICON && b === EMPTY_ICON) return true;
+      if (!a || !b) return false;
+      if (typeof a === "object" && typeof b === "object") {
+        return a.type === b.type && (a.mode || "keep") === (b.mode || "keep");
+      }
+      return false;
+    }
+
+    function normalizeOption(item) {
+      if (item === EMPTY_ICON) return EMPTY_ICON;
+      return { type: item.type, mode: item.mode || "keep" };
+    }
+
+    function optionExists(arr, item) {
+      return arr.some(x => sameAnswer(normalizeOption(x), normalizeOption(item)));
+    }
+
+    function generateDynamicOptions(correctAnswers) {
+      let opts = [];
+
+      correctAnswers.forEach(ans => {
+        if (!optionExists(opts, ans)) opts.push(ans);
+      });
+
+      const distractorPool = [];
+      allEmojis.forEach(e => {
+        distractorPool.push({ type: e, mode: "keep" });
+        distractorPool.push({ type: e, mode: "small" });
+        distractorPool.push({ type: e, mode: "big" });
+        if (directionalSet.has(e)) {
+          distractorPool.push({ type: e, mode: "flip" });
+          distractorPool.push({ type: e, mode: "rot180" });
+          distractorPool.push({ type: e, mode: "rot90" });
+        }
+      });
+      distractorPool.push(EMPTY_ICON);
+
+      const shuffled = shuffle(distractorPool);
+      for (const item of shuffled) {
+        if (opts.length >= 12) break;
+        if (!optionExists(opts, item)) opts.push(item);
+      }
+
+      while (opts.length < 12) {
+        opts.push(EMPTY_ICON);
+      }
+
+      return shuffle(opts).slice(0, 12);
+    }
+
+    function generateOneQuestion() {
+      const rowThemes = buildThemeRows();
+
+      const row1Pool = shuffle(themePools[rowThemes[0]]);
+      const row2Pool = shuffle(themePools[rowThemes[1]]);
+      const row3Pool = shuffle(themePools[rowThemes[2]]);
+
+      const row1Bases = row1Pool.slice(0, 4);
+      const row2Bases = row2Pool.slice(0, 4);
+      const row3Bases = row3Pool.slice(0, 4);
+
+      const baseModes = ["keep", "small", "empty", "flip", "rot90", "rot180", "big"];
+      const answerModes = [];
+
+      for (let i = 0; i < 4; i++) {
+        const base = row3Bases[i];
+        const available = baseModes.filter(m => canTransform(base, m));
+        answerModes.push(shuffle(available)[0]);
+      }
+
+      const demoRowChoice = shuffle([1, 2, 1, 2]);
+
+      const row1A = [], row1B = [], row1R = [];
+      const row2A = [], row2B = [], row2R = [];
+      const row3A = [], row3B = [];
+      const row3Nums = [
+        { type: "num", value: "1" },
+        { type: "num", value: "2" },
+        { type: "num", value: "3" },
+        { type: "num", value: "4" }
+      ];
+
+      const correctAnswers = [];
+      const explanations = [];
+
+      for (let i = 0; i < 4; i++) {
+        const mode = answerModes[i];
+
+        const base1 = row1Bases[i];
+        const base2 = row2Bases[i];
+        const base3 = row3Bases[i];
+
+        const diff1 = differentFrom(base1, row1Pool);
+        const diff2 = differentFrom(base2, row2Pool);
+        const diff3 = differentFrom(base3, row3Pool);
+
+        const mode1 = canTransform(base1, mode) ? mode : "keep";
+        const mode2 = canTransform(base2, mode) ? mode : "keep";
+
+        if (mode === "empty") {
+          row3A.push({ type: base3, mode: "keep" });
+          row3B.push({ type: diff3, mode: "keep" });
+          correctAnswers.push(EMPTY_ICON);
+          explanations.push(`第${i + 1}格：第3行前两个图片不同（${base3} 和 ${diff3}），所以结果是空白图片。`);
+        } else {
+          row3A.push({ type: base3, mode: "keep" });
+          row3B.push({ type: base3, mode: "keep" });
+          correctAnswers.push(buildAnswerResult(base3, mode));
+          explanations.push(`第${i + 1}格：第3行前两个图片相同（${base3}），根据前两行相同位置学到的规律，结果应${modeLabel(mode)}。`);
+        }
+
+        if (demoRowChoice[i] === 1) {
+          row1A.push({ type: base1, mode: "keep" });
+          row1B.push({ type: mode === "empty" ? diff1 : base1, mode: "keep" });
+          row1R.push(mode === "empty" ? EMPTY_ICON : buildAnswerResult(base1, mode1));
+
+          row2A.push({ type: base2, mode: "keep" });
+          row2B.push({ type: diff2, mode: "keep" });
+          row2R.push(EMPTY_ICON);
+        } else {
+          row2A.push({ type: base2, mode: "keep" });
+          row2B.push({ type: mode === "empty" ? diff2 : base2, mode: "keep" });
+          row2R.push(mode === "empty" ? EMPTY_ICON : buildAnswerResult(base2, mode2));
+
+          row1A.push({ type: base1, mode: "keep" });
+          row1B.push({ type: diff1, mode: "keep" });
+          row1R.push(EMPTY_ICON);
+        }
+      }
+
+      return {
+        row1A, row1B, row1R,
+        row2A, row2B, row2R,
+        row3A, row3B, row3Nums,
+        correctAnswers,
+        options: generateDynamicOptions(correctAnswers),
+        userAnswers: [null, null, null, null],
+        explanations
+      };
+    }
+
+    function initQuestions() {
+      questions = [];
+      for (let i = 0; i < QUESTION_COUNT; i++) {
+        questions.push(generateOneQuestion());
+      }
+    }
+
+    function renderQuestionPage() {
+      const q = questions[currentQuestionIndex];
+      document.getElementById("question-index").textContent = `题目 ${currentQuestionIndex + 1} / ${QUESTION_COUNT}`;
+
+      const puzzleGrid = document.getElementById("puzzle-grid");
+      puzzleGrid.innerHTML = "";
+      puzzleGrid.appendChild(createMiniGrid(q.row1A));
+      puzzleGrid.appendChild(createMiniGrid(q.row1B));
+      puzzleGrid.appendChild(createMiniGrid(q.row1R));
+      puzzleGrid.appendChild(createMiniGrid(q.row2A));
+      puzzleGrid.appendChild(createMiniGrid(q.row2B));
+      puzzleGrid.appendChild(createMiniGrid(q.row2R));
+      puzzleGrid.appendChild(createMiniGrid(q.row3A));
+      puzzleGrid.appendChild(createMiniGrid(q.row3B));
+      puzzleGrid.appendChild(createMiniGrid(q.row3Nums));
+    }
+
+    function renderAnswerPage() {
+      const q = questions[currentQuestionIndex];
+      document.getElementById("answer-index").textContent = `第 ${currentQuestionIndex + 1} 题 / 共 ${QUESTION_COUNT} 题`;
+      document.getElementById("next-btn").textContent = currentQuestionIndex === QUESTION_COUNT - 1 ? "完成" : "下一题";
+
+      const answerGrid = document.getElementById("answer-grid");
+      answerGrid.innerHTML = "";
+
+      for (let i = 0; i < 4; i++) {
+        const box = document.createElement("div");
+        box.className = "answer-box" + (i === activeIndex ? " active" : "");
+
+        if (q.userAnswers[i]) {
+          box.appendChild(createGraphic(q.userAnswers[i]));
+        }
+
+        box.addEventListener("click", () => {
+          if (q.userAnswers[i]) {
+            q.userAnswers[i] = null;
+          } else {
+            activeIndex = i;
+          }
+          renderAnswerPage();
+        });
+
+        answerGrid.appendChild(box);
+      }
+
+      const optionsGrid = document.getElementById("options-grid");
+      optionsGrid.innerHTML = "";
+
+      q.options.forEach(item => {
+        const box = document.createElement("div");
+        box.className = "option-box";
+        box.appendChild(createGraphic(item));
+
+        box.addEventListener("click", () => {
+          q.userAnswers[activeIndex] = item === EMPTY_ICON ? EMPTY_ICON : { ...item };
+          const next = q.userAnswers.findIndex(v => v === null);
+          if (next !== -1) activeIndex = next;
+          renderAnswerPage();
+        });
+
+        optionsGrid.appendChild(box);
+      });
+    }
+
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
+      return `${m}:${s}`;
+    }
+
+    function updateProgress() {
+      const used = TOTAL_SECONDS - remain;
+      const percent = used / TOTAL_SECONDS;
+      const line = document.getElementById("progress-line");
+      const rocket = document.getElementById("rocket");
+      const fill = document.getElementById("progress-fill");
+
+      fill.style.width = `${percent * 100}%`;
+      rocket.style.left = `${line.clientWidth * percent}px`;
+    }
+
+    function startTimer() {
+      stopTimer();
+      remain = TOTAL_SECONDS;
+      document.getElementById("timer").textContent = formatTime(remain);
+      updateProgress();
+
+      timer = setInterval(() => {
+        remain--;
+        document.getElementById("timer").textContent = formatTime(remain);
+        updateProgress();
+
+        if (remain <= 0) {
+          stopTimer();
+          submitCurrentAnswer();
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function enterAnswerPage() {
+      activeIndex = questions[currentQuestionIndex].userAnswers.findIndex(v => v === null);
+      if (activeIndex === -1) activeIndex = 0;
+      renderAnswerPage();
+      showPage("answer-page");
+      startTimer();
+    }
+
+    function backToQuestion() {
+      stopTimer();
+      renderQuestionPage();
+      showPage("question-page");
+    }
+
+    function submitCurrentAnswer() {
+      stopTimer();
+
+      if (currentQuestionIndex < QUESTION_COUNT - 1) {
+        currentQuestionIndex++;
+        renderQuestionPage();
+        showPage("question-page");
+      } else {
+        finishAll();
+      }
+    }
+
+    function finishAll() {
+      let total = QUESTION_COUNT * 4;
+      let score = 0;
+      let details = "";
+      let analysis = "";
+      let hasWrong = false;
+
+      questions.forEach((q, idx) => {
+        let subScore = 0;
+        let wrongItems = [];
+
+        for (let i = 0; i < 4; i++) {
+          if (sameAnswer(q.userAnswers[i], q.correctAnswers[i])) {
+            score++;
+            subScore++;
+          } else {
+            wrongItems.push(i);
+          }
+        }
+
+        details += `第 ${idx + 1} 题：${subScore} / 4 正确<br>`;
+
+        if (wrongItems.length > 0) {
+          hasWrong = true;
+          analysis += `<div style="margin-bottom:14px;"><strong>第 ${idx + 1} 题解析：</strong><br>`;
+          wrongItems.forEach(i => {
+            analysis += `- ${q.explanations[i]}<br>`;
+          });
+          analysis += `</div>`;
+        }
+      });
+
+      document.getElementById("result-text").textContent = `总正确数：${score} / ${total}`;
+      document.getElementById("result-detail").innerHTML = details;
+
+      const analysisBox = document.getElementById("analysis-box");
+      if (hasWrong) {
+        analysisBox.style.display = "block";
+        analysisBox.innerHTML = `<div class="analysis-title">错题解析</div>${analysis}`;
+      } else {
+        analysisBox.style.display = "block";
+        analysisBox.innerHTML = `<div class="analysis-title">表现很好</div>全部答对，没有错题解析。`;
+      }
+
+      showPage("result-page");
+    }
+
+    function restartAll() {
+      stopTimer();
+      currentQuestionIndex = 0;
+      activeIndex = 0;
+      remain = TOTAL_SECONDS;
+      initQuestions();
+      renderQuestionPage();
+      showPage("question-page");
+    }
+
+    initQuestions();
+    renderQuestionPage();
+  </script>
+</body>
+</html>
