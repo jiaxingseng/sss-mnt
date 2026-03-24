@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>序列题多题版（iPad适配）</title>
+  <title>序列题多题版（iPad适配最终版）</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -14,34 +15,34 @@
     }
 
     .page {
-      width: min(100%, 1100px);
+      width: min(100%, 980px);
       margin: 0 auto;
-      padding: 18px 20px 32px;
+      padding: 16px 18px 26px;
       display: none;
     }
     .page.active { display: block; }
 
     .question-desc {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       line-height: 1.6;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .puzzle-wrap {
       display: flex;
       justify-content: center;
-      margin: 8px 0 22px;
+      margin: 8px 0 20px;
       overflow-x: auto;
     }
     .puzzle-grid {
       display: grid;
-      grid-template-columns: repeat(3, 170px);
-      gap: 14px 26px;
+      grid-template-columns: repeat(3, 150px);
+      gap: 12px 22px;
     }
     .mini-grid {
-      width: 170px;
-      height: 170px;
+      width: 150px;
+      height: 150px;
       border: 2px solid #8f8f8f;
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -60,7 +61,7 @@
     .num-cell {
       background: #43a843;
       color: #fff;
-      font-size: 42px;
+      font-size: 36px;
       font-weight: 500;
     }
 
@@ -74,8 +75,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 10px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
     .pill {
@@ -85,25 +86,25 @@
       background: #f3b252;
       color: #fff;
       border-radius: 18px;
-      padding: 8px 18px;
-      font-size: 22px;
+      padding: 7px 16px;
+      font-size: 20px;
       font-weight: 700;
-      min-width: 92px;
+      min-width: 88px;
     }
     .timer-box {
       background: #79c843;
       color: #fff;
       border-radius: 4px;
-      padding: 9px 20px;
-      font-size: 24px;
+      padding: 8px 16px;
+      font-size: 22px;
       font-weight: 700;
       line-height: 1;
-      min-width: 118px;
+      min-width: 106px;
       text-align: center;
     }
 
     .progress-wrap {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .progress-line {
       height: 6px;
@@ -126,45 +127,45 @@
       left: 0;
       top: 50%;
       transform: translate(-50%, -50%);
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       background: #79c843;
       clip-path: polygon(100% 50%, 35% 0, 35% 30%, 0 50%, 35% 70%, 35% 100%);
     }
     .rocket::after {
       content: "";
       position: absolute;
-      right: 7px;
-      top: 6px;
-      width: 6px;
-      height: 6px;
+      right: 6px;
+      top: 5px;
+      width: 5px;
+      height: 5px;
       background: #fff;
       border-radius: 50%;
     }
 
     .page-index {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       color: #7b7b7b;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
     }
 
     .section-title {
-      font-size: 18px;
+      font-size: 16px;
       color: #666;
       font-weight: 700;
-      margin: 14px 0 10px;
+      margin: 12px 0 8px;
     }
 
     .answer-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(90px, 110px));
-      gap: 14px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(4, 110px);
+      gap: 12px;
+      margin-bottom: 18px;
     }
     .answer-box {
-      width: 100%;
-      aspect-ratio: 1 / 1;
+      width: 110px;
+      height: 110px;
       border: 2px solid #d9d9d9;
       border-radius: 6px;
       background: #fff;
@@ -181,12 +182,12 @@
 
     .options-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(90px, 110px));
-      gap: 12px;
+      grid-template-columns: repeat(4, 110px);
+      gap: 10px 12px;
     }
     .option-box {
-      width: 100%;
-      aspect-ratio: 1 / 1;
+      width: 110px;
+      height: 110px;
       border: 2px solid #d9d9d9;
       border-radius: 6px;
       background: #fff;
@@ -204,19 +205,19 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 20px;
+      margin-top: 18px;
       gap: 12px;
       flex-wrap: wrap;
     }
     .tip-text {
       color: #888;
-      font-size: 14px;
+      font-size: 13px;
       flex: 1 1 220px;
     }
 
     .btn-group {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
@@ -225,9 +226,9 @@
       border-radius: 8px;
       background: #79c843;
       color: #fff;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
-      padding: 12px 24px;
+      padding: 10px 20px;
       cursor: pointer;
     }
     .sub-btn {
@@ -235,15 +236,15 @@
       border-radius: 8px;
       background: #dfe8d3;
       color: #56614a;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
-      padding: 12px 24px;
+      padding: 10px 20px;
       cursor: pointer;
     }
 
     .icon-wrap {
-      width: 76px;
-      height: 76px;
+      width: 66px;
+      height: 66px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -258,32 +259,32 @@
     }
 
     .emoji-icon {
-      font-size: 46px;
+      font-size: 40px;
       line-height: 1;
       user-select: none;
     }
     .emoji-small {
-      font-size: 32px;
+      font-size: 28px;
     }
     .emoji-big {
-      font-size: 58px;
+      font-size: 50px;
     }
 
     .empty-pic {
-      width: 64px;
-      height: 64px;
+      width: 58px;
+      height: 58px;
       border: 3px solid #c7c7c7;
       background: #fff;
       position: relative;
     }
     .empty-pic .sun-dot {
       position: absolute;
-      width: 13px;
-      height: 13px;
+      width: 11px;
+      height: 11px;
       border: 3px solid #a9a9a9;
       border-radius: 50%;
-      left: 8px;
-      top: 8px;
+      left: 7px;
+      top: 7px;
       background: transparent;
     }
     .empty-pic svg {
@@ -291,70 +292,82 @@
       left: 6px;
       right: 6px;
       bottom: 6px;
-      width: 50px;
-      height: 36px;
+      width: 44px;
+      height: 30px;
     }
 
     .result-box {
-      padding-top: 40px;
+      padding-top: 26px;
     }
     .result-box h2 {
-      font-size: 34px;
-      margin-bottom: 16px;
+      font-size: 30px;
+      margin-bottom: 14px;
       text-align: center;
     }
     .result-box p {
-      font-size: 22px;
+      font-size: 20px;
       color: #666;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       text-align: center;
     }
     .result-detail,
     .analysis-box {
-      margin: 20px auto 0;
+      margin: 18px auto 0;
       width: min(100%, 900px);
       text-align: left;
       background: #fff;
       border: 1px solid #d9e2cf;
       border-radius: 10px;
-      padding: 16px 18px;
+      padding: 14px 16px;
       line-height: 1.8;
-      font-size: 17px;
+      font-size: 16px;
     }
     .analysis-box {
-      margin-top: 18px;
+      margin-top: 16px;
       background: #fcfff8;
     }
     .analysis-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       margin-bottom: 10px;
       color: #516247;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 700px) {
       .page {
-        padding: 14px 12px 26px;
+        padding: 12px 10px 22px;
       }
       .puzzle-grid {
-        grid-template-columns: repeat(3, 150px);
-        gap: 12px 18px;
+        grid-template-columns: repeat(3, 120px);
+        gap: 10px 14px;
       }
       .mini-grid {
-        width: 150px;
-        height: 150px;
+        width: 120px;
+        height: 120px;
+      }
+      .num-cell {
+        font-size: 30px;
       }
       .answer-grid,
       .options-grid {
-        grid-template-columns: repeat(3, minmax(84px, 1fr));
+        grid-template-columns: repeat(3, 96px);
+      }
+      .answer-box,
+      .option-box {
+        width: 96px;
+        height: 96px;
       }
       .icon-wrap {
-        width: 68px;
-        height: 68px;
+        width: 58px;
+        height: 58px;
       }
-      .emoji-icon { font-size: 40px; }
-      .emoji-small { font-size: 28px; }
-      .emoji-big { font-size: 50px; }
+      .emoji-icon { font-size: 34px; }
+      .emoji-small { font-size: 24px; }
+      .emoji-big { font-size: 42px; }
+      .empty-pic {
+        width: 50px;
+        height: 50px;
+      }
     }
   </style>
 </head>
@@ -442,7 +455,7 @@
 
     const directionalSet = new Set([
       "🐟","🐦","🦋","🦆","🐬","🦊","🐓","🦉","🦜",
-      "⛵","🛶","⚓","✈️","🚗","🚲","🚀","🚤","🚁",
+      "⛵","🛶","✈️","🚗","🚲","🚀","🚤","🚁",
       "🌙","🌈","🍁","➡️","⬆️","↗️","↘️","🔺","🔻",
       "✏️","🖍️","📏","✂️","📌","🖊️","🪁","🎈","🪀","🛹",
       "🏸","🏒","⛳","🏹","🎯","🥕","🍤","🎏","🎐","🧭","🗺️","🎣","📍",
@@ -501,13 +514,19 @@
         keep: "保持原样",
         small: "缩小",
         big: "变大",
-        flip: "翻转/镜像",
+        flip: "左右翻转",
         mirror: "镜像",
         rot90: "旋转90°",
         rot180: "旋转180°",
         empty: "变为空白图片"
       };
       return map[mode] || mode;
+    }
+
+    function renderAnswerText(ans) {
+      if (ans === EMPTY_ICON) return "空白图片";
+      if (!ans) return "未作答";
+      return `${ans.type}${modeLabel(ans.mode || "keep") === "保持原样" ? "" : "（" + modeLabel(ans.mode || "keep") + "）"}`;
     }
 
     function createGraphic(data) {
@@ -694,12 +713,12 @@
           row3A.push({ type: base3, mode: "keep" });
           row3B.push({ type: diff3, mode: "keep" });
           correctAnswers.push(EMPTY_ICON);
-          explanations.push(`第${i + 1}格：第3行前两个图片不同（${base3} 和 ${diff3}），所以结果是空白图片。`);
+          explanations.push(`第${i + 1}格：第3行前两个图片分别是 ${base3} 和 ${diff3}，图片不同，所以结果应为空白图片。`);
         } else {
           row3A.push({ type: base3, mode: "keep" });
           row3B.push({ type: base3, mode: "keep" });
           correctAnswers.push(buildAnswerResult(base3, mode));
-          explanations.push(`第${i + 1}格：第3行前两个图片相同（${base3}），根据前两行相同位置学到的规律，结果应${modeLabel(mode)}。`);
+          explanations.push(`第${i + 1}格：第3行前两个图片相同，都是 ${base3}，根据前两行相同位置已经展示过的规律，结果应${modeLabel(mode)}。`);
         }
 
         if (demoRowChoice[i] === 1) {
@@ -895,9 +914,12 @@
 
         if (wrongItems.length > 0) {
           hasWrong = true;
-          analysis += `<div style="margin-bottom:14px;"><strong>第 ${idx + 1} 题解析：</strong><br>`;
+          analysis += `<div style="margin-bottom:14px;"><strong>第 ${idx + 1} 题错因分析：</strong><br>`;
           wrongItems.forEach(i => {
-            analysis += `- ${q.explanations[i]}<br>`;
+            const user = q.userAnswers[i];
+            const correct = q.correctAnswers[i];
+            analysis += `- 第${i + 1}格：你的答案是【${renderAnswerText(user)}】，正确答案是【${renderAnswerText(correct)}】。<br>`;
+            analysis += `&nbsp;&nbsp;原因：${q.explanations[i]}<br>`;
           });
           analysis += `</div>`;
         }
@@ -933,3 +955,4 @@
   </script>
 </body>
 </html>
+```
