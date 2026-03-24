@@ -157,15 +157,16 @@
     }
 
     .answer-grid {
+      --answer-gap: 12px;
       display: grid;
-      grid-template-columns: repeat(4, 110px);
-      gap: 12px;
+      grid-template-columns: repeat(4, var(--opt-size, 110px));
+      gap: var(--answer-gap);
       margin-bottom: 18px;
       justify-content: center;
     }
     .answer-box {
-      width: 110px;
-      height: 110px;
+      width: var(--opt-size, 110px);
+      height: var(--opt-size, 110px);
       border: 2px solid #d9d9d9;
       border-radius: 6px;
       background: #fff;
@@ -359,12 +360,7 @@
       }
 
       .answer-grid {
-        grid-template-columns: repeat(4, 92px);
-        gap: 10px;
-      }
-      .answer-box {
-        width: 92px;
-        height: 92px;
+        --answer-gap: 10px;
       }
 
       .options-grid {
@@ -414,12 +410,7 @@
       }
 
       .answer-grid {
-        grid-template-columns: repeat(4, 84px);
-        gap: 8px;
-      }
-      .answer-box {
-        width: 84px;
-        height: 84px;
+        --answer-gap: 8px;
       }
 
       .options-grid {
