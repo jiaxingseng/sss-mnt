@@ -182,6 +182,7 @@
     .options-grid {
       display: grid;
       grid-template-columns: repeat(6, 110px);
+      grid-template-rows: repeat(2, 110px);
       gap: 10px 12px;
     }
     .option-box {
@@ -241,6 +242,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
+      overflow: visible;
     }
 
     .transform-box {
@@ -262,18 +264,20 @@
       font-size: 50px;
     }
 
+    /* 严格按参考图重绘空图片 */
     .empty-pic {
       width: 58px;
       height: 58px;
-      border: 3px solid #c7c7c7;
+      border: 3px solid #cfcfcf;
       background: #fff;
       position: relative;
+      display: block;
     }
     .empty-pic .sun-dot {
       position: absolute;
       width: 11px;
       height: 11px;
-      border: 3px solid #a9a9a9;
+      border: 3px solid #b3b3b3;
       border-radius: 50%;
       left: 7px;
       top: 7px;
@@ -282,10 +286,9 @@
     .empty-pic svg {
       position: absolute;
       left: 6px;
-      right: 6px;
-      bottom: 6px;
-      width: 44px;
-      height: 30px;
+      top: 6px;
+      width: 46px;
+      height: 46px;
     }
 
     .result-box {
@@ -347,6 +350,7 @@
       }
       .options-grid {
         grid-template-columns: repeat(4, 92px);
+        grid-template-rows: auto;
       }
       .option-box {
         width: 92px;
@@ -362,6 +366,18 @@
       .empty-pic {
         width: 48px;
         height: 48px;
+      }
+      .empty-pic .sun-dot {
+        width: 9px;
+        height: 9px;
+        left: 5px;
+        top: 5px;
+      }
+      .empty-pic svg {
+        width: 38px;
+        height: 38px;
+        left: 4px;
+        top: 4px;
       }
     }
   </style>
@@ -481,13 +497,23 @@
     function createEmptyPic() {
       const wrap = document.createElement("div");
       wrap.className = "empty-pic";
-      wrap.innerHTML = `
-        <div class="sun-dot"></div>
-        <svg viewBox="0 0 58 42" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 34 L2 18 L14 18 L24 8 L33 18 L40 6 L56 24 L56 34 Z"
-                fill="none" stroke="#9f9f9f" stroke-width="3" />
-        </svg>
-      `;
+
+      const sunDot = document.createElement("div");
+      sunDot.className = "sun-dot";
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 58 42");
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", "M2 34 L2 18 L14 18 L24 8 L33 18 L40 6 L56 24 L56 34 Z");
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "#9f9f9f");
+      path.setAttribute("stroke-width", "3");
+
+      svg.appendChild(path);
+      wrap.appendChild(sunDot);
+      wrap.appendChild(svg);
+
       return wrap;
     }
 
