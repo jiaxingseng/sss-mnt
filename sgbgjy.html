@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -182,7 +181,7 @@
 
     .options-grid {
       display: grid;
-      grid-template-columns: repeat(4, 110px);
+      grid-template-columns: repeat(6, 110px);
       gap: 10px 12px;
     }
     .option-box {
@@ -203,16 +202,16 @@
 
     .footer-actions {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
       margin-top: 18px;
       gap: 12px;
-      flex-wrap: wrap;
     }
     .tip-text {
       color: #888;
       font-size: 13px;
-      flex: 1 1 220px;
+      text-align: center;
     }
 
     .btn-group {
@@ -220,22 +219,15 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    .center-btn {
+      justify-content: center;
+    }
 
     .main-btn {
       border: none;
       border-radius: 8px;
       background: #79c843;
       color: #fff;
-      font-size: 18px;
-      font-weight: 700;
-      padding: 10px 20px;
-      cursor: pointer;
-    }
-    .sub-btn {
-      border: none;
-      border-radius: 8px;
-      background: #dfe8d3;
-      color: #56614a;
       font-size: 18px;
       font-weight: 700;
       padding: 10px 20px;
@@ -333,40 +325,43 @@
       color: #516247;
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
       .page {
-        padding: 12px 10px 22px;
+        width: min(100%, 820px);
       }
       .puzzle-grid {
-        grid-template-columns: repeat(3, 120px);
-        gap: 10px 14px;
+        grid-template-columns: repeat(3, 132px);
+        gap: 10px 16px;
       }
       .mini-grid {
-        width: 120px;
-        height: 120px;
+        width: 132px;
+        height: 132px;
       }
-      .num-cell {
-        font-size: 30px;
+      .answer-grid {
+        grid-template-columns: repeat(4, 92px);
+        gap: 10px;
       }
-      .answer-grid,
+      .answer-box {
+        width: 92px;
+        height: 92px;
+      }
       .options-grid {
-        grid-template-columns: repeat(3, 96px);
+        grid-template-columns: repeat(4, 92px);
       }
-      .answer-box,
       .option-box {
-        width: 96px;
-        height: 96px;
+        width: 92px;
+        height: 92px;
       }
       .icon-wrap {
-        width: 58px;
-        height: 58px;
+        width: 56px;
+        height: 56px;
       }
       .emoji-icon { font-size: 34px; }
       .emoji-small { font-size: 24px; }
       .emoji-big { font-size: 42px; }
       .empty-pic {
-        width: 50px;
-        height: 50px;
+        width: 48px;
+        height: 48px;
       }
     }
   </style>
@@ -411,8 +406,7 @@
 
     <div class="footer-actions">
       <div class="tip-text">点击作答区中的图片，可清空该位置并重新选择</div>
-      <div class="btn-group">
-        <button class="sub-btn" onclick="backToQuestion()">返回题目</button>
+      <div class="btn-group center-btn">
         <button class="main-btn" id="next-btn" onclick="submitCurrentAnswer()">下一题</button>
       </div>
     </div>
@@ -526,7 +520,8 @@
     function renderAnswerText(ans) {
       if (ans === EMPTY_ICON) return "空白图片";
       if (!ans) return "未作答";
-      return `${ans.type}${modeLabel(ans.mode || "keep") === "保持原样" ? "" : "（" + modeLabel(ans.mode || "keep") + "）"}`;
+      const m = ans.mode || "keep";
+      return `${ans.type}${m === "keep" ? "" : "（" + modeLabel(m) + "）"}`;
     }
 
     function createGraphic(data) {
@@ -872,12 +867,6 @@
       startTimer();
     }
 
-    function backToQuestion() {
-      stopTimer();
-      renderQuestionPage();
-      showPage("question-page");
-    }
-
     function submitCurrentAnswer() {
       stopTimer();
 
@@ -955,4 +944,3 @@
   </script>
 </body>
 </html>
-```
