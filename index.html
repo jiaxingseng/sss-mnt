@@ -47,7 +47,7 @@
       margin-bottom: 18px;
     }
 
-    .btn {
+    .top-btn {
       display: inline-block;
       background: linear-gradient(#dcedc8, #aed581);
       color: #2f4f2f;
@@ -66,37 +66,65 @@
       margin: 8px 0 14px;
     }
 
-    .grid {
+    .menu-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
     }
 
-    .card {
+    .menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
       background: #f8fff8;
       border: 1px solid #d7ead7;
       border-radius: 16px;
-      padding: 18px 16px;
-      text-align: center;
+      padding: 16px 18px;
+      text-decoration: none;
+      color: #2f4f2f;
       box-shadow: 0 4px 10px rgba(120, 170, 120, 0.08);
+      transition: all 0.2s ease;
     }
 
-    .icon {
-      font-size: 2rem;
-      margin-bottom: 10px;
+    .menu-btn:hover {
+      background: #f1faec;
+      border-color: #b7d7a8;
+      transform: translateY(-2px);
     }
 
-    .card-title {
-      font-size: 1rem;
+    .menu-btn:active {
+      transform: translateY(0);
+    }
+
+    .menu-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #e8f5d8, #dcedc8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      flex-shrink: 0;
+    }
+
+    .menu-text {
+      text-align: left;
+      min-width: 0;
+    }
+
+    .menu-title {
+      font-size: 1.02rem;
       font-weight: 700;
       color: #355735;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
-    .card-desc {
-      font-size: 0.88rem;
-      color: #637b63;
-      line-height: 1.7;
+    .menu-link {
+      font-size: 0.84rem;
+      color: #7a927a;
+      line-height: 1.5;
+      word-break: break-all;
     }
 
     .footer {
@@ -106,7 +134,6 @@
       color: #6a826a;
     }
 
-    /* iPad */
     @media (min-width: 768px) and (max-width: 1024px) {
       .page {
         max-width: 900px;
@@ -116,12 +143,11 @@
         font-size: 1.8rem;
       }
 
-      .grid {
-        grid-template-columns: repeat(3, 1fr);
+      .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    /* 手机 */
     @media (max-width: 767px) {
       body {
         padding: 14px 10px 24px;
@@ -139,8 +165,28 @@
         font-size: 0.92rem;
       }
 
-      .grid {
+      .menu-grid {
         grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .menu-btn {
+        padding: 14px 14px;
+        gap: 12px;
+      }
+
+      .menu-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+
+      .menu-title {
+        font-size: 0.95rem;
+      }
+
+      .menu-link {
+        font-size: 0.8rem;
       }
     }
   </style>
@@ -153,46 +199,42 @@
         通过图形观察、规律发现、分类比较和空间想象练习，
         帮助孩子提升逻辑思维与专注力。
       </div>
-      <a href="#" class="btn">开始练习</a>
+      <a href="txtl.html" class="top-btn">开始练习</a>
     </div>
 
-    <div class="section-title">题库分类</div>
-    <div class="grid">
-      <div class="card">
-        <div class="icon">🔷</div>
-        <div class="card-title">图形规律</div>
-        <div class="card-desc">观察图形变化，找出排列规律。</div>
-      </div>
+    <div class="section-title">练习入口</div>
+    <div class="menu-grid">
+      <a href="jywx.html" class="menu-btn">
+        <div class="menu-icon">🧠</div>
+        <div class="menu-text">
+          <div class="menu-title">记忆无序1</div>
+          <div class="menu-link">jywx.html</div>
+        </div>
+      </a>
 
-      <div class="card">
-        <div class="icon">🟡</div>
-        <div class="card-title">分类归纳</div>
-        <div class="card-desc">找出相同特征，学习分类整理。</div>
-      </div>
+      <a href="jywx3.html" class="menu-btn">
+        <div class="menu-icon">🎯</div>
+        <div class="menu-text">
+          <div class="menu-title">记忆无序2</div>
+          <div class="menu-link">jywx3.html</div>
+        </div>
+      </a>
 
-      <div class="card">
-        <div class="icon">🧠</div>
-        <div class="card-title">图形推理</div>
-        <div class="card-desc">根据线索推断缺失图形。</div>
-      </div>
+      <a href="txtl.html" class="menu-btn">
+        <div class="menu-icon">🔷</div>
+        <div class="menu-text">
+          <div class="menu-title">图形推理1</div>
+          <div class="menu-link">txtl.html</div>
+        </div>
+      </a>
 
-      <div class="card">
-        <div class="icon">🪞</div>
-        <div class="card-title">镜像旋转</div>
-        <div class="card-desc">练习方向变化和空间感知。</div>
-      </div>
-
-      <div class="card">
-        <div class="icon">🧩</div>
-        <div class="card-title">拼图组合</div>
-        <div class="card-desc">判断图形拼接与拆分关系。</div>
-      </div>
-
-      <div class="card">
-        <div class="icon">👀</div>
-        <div class="card-title">观察辨别</div>
-        <div class="card-desc">找不同、找相同，训练细节观察。</div>
-      </div>
+      <a href="sgbgjy.html" class="menu-btn">
+        <div class="menu-icon">🧩</div>
+        <div class="menu-text">
+          <div class="menu-title">四宫八宫记忆</div>
+          <div class="menu-link">sgbgjy.html</div>
+        </div>
+      </a>
     </div>
 
     <div class="footer">
