@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>序列题多题版（纯自定义拖拽最终版）</title>
+  <title>序列题多题版（拖拽修复最终版）</title>
   <style>
     :root {
       --box-size: 110px;
@@ -24,7 +24,7 @@
     }
 
     * { box-sizing: border-box; }
-    html, body { touch-action: manipulation; }
+    html, body { touch-action: none; }
     body {
       margin: 0;
       background: #f4f8ee;
@@ -289,6 +289,7 @@
       position: relative;
       overflow: visible;
       flex-shrink: 0;
+      pointer-events: none;
     }
 
     .transform-box {
@@ -296,6 +297,7 @@
       align-items: center;
       justify-content: center;
       transform-origin: center center;
+      pointer-events: none;
     }
 
     .emoji-icon {
@@ -303,6 +305,7 @@
       line-height: 1;
       user-select: none;
       font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Microsoft YaHei",sans-serif;
+      pointer-events: none;
     }
     .emoji-small {
       font-size: var(--emoji-small-size);
@@ -318,6 +321,7 @@
       background: #fff;
       position: relative;
       display: block;
+      pointer-events: none;
     }
     .empty-pic .sun-dot {
       position: absolute;
@@ -350,7 +354,7 @@
       align-items: center;
       justify-content: center;
       pointer-events: none;
-      z-index: 9999;
+      z-index: 99999;
       transform: translate(-50%, -50%) scale(1.02);
       box-shadow: 0 10px 24px rgba(0,0,0,.12);
     }
@@ -485,7 +489,7 @@
   <div class="page active" id="question-page">
     <div class="page-index" id="question-index"></div>
     <div class="question-desc">
-      [序列-有序-拖曳【家长指导语：根据每行田字格内图形的变化规律，右下角绿色背景数字格子内的图形是什么？记住它们，并在下一页拖到作答区中】]
+      [序列-右序-拖曳【家长指导语：根据每行田字格内图形的变化规律，右下角绿色背景数字格子内的图形是什么？记住它们，并在下一页拖到作答区中】]
     </div>
 
     <div class="puzzle-wrap">
@@ -1410,7 +1414,7 @@
           const dx = x - hit.centerX;
           const dy = y - hit.centerY;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > 70) hit = null;
+          if (dist > 90) hit = null;
         }
       }
 
@@ -1434,6 +1438,7 @@
       box.addEventListener("pointerdown", e => {
         if (e.button !== undefined && e.button !== 0) return;
         e.preventDefault();
+        e.stopPropagation();
 
         currentDragData = item;
         dragSourceBox = box;
@@ -1450,6 +1455,7 @@
       box.addEventListener("pointermove", e => {
         if (!isPointerDown || e.pointerId !== dragPointerId) return;
         e.preventDefault();
+        e.stopPropagation();
 
         const dx = e.clientX - dragStartX;
         const dy = e.clientY - dragStartY;
@@ -1470,6 +1476,7 @@
       box.addEventListener("pointerup", e => {
         if (!isPointerDown || e.pointerId !== dragPointerId) return;
         e.preventDefault();
+        e.stopPropagation();
 
         if (isCustomDragging) {
           dropByPoint(e.clientX, e.clientY);
