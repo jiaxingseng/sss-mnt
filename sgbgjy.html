@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>序列题多题版（视觉归并最终版）</title>
+  <title>序列题多题版（纯自定义拖拽最终版）</title>
   <style>
     :root {
       --box-size: 110px;
@@ -630,7 +630,12 @@
     let dragGhost = null;
     let dragSourceBox = null;
     let dragPointerId = null;
+    let isPointerDown = false;
     let isCustomDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let answerBoxRects = [];
+    const DRAG_THRESHOLD = 8;
 
     function showPage(id) {
       document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -909,7 +914,6 @@
       if (!mode) mode = "keep";
       if (mode === "mirror") mode = "flip";
 
-      // 高风险图片：方向变化统一归并为 keep
       if (visualCollapseSet.has(type)) {
         if (mode === "flip" || mode === "rot90" || mode === "rot180") {
           return "keep";
@@ -1068,13 +1072,12 @@
     function generateDynamicOptions(correctAnswers) {
       let opts = [];
 
-      // 1. 正确答案先放入，按视觉效果唯一
       const uniqueCorrect = dedupeOptionsByVisualEffect(correctAnswers);
+
       uniqueCorrect.forEach(ans => {
         pushUniqueOption(opts, ans);
       });
 
-      // 2. 近似干扰项
       let priorityDistractors = [];
       uniqueCorrect.forEach(ans => {
         priorityDistractors.push(...getSimilarDistractors(ans, uniqueCorrect));
@@ -1087,17 +1090,14 @@
         }
       });
 
-      // 3. 全局池补足
       buildGlobalDistractorPool().forEach(item => {
         if (opts.length < OPTION_COUNT) {
           pushUniqueOption(opts, item);
         }
       });
 
-      // 4. 强制按视觉效果去重
       opts = dedupeOptionsByVisualEffect(opts);
 
-      // 5. 确保每个正确答案都还在
       const correctKeys = new Set(uniqueCorrect.map(visualOptionKey));
       uniqueCorrect.forEach(ans => {
         if (!optionExists(opts, ans)) {
@@ -1113,7 +1113,6 @@
         }
       });
 
-      // 6. 如果超出 12，继续删非正确项
       opts = dedupeOptionsByVisualEffect(opts);
       while (opts.length > OPTION_COUNT) {
         let removed = false;
@@ -1127,7 +1126,6 @@
         if (!removed) break;
       }
 
-      // 7. 如果不足 12，继续从全局池补
       if (opts.length < OPTION_COUNT) {
         const extraPool = buildGlobalDistractorPool();
         extraPool.forEach(item => {
@@ -1139,10 +1137,8 @@
         });
       }
 
-      // 8. 最终双保险去重
       opts = dedupeOptionsByVisualEffect(opts);
 
-      // 9. 再次确保正确答案都在
       uniqueCorrect.forEach(ans => {
         if (!optionExists(opts, ans)) {
           if (opts.length >= OPTION_COUNT) {
@@ -1157,7 +1153,6 @@
         }
       });
 
-      // 10. 最终收口：再去重，再裁到12
       opts = dedupeOptionsByVisualEffect(opts);
 
       while (opts.length > OPTION_COUNT) {
@@ -1172,7 +1167,6 @@
         if (!removed) break;
       }
 
-      // 11. 如仍不足 12，再补一次
       if (opts.length < OPTION_COUNT) {
         const extraPool2 = buildGlobalDistractorPool();
         extraPool2.forEach(item => {
@@ -1182,7 +1176,6 @@
         });
       }
 
-      // 12. 最终绝对唯一 + 打乱
       opts = dedupeOptionsByVisualEffect(opts);
 
       return shuffle(opts).slice(0, OPTION_COUNT);
@@ -1343,15 +1336,36 @@
       renderAnswerPage();
     }
 
+    function cacheAnswerBoxRects() {
+      answerBoxRects = [...document.querySelectorAll(".answer-box")].map(box => {
+        const rect = box.getBoundingClientRect();
+        return {
+          box,
+          index: Number(box.dataset.index),
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+          centerX: rect.left + rect.width / 2,
+          centerY: rect.top + rect.height / 2
+        };
+      });
+    }
+
     function clearDragState() {
       document.querySelectorAll(".answer-box").forEach(b => b.classList.remove("drag-over"));
       if (dragSourceBox) dragSourceBox.classList.remove("dragging");
       if (dragGhost && dragGhost.parentNode) dragGhost.parentNode.removeChild(dragGhost);
+
       dragGhost = null;
       dragSourceBox = null;
       currentDragData = null;
       dragPointerId = null;
+      isPointerDown = false;
       isCustomDragging = false;
+      dragStartX = 0;
+      dragStartY = 0;
+      answerBoxRects = [];
     }
 
     function createDragGhost(item, x, y) {
@@ -1370,19 +1384,45 @@
 
     function highlightAnswerBoxByPoint(x, y) {
       document.querySelectorAll(".answer-box").forEach(b => b.classList.remove("drag-over"));
-      const el = document.elementFromPoint(x, y);
-      if (!el) return null;
-      const answerBox = el.closest(".answer-box");
-      if (answerBox) answerBox.classList.add("drag-over");
-      return answerBox;
+
+      let hit = null;
+
+      for (const item of answerBoxRects) {
+        if (x >= item.left && x <= item.right && y >= item.top && y <= item.bottom) {
+          hit = item;
+          break;
+        }
+      }
+
+      if (!hit) {
+        let minDist = Infinity;
+        for (const item of answerBoxRects) {
+          const dx = x - item.centerX;
+          const dy = y - item.centerY;
+          const dist = dx * dx + dy * dy;
+          if (dist < minDist) {
+            minDist = dist;
+            hit = item;
+          }
+        }
+
+        if (hit) {
+          const dx = x - hit.centerX;
+          const dy = y - hit.centerY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 70) hit = null;
+        }
+      }
+
+      if (hit) hit.box.classList.add("drag-over");
+      return hit;
     }
 
     function dropByPoint(x, y) {
-      const el = document.elementFromPoint(x, y);
-      if (!el) return false;
-      const answerBox = el.closest(".answer-box");
-      if (!answerBox) return false;
-      const index = Number(answerBox.dataset.index);
+      const hit = highlightAnswerBoxByPoint(x, y);
+      if (!hit) return false;
+
+      const index = hit.index;
       if (!Number.isNaN(index) && currentDragData != null) {
         setAnswerAt(index, currentDragData);
         return true;
@@ -1398,30 +1438,48 @@
         currentDragData = item;
         dragSourceBox = box;
         dragPointerId = e.pointerId;
-        isCustomDragging = true;
-        box.classList.add("dragging");
-        box.setPointerCapture?.(e.pointerId);
+        isPointerDown = true;
+        isCustomDragging = false;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
 
-        createDragGhost(item, e.clientX, e.clientY);
-        highlightAnswerBoxByPoint(e.clientX, e.clientY);
+        box.setPointerCapture?.(e.pointerId);
+        cacheAnswerBoxRects();
       });
 
       box.addEventListener("pointermove", e => {
-        if (!isCustomDragging || e.pointerId !== dragPointerId) return;
+        if (!isPointerDown || e.pointerId !== dragPointerId) return;
         e.preventDefault();
-        moveDragGhost(e.clientX, e.clientY);
-        highlightAnswerBoxByPoint(e.clientX, e.clientY);
+
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        const moved = Math.sqrt(dx * dx + dy * dy);
+
+        if (!isCustomDragging && moved >= DRAG_THRESHOLD) {
+          isCustomDragging = true;
+          box.classList.add("dragging");
+          createDragGhost(currentDragData, e.clientX, e.clientY);
+        }
+
+        if (isCustomDragging) {
+          moveDragGhost(e.clientX, e.clientY);
+          highlightAnswerBoxByPoint(e.clientX, e.clientY);
+        }
       });
 
       box.addEventListener("pointerup", e => {
-        if (!isCustomDragging || e.pointerId !== dragPointerId) return;
+        if (!isPointerDown || e.pointerId !== dragPointerId) return;
         e.preventDefault();
-        dropByPoint(e.clientX, e.clientY);
+
+        if (isCustomDragging) {
+          dropByPoint(e.clientX, e.clientY);
+        }
+
         clearDragState();
       });
 
       box.addEventListener("pointercancel", e => {
-        if (!isCustomDragging || e.pointerId !== dragPointerId) return;
+        if (!isPointerDown || e.pointerId !== dragPointerId) return;
         clearDragState();
       });
     }
@@ -1475,6 +1533,8 @@
 
         answerGrid.appendChild(box);
       }
+
+      cacheAnswerBoxRects();
 
       const optionsGrid = document.getElementById("options-grid");
       optionsGrid.innerHTML = "";
