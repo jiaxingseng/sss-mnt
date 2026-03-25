@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>序列题多题版（iPad适配最终版）</title>
+  <title>序列题多题版（视觉归并最终版）</title>
   <style>
     :root {
       --box-size: 110px;
@@ -24,11 +24,15 @@
     }
 
     * { box-sizing: border-box; }
+    html, body { touch-action: manipulation; }
     body {
       margin: 0;
       background: #f4f8ee;
       font-family: "Microsoft YaHei", Arial, sans-serif;
       color: #333;
+      -webkit-user-select: none;
+      user-select: none;
+      overscroll-behavior: none;
     }
 
     .page {
@@ -181,7 +185,9 @@
       margin-bottom: 18px;
       justify-content: center;
     }
-    .answer-box {
+
+    .answer-box,
+    .option-box {
       width: var(--box-size);
       height: var(--box-size);
       border: 2px solid #d9d9d9;
@@ -191,11 +197,24 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      cursor: pointer;
+      min-width: 0;
+      min-height: 0;
     }
+
+    .answer-box {
+      cursor: pointer;
+      transition: .15s;
+    }
+
     .answer-box.active {
       border-color: #79c843;
       box-shadow: 0 0 0 3px rgba(121,200,67,.14);
+    }
+
+    .answer-box.drag-over {
+      border-color: #4caf50;
+      box-shadow: 0 0 0 3px rgba(121,200,67,.18);
+      background: #f7fff2;
     }
 
     .options-wrap {
@@ -214,21 +233,16 @@
     }
 
     .option-box {
-      width: var(--box-size);
-      height: var(--box-size);
-      border: 2px solid #d9d9d9;
-      border-radius: 6px;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-      min-width: 0;
-      min-height: 0;
+      cursor: grab;
+      transition: transform .12s ease, opacity .12s ease, border-color .12s ease;
+      touch-action: none;
     }
     .option-box:hover {
       border-color: #8e97ff;
+    }
+    .option-box.dragging {
+      opacity: .3;
+      transform: scale(.96);
     }
 
     .footer-actions {
@@ -243,6 +257,7 @@
       color: #888;
       font-size: 13px;
       text-align: center;
+      line-height: 1.7;
     }
 
     .btn-group {
@@ -273,6 +288,7 @@
       justify-content: center;
       position: relative;
       overflow: visible;
+      flex-shrink: 0;
     }
 
     .transform-box {
@@ -286,6 +302,7 @@
       font-size: var(--emoji-size);
       line-height: 1;
       user-select: none;
+      font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Microsoft YaHei",sans-serif;
     }
     .emoji-small {
       font-size: var(--emoji-small-size);
@@ -318,6 +335,24 @@
       top: var(--empty-svg-top);
       width: var(--empty-svg-size);
       height: var(--empty-svg-size);
+    }
+
+    .drag-ghost {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--box-size);
+      height: var(--box-size);
+      border: 2px solid #79c843;
+      border-radius: 8px;
+      background: rgba(255,255,255,.96);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%) scale(1.02);
+      box-shadow: 0 10px 24px rgba(0,0,0,.12);
     }
 
     .result-box {
@@ -376,10 +411,7 @@
         --empty-svg-top: 4px;
       }
 
-      .page {
-        width: min(100%, 900px);
-      }
-
+      .page { width: min(100%, 900px); }
       .puzzle-grid {
         grid-template-columns: repeat(3, 136px);
         gap: 10px 16px;
@@ -409,10 +441,7 @@
         --empty-svg-top: 3px;
       }
 
-      .page {
-        width: min(100%, 820px);
-      }
-
+      .page { width: min(100%, 820px); }
       .puzzle-grid {
         grid-template-columns: repeat(3, 128px);
         gap: 10px 14px;
@@ -456,7 +485,7 @@
   <div class="page active" id="question-page">
     <div class="page-index" id="question-index"></div>
     <div class="question-desc">
-      [序列-右序-拖曳【家长指导语：根据每行田字格内图形的变化规律，右下角绿色背景数字格子内的图形是什么？记住它们，并在下一页按数字顺序选择出来】]
+      [序列-有序-拖曳【家长指导语：根据每行田字格内图形的变化规律，右下角绿色背景数字格子内的图形是什么？记住它们，并在下一页拖到作答区中】]
     </div>
 
     <div class="puzzle-wrap">
@@ -492,7 +521,9 @@
     </div>
 
     <div class="footer-actions">
-      <div class="tip-text">点击作答区中的图片，可清空该位置并重新选择</div>
+      <div class="tip-text">
+        请将下方选项拖到作答区中；点击作答区中的图片可清空该位置并重新拖入。
+      </div>
       <div class="btn-group center-btn">
         <button class="main-btn" id="next-btn" onclick="submitCurrentAnswer()">下一题</button>
       </div>
@@ -515,6 +546,7 @@
     const EMPTY_ICON = "empty-pic";
     const QUESTION_COUNT = 5;
     const TOTAL_SECONDS = 180;
+    const OPTION_COUNT = 12;
 
     const themePools = {
       animalA: ["🐟", "🐦", "🐢", "🦋", "🦆", "🐬"],
@@ -523,7 +555,6 @@
       transport: ["✈️", "🚗", "🚲", "🚀", "🚤", "🚁"],
       weather: ["☀️", "🌙", "⭐", "🌈", "☁️", "⛅"],
       plant: ["🍀", "🌿", "🌵", "🍁", "🌷", "🌻"],
-      direction: ["➡️", "⬆️", "↗️", "↘️", "🔺", "🔻"],
       stationery: ["✏️", "🖍️", "📏", "✂️", "📌", "🖊️"],
       toy: ["🪁", "🎈", "🧸", "🎮", "🪀", "🛹"],
       sports: ["🏸", "🏒", "⛳", "🏹", "🥅", "🎯"],
@@ -531,25 +562,75 @@
       festival: ["🎁", "🎀", "🎏", "🎐", "🎎", "🪔"],
       travel: ["🧭", "🗺️", "🏕️", "🛶", "🎣", "📍"],
       tool: ["🔧", "🪓", "🔨", "🪛", "⚙️", "🔩"],
-      home: ["🔔", "🪑", "🛏️", "🚪", "🪞", "🪟"]
+      home: ["🔔", "🪑", "🛏️", "🚪", "🪞", "🪟"],
+      fruit: ["🍌", "🍍", "🍒", "🥭", "🍐", "🍋"],
+      insect: ["🐛", "🪲", "🐜", "🦗", "🪰", "🐝"],
+      sky: ["☄️", "🌤️", "🌥️", "🌦️", "🌪️", "🌬️"],
+      music: ["🎻", "🎺", "🎷", "🪕", "🎸", "🥁"],
+      clothing: ["👟", "🧢", "👕", "🧤", "👒", "👠"],
+      kitchen: ["🥄", "🍴", "🫖", "🫙", "🍳", "🥣"],
+      school: ["📚", "📐", "🧮", "📎", "📝", "📒"]
     };
 
-    const directionalSet = new Set([
-      "🐟","🐦","🦋","🦆","🐬","🦊","🐓","🦉","🦜",
-      "⛵","🛶","✈️","🚗","🚲","🚀","🚤","🚁",
-      "🌙","🌈","🍁","➡️","⬆️","↗️","↘️","🔺","🔻",
-      "✏️","🖍️","📏","✂️","📌","🖊️","🪁","🎈","🪀","🛹",
-      "🏸","🏒","⛳","🏹","🎯","🥕","🍤","🎏","🎐","🧭","🗺️","🎣","📍",
-      "🔧","🪓","🔨","🪛","🔔","🚪","🪞"
+    const themeGroups = [
+      ["animalA", "animalB", "insect"],
+      ["ocean", "weather", "sky"],
+      ["transport", "travel"],
+      ["plant", "food", "fruit"],
+      ["stationery", "school", "tool"],
+      ["toy", "sports", "festival", "music"],
+      ["home", "clothing", "kitchen"]
+    ];
+
+    const flipAllowed = new Set([
+      "✈️","🚗","🚲","🚀","🚤","🐟","🐦","🦆","🐬","🦊","🐓","🦜","⛵","🛶",
+      "✏️","🖍️","🖊️","🪁","🎈","🪀","🛹","🏸","🏒","⛳","🏹","🥕","🍤",
+      "🎏","🎐","🧭","🗺️","🔧","🪓","🔨","🪛","🍌","🍋","🎻","🎺","🎷","🎸",
+      "👟","🧢","👕","🧤","👠","🥄","🍴","📐","📎","📝"
     ]);
 
-    const allEmojis = Object.values(themePools).flat();
+    const rot90Allowed = new Set([
+      "✈️","🚀","🚁","📏","📌","🔧","🔨","🪛","🎯","🧭","🗺️","🎺","🥄","🍴","📐"
+    ]);
+
+    const rot180Allowed = new Set([
+      "✈️","🚀","🔧","🧭","📍","🎺"
+    ]);
+
+    const visualCollapseSet = new Set([
+      "🥄", "🍴",
+      "🎯",
+      "📍",
+      "🔔",
+      "🌙",
+      "🍁",
+      "🪓",
+      "🚪",
+      "✏️",
+      "🎣",
+      "📏",
+      "🔨",
+      "🪛",
+      "🔧",
+      "🧭",
+      "🗺️",
+      "🎺"
+    ]);
+
+    const modeCandidates = ["keep","small","big","empty","flip","mirror","rot90","rot180"];
+    const allThemeItems = Object.values(themePools).flat();
 
     let questions = [];
     let currentQuestionIndex = 0;
     let timer = null;
     let remain = TOTAL_SECONDS;
     let activeIndex = 0;
+
+    let currentDragData = null;
+    let dragGhost = null;
+    let dragSourceBox = null;
+    let dragPointerId = null;
+    let isCustomDragging = false;
 
     function showPage(id) {
       document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -563,6 +644,10 @@
         [a[i], a[j]] = [a[j], a[i]];
       }
       return a;
+    }
+
+    function sampleOne(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
     }
 
     function createEmptyPic() {
@@ -669,36 +754,141 @@
       return grid;
     }
 
-    function differentFrom(base, pool) {
-      for (const x of pool) {
-        if (x !== base) return x;
-      }
-      return pool[0];
+    function createMiniGridScaled(cells, size = 110) {
+      const grid = document.createElement("div");
+      grid.style.width = `${size}px`;
+      grid.style.height = `${size}px`;
+      grid.style.border = "2px solid #8f8f8f";
+      grid.style.display = "grid";
+      grid.style.gridTemplateColumns = "1fr 1fr";
+      grid.style.gridTemplateRows = "1fr 1fr";
+      grid.style.background = "#fff";
+
+      cells.forEach(item => {
+        const cell = document.createElement("div");
+        cell.style.border = "1px solid #a9a9a9";
+        cell.style.display = "flex";
+        cell.style.alignItems = "center";
+        cell.style.justifyContent = "center";
+        cell.style.background = "#fff";
+        cell.style.overflow = "hidden";
+
+        if (item && item.type === "num") {
+          cell.style.background = "#43a843";
+          cell.style.color = "#fff";
+          cell.style.fontSize = size < 100 ? "22px" : "28px";
+          cell.style.fontWeight = "600";
+          cell.textContent = item.value;
+        } else if (item) {
+          const graphic = createGraphic(item);
+          graphic.style.transform = "scale(0.72)";
+          cell.appendChild(graphic);
+        }
+
+        grid.appendChild(cell);
+      });
+
+      return grid;
     }
 
-    function pickTwoOrThreeThemes() {
-      const keys = shuffle(Object.keys(themePools));
-      const count = Math.random() < 0.5 ? 2 : 3;
-      return keys.slice(0, count);
+    function createResultPuzzle(q) {
+      const wrap = document.createElement("div");
+      wrap.style.margin = "10px 0 12px";
+      wrap.style.overflowX = "auto";
+
+      const grid = document.createElement("div");
+      grid.style.display = "grid";
+      grid.style.gridTemplateColumns = "repeat(3, 110px)";
+      grid.style.gap = "8px 12px";
+      grid.style.justifyContent = "start";
+      grid.style.minWidth = "fit-content";
+
+      const blocks = [
+        q.row1A, q.row1B, q.row1R,
+        q.row2A, q.row2B, q.row2R,
+        q.row3A, q.row3B, q.row3Nums
+      ];
+
+      blocks.forEach(cells => {
+        grid.appendChild(createMiniGridScaled(cells, 110));
+      });
+
+      wrap.appendChild(grid);
+      return wrap;
+    }
+
+    function createResultAnswerRow(titleText, answerArr) {
+      const wrap = document.createElement("div");
+      wrap.style.marginTop = "8px";
+
+      const title = document.createElement("div");
+      title.textContent = titleText;
+      title.style.fontWeight = "700";
+      title.style.marginBottom = "6px";
+      wrap.appendChild(title);
+
+      const row = document.createElement("div");
+      row.style.display = "grid";
+      row.style.gridTemplateColumns = "repeat(4, 78px)";
+      row.style.gap = "8px";
+      row.style.justifyContent = "start";
+
+      for (let i = 0; i < 4; i++) {
+        const box = document.createElement("div");
+        box.style.width = "78px";
+        box.style.height = "78px";
+        box.style.border = "2px solid #d9d9d9";
+        box.style.borderRadius = "6px";
+        box.style.background = "#fff";
+        box.style.display = "flex";
+        box.style.alignItems = "center";
+        box.style.justifyContent = "center";
+
+        if (answerArr[i]) {
+          const g = createGraphic(answerArr[i]);
+          g.style.transform = "scale(0.72)";
+          box.appendChild(g);
+        } else {
+          box.style.color = "#bbb";
+          box.style.fontSize = "13px";
+          box.textContent = "空";
+        }
+
+        row.appendChild(box);
+      }
+
+      wrap.appendChild(row);
+      return wrap;
+    }
+
+    function pickThreeDifferentThemesByGroup() {
+      const groups = shuffle(themeGroups).slice(0, 3);
+      return groups.map(group => sampleOne(group));
     }
 
     function buildThemeRows() {
-      const availableThemes = pickTwoOrThreeThemes();
-      return shuffle(
-        availableThemes.length === 2
-          ? [availableThemes[0], availableThemes[1], availableThemes[0]]
-          : availableThemes
-      );
+      return pickThreeDifferentThemesByGroup();
     }
 
-    function canTransform(emoji, mode) {
-      if (mode === "empty" || mode === "keep" || mode === "small" || mode === "big") return true;
-      return directionalSet.has(emoji);
+    function getAllowedModes(item) {
+      const modes = ["keep", "small", "big"];
+      if (flipAllowed.has(item.type)) {
+        modes.push("flip");
+        modes.push("mirror");
+      }
+      if (rot90Allowed.has(item.type)) modes.push("rot90");
+      if (rot180Allowed.has(item.type)) modes.push("rot180");
+      return modes;
+    }
+
+    function canTransform(item, mode) {
+      if (mode === "empty") return true;
+      return getAllowedModes(item).includes(mode);
     }
 
     function buildAnswerResult(base, mode) {
       if (mode === "empty") return EMPTY_ICON;
-      return { type: base, mode };
+      return { ...base, mode };
     }
 
     function sameAnswer(a, b) {
@@ -715,41 +905,350 @@
       return { type: item.type, mode: item.mode || "keep" };
     }
 
+    function normalizeVisualMode(type, mode) {
+      if (!mode) mode = "keep";
+      if (mode === "mirror") mode = "flip";
+
+      // 高风险图片：方向变化统一归并为 keep
+      if (visualCollapseSet.has(type)) {
+        if (mode === "flip" || mode === "rot90" || mode === "rot180") {
+          return "keep";
+        }
+      }
+
+      return mode;
+    }
+
+    function getVisualMode(item) {
+      if (item === EMPTY_ICON) return "empty";
+      return normalizeVisualMode(item.type, item.mode || "keep");
+    }
+
+    function visualOptionKey(item) {
+      if (item === EMPTY_ICON) return EMPTY_ICON;
+      const n = normalizeOption(item);
+      return `${n.type}__${normalizeVisualMode(n.type, n.mode)}`;
+    }
+
     function optionExists(arr, item) {
-      return arr.some(x => sameAnswer(normalizeOption(x), normalizeOption(item)));
+      const key = visualOptionKey(item);
+      return arr.some(x => visualOptionKey(x) === key);
+    }
+
+    function uniqueOptions(arr) {
+      const result = [];
+      const seen = new Set();
+      arr.forEach(item => {
+        const normalized = normalizeOption(item);
+        const key = visualOptionKey(normalized);
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(normalized);
+        }
+      });
+      return result;
+    }
+
+    function dedupeOptionsByVisualEffect(arr) {
+      const result = [];
+      const seen = new Set();
+
+      arr.forEach(item => {
+        const normalized = normalizeOption(item);
+        const key = visualOptionKey(normalized);
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(normalized);
+        }
+      });
+
+      return result;
+    }
+
+    function pushUniqueOption(arr, item) {
+      if (item == null) return false;
+      const normalized = normalizeOption(item);
+      if (optionExists(arr, normalized)) return false;
+      arr.push(normalized);
+      return true;
+    }
+
+    function createEmojiBase(emoji) {
+      return { type: emoji, mode: "keep" };
+    }
+
+    function getSimilarDistractors(ans, correctAnswers) {
+      const list = [];
+
+      if (ans === EMPTY_ICON) {
+        correctAnswers.forEach(a => {
+          if (a && a !== EMPTY_ICON && typeof a === "object") {
+            list.push({ type: a.type, mode: "keep" });
+            list.push({ type: a.type, mode: "small" });
+            list.push({ type: a.type, mode: "big" });
+          }
+        });
+        return list;
+      }
+
+      if (!ans || typeof ans !== "object") return list;
+
+      const base = { type: ans.type };
+      const mode = ans.mode || "keep";
+
+      if (mode === "small") {
+        list.push({ ...base, mode: "keep" });
+        list.push({ ...base, mode: "big" });
+      } else if (mode === "big") {
+        list.push({ ...base, mode: "keep" });
+        list.push({ ...base, mode: "small" });
+      } else if (mode === "keep") {
+        list.push({ ...base, mode: "small" });
+        list.push({ ...base, mode: "big" });
+        if (flipAllowed.has(ans.type)) {
+          list.push({ ...base, mode: "flip" });
+          list.push({ ...base, mode: "mirror" });
+        }
+        if (rot90Allowed.has(ans.type)) list.push({ ...base, mode: "rot90" });
+        if (rot180Allowed.has(ans.type)) list.push({ ...base, mode: "rot180" });
+      } else if (mode === "flip" || mode === "mirror") {
+        list.push({ ...base, mode: "keep" });
+        list.push({ ...base, mode: "small" });
+        list.push({ ...base, mode: "big" });
+      } else if (mode === "rot90") {
+        list.push({ ...base, mode: "keep" });
+        list.push({ ...base, mode: "small" });
+        list.push({ ...base, mode: "big" });
+        if (rot180Allowed.has(ans.type)) list.push({ ...base, mode: "rot180" });
+      } else if (mode === "rot180") {
+        list.push({ ...base, mode: "keep" });
+        list.push({ ...base, mode: "small" });
+        list.push({ ...base, mode: "big" });
+        if (rot90Allowed.has(ans.type)) list.push({ ...base, mode: "rot90" });
+      }
+
+      return list;
+    }
+
+    function getCrossDistractors(correctAnswers) {
+      const list = [];
+      correctAnswers.forEach(ans => {
+        if (ans && ans !== EMPTY_ICON && typeof ans === "object") {
+          list.push({ type: ans.type, mode: "keep" });
+          list.push({ type: ans.type, mode: "small" });
+          list.push({ type: ans.type, mode: "big" });
+          if (flipAllowed.has(ans.type)) {
+            list.push({ type: ans.type, mode: "flip" });
+            list.push({ type: ans.type, mode: "mirror" });
+          }
+          if (rot90Allowed.has(ans.type)) list.push({ type: ans.type, mode: "rot90" });
+          if (rot180Allowed.has(ans.type)) list.push({ type: ans.type, mode: "rot180" });
+        }
+      });
+      return list;
+    }
+
+    function buildGlobalDistractorPool() {
+      const pool = [];
+      allThemeItems.forEach(e => {
+        pool.push({ type: e, mode: "keep" });
+        pool.push({ type: e, mode: "small" });
+        pool.push({ type: e, mode: "big" });
+        if (flipAllowed.has(e)) {
+          pool.push({ type: e, mode: "flip" });
+          pool.push({ type: e, mode: "mirror" });
+        }
+        if (rot90Allowed.has(e)) pool.push({ type: e, mode: "rot90" });
+        if (rot180Allowed.has(e)) pool.push({ type: e, mode: "rot180" });
+      });
+      pool.push(EMPTY_ICON);
+      return shuffle(dedupeOptionsByVisualEffect(pool));
     }
 
     function generateDynamicOptions(correctAnswers) {
       let opts = [];
 
-      correctAnswers.forEach(ans => {
-        if (!optionExists(opts, ans)) opts.push(ans);
+      // 1. 正确答案先放入，按视觉效果唯一
+      const uniqueCorrect = dedupeOptionsByVisualEffect(correctAnswers);
+      uniqueCorrect.forEach(ans => {
+        pushUniqueOption(opts, ans);
       });
 
-      const distractorPool = [];
-      allEmojis.forEach(e => {
-        distractorPool.push({ type: e, mode: "keep" });
-        distractorPool.push({ type: e, mode: "small" });
-        distractorPool.push({ type: e, mode: "big" });
-        if (directionalSet.has(e)) {
-          distractorPool.push({ type: e, mode: "flip" });
-          distractorPool.push({ type: e, mode: "rot180" });
-          distractorPool.push({ type: e, mode: "rot90" });
+      // 2. 近似干扰项
+      let priorityDistractors = [];
+      uniqueCorrect.forEach(ans => {
+        priorityDistractors.push(...getSimilarDistractors(ans, uniqueCorrect));
+      });
+      priorityDistractors.push(...getCrossDistractors(uniqueCorrect));
+
+      shuffle(dedupeOptionsByVisualEffect(priorityDistractors)).forEach(item => {
+        if (opts.length < OPTION_COUNT) {
+          pushUniqueOption(opts, item);
         }
       });
-      distractorPool.push(EMPTY_ICON);
 
-      const shuffled = shuffle(distractorPool);
-      for (const item of shuffled) {
-        if (opts.length >= 12) break;
-        if (!optionExists(opts, item)) opts.push(item);
+      // 3. 全局池补足
+      buildGlobalDistractorPool().forEach(item => {
+        if (opts.length < OPTION_COUNT) {
+          pushUniqueOption(opts, item);
+        }
+      });
+
+      // 4. 强制按视觉效果去重
+      opts = dedupeOptionsByVisualEffect(opts);
+
+      // 5. 确保每个正确答案都还在
+      const correctKeys = new Set(uniqueCorrect.map(visualOptionKey));
+      uniqueCorrect.forEach(ans => {
+        if (!optionExists(opts, ans)) {
+          if (opts.length >= OPTION_COUNT) {
+            for (let i = opts.length - 1; i >= 0; i--) {
+              if (!correctKeys.has(visualOptionKey(opts[i]))) {
+                opts.splice(i, 1);
+                break;
+              }
+            }
+          }
+          pushUniqueOption(opts, ans);
+        }
+      });
+
+      // 6. 如果超出 12，继续删非正确项
+      opts = dedupeOptionsByVisualEffect(opts);
+      while (opts.length > OPTION_COUNT) {
+        let removed = false;
+        for (let i = opts.length - 1; i >= 0; i--) {
+          if (!correctKeys.has(visualOptionKey(opts[i]))) {
+            opts.splice(i, 1);
+            removed = true;
+            break;
+          }
+        }
+        if (!removed) break;
       }
 
-      while (opts.length < 12) {
-        opts.push(EMPTY_ICON);
+      // 7. 如果不足 12，继续从全局池补
+      if (opts.length < OPTION_COUNT) {
+        const extraPool = buildGlobalDistractorPool();
+        extraPool.forEach(item => {
+          if (opts.length < OPTION_COUNT) {
+            if (!optionExists(opts, item)) {
+              opts.push(normalizeOption(item));
+            }
+          }
+        });
       }
 
-      return shuffle(opts).slice(0, 12);
+      // 8. 最终双保险去重
+      opts = dedupeOptionsByVisualEffect(opts);
+
+      // 9. 再次确保正确答案都在
+      uniqueCorrect.forEach(ans => {
+        if (!optionExists(opts, ans)) {
+          if (opts.length >= OPTION_COUNT) {
+            for (let i = opts.length - 1; i >= 0; i--) {
+              if (!correctKeys.has(visualOptionKey(opts[i]))) {
+                opts.splice(i, 1);
+                break;
+              }
+            }
+          }
+          pushUniqueOption(opts, ans);
+        }
+      });
+
+      // 10. 最终收口：再去重，再裁到12
+      opts = dedupeOptionsByVisualEffect(opts);
+
+      while (opts.length > OPTION_COUNT) {
+        let removed = false;
+        for (let i = opts.length - 1; i >= 0; i--) {
+          if (!correctKeys.has(visualOptionKey(opts[i]))) {
+            opts.splice(i, 1);
+            removed = true;
+            break;
+          }
+        }
+        if (!removed) break;
+      }
+
+      // 11. 如仍不足 12，再补一次
+      if (opts.length < OPTION_COUNT) {
+        const extraPool2 = buildGlobalDistractorPool();
+        extraPool2.forEach(item => {
+          if (opts.length < OPTION_COUNT && !optionExists(opts, item)) {
+            opts.push(normalizeOption(item));
+          }
+        });
+      }
+
+      // 12. 最终绝对唯一 + 打乱
+      opts = dedupeOptionsByVisualEffect(opts);
+
+      return shuffle(opts).slice(0, OPTION_COUNT);
+    }
+
+    function buildColumnRules() {
+      return shuffle([...modeCandidates]).slice(0, 4);
+    }
+
+    function pickBaseForRule(rule, pool, usedSet, usedAcrossRows) {
+      let candidates = [];
+
+      if (rule === "flip" || rule === "mirror") {
+        candidates = pool.filter(x => flipAllowed.has(x) && !usedSet.has(x) && !usedAcrossRows.has(x));
+      } else if (rule === "rot90") {
+        candidates = pool.filter(x => rot90Allowed.has(x) && !usedSet.has(x) && !usedAcrossRows.has(x));
+      } else if (rule === "rot180") {
+        candidates = pool.filter(x => rot180Allowed.has(x) && !usedSet.has(x) && !usedAcrossRows.has(x));
+      } else {
+        candidates = pool.filter(x => !usedSet.has(x) && !usedAcrossRows.has(x));
+      }
+
+      if (candidates.length === 0) {
+        if (rule === "flip" || rule === "mirror") {
+          candidates = allThemeItems.filter(x => flipAllowed.has(x) && !usedSet.has(x) && !usedAcrossRows.has(x));
+        } else if (rule === "rot90") {
+          candidates = allThemeItems.filter(x => rot90Allowed.has(x) && !usedSet.has(x) && !usedAcrossRows.has(x));
+        } else if (rule === "rot180") {
+          candidates = allThemeItems.filter(x => rot180Allowed.has(x) && !usedSet.has(x) && !usedAcrossRows.has(x));
+        } else {
+          candidates = pool.filter(x => !usedSet.has(x) && !usedAcrossRows.has(x));
+        }
+      }
+
+      if (candidates.length === 0) {
+        if (rule === "flip" || rule === "mirror") {
+          candidates = [...flipAllowed].filter(x => !usedSet.has(x) && !usedAcrossRows.has(x));
+        } else if (rule === "rot90") {
+          candidates = [...rot90Allowed].filter(x => !usedSet.has(x) && !usedAcrossRows.has(x));
+        } else if (rule === "rot180") {
+          candidates = [...rot180Allowed].filter(x => !usedSet.has(x) && !usedAcrossRows.has(x));
+        } else {
+          candidates = allThemeItems.filter(x => !usedSet.has(x) && !usedAcrossRows.has(x));
+        }
+      }
+
+      if (candidates.length === 0) {
+        candidates = pool.filter(x => !usedSet.has(x));
+      }
+
+      if (candidates.length === 0) {
+        candidates = [...pool];
+      }
+
+      const picked = sampleOne(candidates);
+      usedSet.add(picked);
+      usedAcrossRows.add(picked);
+      return createEmojiBase(picked);
+    }
+
+    function differentEmojiBase(base, pool, usedAcrossRows) {
+      let found = pool.find(x => x !== base.type && !usedAcrossRows.has(x));
+      if (!found) found = pool.find(x => x !== base.type);
+      if (!found) found = pool[0];
+      usedAcrossRows.add(found);
+      return createEmojiBase(found);
     }
 
     function generateOneQuestion() {
@@ -759,20 +1258,16 @@
       const row2Pool = shuffle(themePools[rowThemes[1]]);
       const row3Pool = shuffle(themePools[rowThemes[2]]);
 
-      const row1Bases = row1Pool.slice(0, 4);
-      const row2Bases = row2Pool.slice(0, 4);
-      const row3Bases = row3Pool.slice(0, 4);
+      const columnRules = buildColumnRules();
 
-      const baseModes = ["keep", "small", "empty", "flip", "rot90", "rot180", "big"];
-      const answerModes = [];
+      const used1 = new Set();
+      const used2 = new Set();
+      const used3 = new Set();
+      const usedAcrossRows = new Set();
 
-      for (let i = 0; i < 4; i++) {
-        const base = row3Bases[i];
-        const available = baseModes.filter(m => canTransform(base, m));
-        answerModes.push(shuffle(available)[0]);
-      }
-
-      const demoRowChoice = shuffle([1, 2, 1, 2]);
+      const row1Bases = columnRules.map(rule => pickBaseForRule(rule, row1Pool, used1, usedAcrossRows));
+      const row2Bases = columnRules.map(rule => pickBaseForRule(rule, row2Pool, used2, usedAcrossRows));
+      const row3Bases = columnRules.map(rule => pickBaseForRule(rule, row3Pool, used3, usedAcrossRows));
 
       const row1A = [], row1B = [], row1R = [];
       const row2A = [], row2B = [], row2R = [];
@@ -788,47 +1283,43 @@
       const explanations = [];
 
       for (let i = 0; i < 4; i++) {
-        const mode = answerModes[i];
+        const rule = columnRules[i];
+        const b1 = row1Bases[i];
+        const b2 = row2Bases[i];
+        const b3 = row3Bases[i];
 
-        const base1 = row1Bases[i];
-        const base2 = row2Bases[i];
-        const base3 = row3Bases[i];
+        if (rule === "empty") {
+          const d1 = differentEmojiBase(b1, row1Pool, usedAcrossRows);
+          const d2 = differentEmojiBase(b2, row2Pool, usedAcrossRows);
+          const d3 = differentEmojiBase(b3, row3Pool, usedAcrossRows);
 
-        const diff1 = differentFrom(base1, row1Pool);
-        const diff2 = differentFrom(base2, row2Pool);
-        const diff3 = differentFrom(base3, row3Pool);
-
-        const mode1 = canTransform(base1, mode) ? mode : "keep";
-        const mode2 = canTransform(base2, mode) ? mode : "keep";
-
-        if (mode === "empty") {
-          row3A.push({ type: base3, mode: "keep" });
-          row3B.push({ type: diff3, mode: "keep" });
-          correctAnswers.push(EMPTY_ICON);
-          explanations.push(`第${i + 1}格：第3行前两个图片分别是 ${base3} 和 ${diff3}，图片不同，所以结果应为空白图片。`);
-        } else {
-          row3A.push({ type: base3, mode: "keep" });
-          row3B.push({ type: base3, mode: "keep" });
-          correctAnswers.push(buildAnswerResult(base3, mode));
-          explanations.push(`第${i + 1}格：第3行前两个图片相同，都是 ${base3}，根据前两行相同位置已经展示过的规律，结果应${modeLabel(mode)}。`);
-        }
-
-        if (demoRowChoice[i] === 1) {
-          row1A.push({ type: base1, mode: "keep" });
-          row1B.push({ type: mode === "empty" ? diff1 : base1, mode: "keep" });
-          row1R.push(mode === "empty" ? EMPTY_ICON : buildAnswerResult(base1, mode1));
-
-          row2A.push({ type: base2, mode: "keep" });
-          row2B.push({ type: diff2, mode: "keep" });
-          row2R.push(EMPTY_ICON);
-        } else {
-          row2A.push({ type: base2, mode: "keep" });
-          row2B.push({ type: mode === "empty" ? diff2 : base2, mode: "keep" });
-          row2R.push(mode === "empty" ? EMPTY_ICON : buildAnswerResult(base2, mode2));
-
-          row1A.push({ type: base1, mode: "keep" });
-          row1B.push({ type: diff1, mode: "keep" });
+          row1A.push({ ...b1, mode: "keep" });
+          row1B.push({ ...d1, mode: "keep" });
           row1R.push(EMPTY_ICON);
+
+          row2A.push({ ...b2, mode: "keep" });
+          row2B.push({ ...d2, mode: "keep" });
+          row2R.push(EMPTY_ICON);
+
+          row3A.push({ ...b3, mode: "keep" });
+          row3B.push({ ...d3, mode: "keep" });
+          correctAnswers.push(EMPTY_ICON);
+
+          explanations.push(`第${i + 1}格：这一列规律是“前两个图片不同，结果为空白图片”。第3行前两个图片不同，所以答案应为空白图片。`);
+        } else {
+          row1A.push({ ...b1, mode: "keep" });
+          row1B.push({ ...b1, mode: "keep" });
+          row1R.push(buildAnswerResult(b1, rule));
+
+          row2A.push({ ...b2, mode: "keep" });
+          row2B.push({ ...b2, mode: "keep" });
+          row2R.push(buildAnswerResult(b2, rule));
+
+          row3A.push({ ...b3, mode: "keep" });
+          row3B.push({ ...b3, mode: "keep" });
+          correctAnswers.push(buildAnswerResult(b3, rule));
+
+          explanations.push(`第${i + 1}格：这一列规律是“前两个图片相同，结果应${modeLabel(rule)}”。第3行前两个图片相同，所以答案应${modeLabel(rule)}。`);
         }
       }
 
@@ -839,15 +1330,100 @@
         correctAnswers,
         options: generateDynamicOptions(correctAnswers),
         userAnswers: [null, null, null, null],
-        explanations
+        explanations,
+        rowThemes
       };
     }
 
-    function initQuestions() {
-      questions = [];
-      for (let i = 0; i < QUESTION_COUNT; i++) {
-        questions.push(generateOneQuestion());
+    function setAnswerAt(index, item) {
+      const q = questions[currentQuestionIndex];
+      q.userAnswers[index] = item === EMPTY_ICON ? EMPTY_ICON : { ...item };
+      const next = q.userAnswers.findIndex(v => v === null);
+      activeIndex = next !== -1 ? next : index;
+      renderAnswerPage();
+    }
+
+    function clearDragState() {
+      document.querySelectorAll(".answer-box").forEach(b => b.classList.remove("drag-over"));
+      if (dragSourceBox) dragSourceBox.classList.remove("dragging");
+      if (dragGhost && dragGhost.parentNode) dragGhost.parentNode.removeChild(dragGhost);
+      dragGhost = null;
+      dragSourceBox = null;
+      currentDragData = null;
+      dragPointerId = null;
+      isCustomDragging = false;
+    }
+
+    function createDragGhost(item, x, y) {
+      dragGhost = document.createElement("div");
+      dragGhost.className = "drag-ghost";
+      dragGhost.appendChild(createGraphic(item));
+      document.body.appendChild(dragGhost);
+      moveDragGhost(x, y);
+    }
+
+    function moveDragGhost(x, y) {
+      if (!dragGhost) return;
+      dragGhost.style.left = `${x}px`;
+      dragGhost.style.top = `${y}px`;
+    }
+
+    function highlightAnswerBoxByPoint(x, y) {
+      document.querySelectorAll(".answer-box").forEach(b => b.classList.remove("drag-over"));
+      const el = document.elementFromPoint(x, y);
+      if (!el) return null;
+      const answerBox = el.closest(".answer-box");
+      if (answerBox) answerBox.classList.add("drag-over");
+      return answerBox;
+    }
+
+    function dropByPoint(x, y) {
+      const el = document.elementFromPoint(x, y);
+      if (!el) return false;
+      const answerBox = el.closest(".answer-box");
+      if (!answerBox) return false;
+      const index = Number(answerBox.dataset.index);
+      if (!Number.isNaN(index) && currentDragData != null) {
+        setAnswerAt(index, currentDragData);
+        return true;
       }
+      return false;
+    }
+
+    function setupPointerDrag(box, item) {
+      box.addEventListener("pointerdown", e => {
+        if (e.button !== undefined && e.button !== 0) return;
+        e.preventDefault();
+
+        currentDragData = item;
+        dragSourceBox = box;
+        dragPointerId = e.pointerId;
+        isCustomDragging = true;
+        box.classList.add("dragging");
+        box.setPointerCapture?.(e.pointerId);
+
+        createDragGhost(item, e.clientX, e.clientY);
+        highlightAnswerBoxByPoint(e.clientX, e.clientY);
+      });
+
+      box.addEventListener("pointermove", e => {
+        if (!isCustomDragging || e.pointerId !== dragPointerId) return;
+        e.preventDefault();
+        moveDragGhost(e.clientX, e.clientY);
+        highlightAnswerBoxByPoint(e.clientX, e.clientY);
+      });
+
+      box.addEventListener("pointerup", e => {
+        if (!isCustomDragging || e.pointerId !== dragPointerId) return;
+        e.preventDefault();
+        dropByPoint(e.clientX, e.clientY);
+        clearDragState();
+      });
+
+      box.addEventListener("pointercancel", e => {
+        if (!isCustomDragging || e.pointerId !== dragPointerId) return;
+        clearDragState();
+      });
     }
 
     function renderQuestionPage() {
@@ -868,6 +1444,8 @@
     }
 
     function renderAnswerPage() {
+      clearDragState();
+
       const q = questions[currentQuestionIndex];
       document.getElementById("answer-index").textContent = `第 ${currentQuestionIndex + 1} 题 / 共 ${QUESTION_COUNT} 题`;
       document.getElementById("next-btn").textContent = currentQuestionIndex === QUESTION_COUNT - 1 ? "完成" : "下一题";
@@ -878,6 +1456,7 @@
       for (let i = 0; i < 4; i++) {
         const box = document.createElement("div");
         box.className = "answer-box" + (i === activeIndex ? " active" : "");
+        box.dataset.index = i;
 
         if (q.userAnswers[i]) {
           box.appendChild(createGraphic(q.userAnswers[i]));
@@ -886,10 +1465,12 @@
         box.addEventListener("click", () => {
           if (q.userAnswers[i]) {
             q.userAnswers[i] = null;
+            activeIndex = i;
+            renderAnswerPage();
           } else {
             activeIndex = i;
+            renderAnswerPage();
           }
-          renderAnswerPage();
         });
 
         answerGrid.appendChild(box);
@@ -902,14 +1483,7 @@
         const box = document.createElement("div");
         box.className = "option-box";
         box.appendChild(createGraphic(item));
-
-        box.addEventListener("click", () => {
-          q.userAnswers[activeIndex] = item === EMPTY_ICON ? EMPTY_ICON : { ...item };
-          const next = q.userAnswers.findIndex(v => v === null);
-          if (next !== -1) activeIndex = next;
-          renderAnswerPage();
-        });
-
+        setupPointerDrag(box, item);
         optionsGrid.appendChild(box);
       });
     }
@@ -980,8 +1554,11 @@
       let total = QUESTION_COUNT * 4;
       let score = 0;
       let details = "";
-      let analysis = "";
       let hasWrong = false;
+
+      const analysisBox = document.getElementById("analysis-box");
+      analysisBox.style.display = "block";
+      analysisBox.innerHTML = `<div class="analysis-title">错题解析</div>`;
 
       questions.forEach((q, idx) => {
         let subScore = 0;
@@ -1000,26 +1577,46 @@
 
         if (wrongItems.length > 0) {
           hasWrong = true;
-          analysis += `<div style="margin-bottom:14px;"><strong>第 ${idx + 1} 题错因分析：</strong><br>`;
+
+          const block = document.createElement("div");
+          block.style.marginBottom = "18px";
+          block.style.paddingBottom = "12px";
+          block.style.borderBottom = "1px dashed #d8e2cf";
+
+          const title = document.createElement("div");
+          title.innerHTML = `<strong>第 ${idx + 1} 题错因分析：</strong>`;
+          title.style.marginBottom = "8px";
+          block.appendChild(title);
+
+          const puzzleTitle = document.createElement("div");
+          puzzleTitle.textContent = "原题：";
+          puzzleTitle.style.fontWeight = "700";
+          puzzleTitle.style.margin = "6px 0";
+          block.appendChild(puzzleTitle);
+
+          block.appendChild(createResultPuzzle(q));
+          block.appendChild(createResultAnswerRow("你的作答：", q.userAnswers));
+          block.appendChild(createResultAnswerRow("正确答案：", q.correctAnswers));
+
+          const text = document.createElement("div");
+          text.style.marginTop = "10px";
+
           wrongItems.forEach(i => {
             const user = q.userAnswers[i];
             const correct = q.correctAnswers[i];
-            analysis += `- 第${i + 1}格：你的答案是【${renderAnswerText(user)}】，正确答案是【${renderAnswerText(correct)}】。<br>`;
-            analysis += `&nbsp;&nbsp;原因：${q.explanations[i]}<br>`;
+            text.innerHTML += `- 第${i + 1}格：你的答案是【${renderAnswerText(user)}】，正确答案是【${renderAnswerText(correct)}】。<br>`;
+            text.innerHTML += `&nbsp;&nbsp;原因：${q.explanations[i]}<br>`;
           });
-          analysis += `</div>`;
+
+          block.appendChild(text);
+          analysisBox.appendChild(block);
         }
       });
 
       document.getElementById("result-text").textContent = `总正确数：${score} / ${total}`;
       document.getElementById("result-detail").innerHTML = details;
 
-      const analysisBox = document.getElementById("analysis-box");
-      if (hasWrong) {
-        analysisBox.style.display = "block";
-        analysisBox.innerHTML = `<div class="analysis-title">错题解析</div>${analysis}`;
-      } else {
-        analysisBox.style.display = "block";
+      if (!hasWrong) {
         analysisBox.innerHTML = `<div class="analysis-title">表现很好</div>全部答对，没有错题解析。`;
       }
 
@@ -1031,9 +1628,17 @@
       currentQuestionIndex = 0;
       activeIndex = 0;
       remain = TOTAL_SECONDS;
+      clearDragState();
       initQuestions();
       renderQuestionPage();
       showPage("question-page");
+    }
+
+    function initQuestions() {
+      questions = [];
+      for (let i = 0; i < QUESTION_COUNT; i++) {
+        questions.push(generateOneQuestion());
+      }
     }
 
     initQuestions();
