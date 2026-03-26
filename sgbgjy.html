@@ -278,6 +278,7 @@
       font-weight: 700;
       padding: 10px 20px;
       cursor: pointer;
+      touch-action: none;
     }
 
     .icon-wrap {
@@ -497,7 +498,7 @@
     </div>
 
     <div class="question-btn-row">
-      <button class="main-btn" onclick="enterAnswerPage()">请选择</button>
+      <button class="main-btn" id="choose-btn">请选择</button>
     </div>
   </div>
 
@@ -529,7 +530,7 @@
         请将下方选项拖到作答区中；点击作答区中的图片可清空该位置并重新拖入。
       </div>
       <div class="btn-group center-btn">
-        <button class="main-btn" id="next-btn" onclick="submitCurrentAnswer()">下一题</button>
+        <button class="main-btn" id="next-btn">下一题</button>
       </div>
     </div>
   </div>
@@ -541,7 +542,7 @@
       <div class="result-detail" id="result-detail"></div>
       <div class="analysis-box" id="analysis-box" style="display:none;"></div>
       <div style="margin-top:24px; text-align:center;">
-        <button class="main-btn" onclick="restartAll()">重新开始</button>
+        <button class="main-btn" id="restart-btn">重新开始</button>
       </div>
     </div>
   </div>
@@ -639,6 +640,7 @@
     let dragStartX = 0;
     let dragStartY = 0;
     let answerBoxRects = [];
+    let isSubmitting = false;
     const DRAG_THRESHOLD = 8;
 
     function showPage(id) {
@@ -927,11 +929,6 @@
       return mode;
     }
 
-    function getVisualMode(item) {
-      if (item === EMPTY_ICON) return "empty";
-      return normalizeVisualMode(item.type, item.mode || "keep");
-    }
-
     function visualOptionKey(item) {
       if (item === EMPTY_ICON) return EMPTY_ICON;
       const n = normalizeOption(item);
@@ -941,20 +938,6 @@
     function optionExists(arr, item) {
       const key = visualOptionKey(item);
       return arr.some(x => visualOptionKey(x) === key);
-    }
-
-    function uniqueOptions(arr) {
-      const result = [];
-      const seen = new Set();
-      arr.forEach(item => {
-        const normalized = normalizeOption(item);
-        const key = visualOptionKey(normalized);
-        if (!seen.has(key)) {
-          seen.add(key);
-          result.push(normalized);
-        }
-      });
-      return result;
     }
 
     function dedupeOptionsByVisualEffect(arr) {
@@ -1075,7 +1058,6 @@
 
     function generateDynamicOptions(correctAnswers) {
       let opts = [];
-
       const uniqueCorrect = dedupeOptionsByVisualEffect(correctAnswers);
 
       uniqueCorrect.forEach(ans => {
@@ -1133,47 +1115,6 @@
       if (opts.length < OPTION_COUNT) {
         const extraPool = buildGlobalDistractorPool();
         extraPool.forEach(item => {
-          if (opts.length < OPTION_COUNT) {
-            if (!optionExists(opts, item)) {
-              opts.push(normalizeOption(item));
-            }
-          }
-        });
-      }
-
-      opts = dedupeOptionsByVisualEffect(opts);
-
-      uniqueCorrect.forEach(ans => {
-        if (!optionExists(opts, ans)) {
-          if (opts.length >= OPTION_COUNT) {
-            for (let i = opts.length - 1; i >= 0; i--) {
-              if (!correctKeys.has(visualOptionKey(opts[i]))) {
-                opts.splice(i, 1);
-                break;
-              }
-            }
-          }
-          pushUniqueOption(opts, ans);
-        }
-      });
-
-      opts = dedupeOptionsByVisualEffect(opts);
-
-      while (opts.length > OPTION_COUNT) {
-        let removed = false;
-        for (let i = opts.length - 1; i >= 0; i--) {
-          if (!correctKeys.has(visualOptionKey(opts[i]))) {
-            opts.splice(i, 1);
-            removed = true;
-            break;
-          }
-        }
-        if (!removed) break;
-      }
-
-      if (opts.length < OPTION_COUNT) {
-        const extraPool2 = buildGlobalDistractorPool();
-        extraPool2.forEach(item => {
           if (opts.length < OPTION_COUNT && !optionExists(opts, item)) {
             opts.push(normalizeOption(item));
           }
@@ -1181,7 +1122,6 @@
       }
 
       opts = dedupeOptionsByVisualEffect(opts);
-
       return shuffle(opts).slice(0, OPTION_COUNT);
     }
 
@@ -1598,6 +1538,7 @@
     }
 
     function enterAnswerPage() {
+      clearDragState();
       activeIndex = questions[currentQuestionIndex].userAnswers.findIndex(v => v === null);
       if (activeIndex === -1) activeIndex = 0;
       renderAnswerPage();
@@ -1606,15 +1547,24 @@
     }
 
     function submitCurrentAnswer() {
+      if (isSubmitting) return;
+      isSubmitting = true;
+
+      clearDragState();
       stopTimer();
 
       if (currentQuestionIndex < QUESTION_COUNT - 1) {
         currentQuestionIndex++;
+        activeIndex = 0;
         renderQuestionPage();
         showPage("question-page");
       } else {
         finishAll();
       }
+
+      requestAnimationFrame(() => {
+        isSubmitting = false;
+      });
     }
 
     function finishAll() {
@@ -1692,10 +1642,11 @@
 
     function restartAll() {
       stopTimer();
+      clearDragState();
       currentQuestionIndex = 0;
       activeIndex = 0;
       remain = TOTAL_SECONDS;
-      clearDragState();
+      isSubmitting = false;
       initQuestions();
       renderQuestionPage();
       showPage("question-page");
@@ -1707,6 +1658,24 @@
         questions.push(generateOneQuestion());
       }
     }
+
+    document.getElementById("choose-btn").addEventListener("pointerup", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      enterAnswerPage();
+    });
+
+    document.getElementById("next-btn").addEventListener("pointerup", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      submitCurrentAnswer();
+    });
+
+    document.getElementById("restart-btn").addEventListener("pointerup", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      restartAll();
+    });
 
     initQuestions();
     renderQuestionPage();
