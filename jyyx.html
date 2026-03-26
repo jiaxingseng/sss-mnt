@@ -8,13 +8,13 @@
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      touch-action: none;
     }
     body {
       margin: 0;
       font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
       background: #eef7e7;
       color: #333;
+      overflow-x: hidden;
     }
     .page {
       width: min(96vw, 1024px);
@@ -107,7 +107,7 @@
       font-size: 22px;
       font-weight: 700;
       cursor: pointer;
-      touch-action: manipulation;
+      touch-action: none;
     }
 
     .progress-wrap {
@@ -219,6 +219,7 @@
       cursor: grab;
       transition: transform .12s ease, box-shadow .12s ease;
       will-change: transform;
+      touch-action: none;
     }
     .option:hover {
       transform: translateY(-2px);
@@ -239,8 +240,8 @@
       cursor: pointer;
       font-size: 22px;
       font-weight: 700;
-      touch-action: manipulation;
       background: #6fbf45;
+      touch-action: none;
     }
 
     .result {
@@ -260,19 +261,20 @@
 
     .drag-ghost {
       position: fixed;
-      width: 96px;
-      height: 96px;
+      width: 88px;
+      height: 88px;
       border: 2px solid #8db4ff;
       background: #fff;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 52px;
+      font-size: 46px;
       z-index: 9999;
       pointer-events: none;
       box-shadow: 0 10px 24px rgba(0,0,0,.18);
       transform: translate(-50%, -50%) scale(1.04);
+      touch-action: none;
     }
 
     .summary-card {
@@ -337,6 +339,7 @@
       font-size: 22px;
       font-weight: 700;
       cursor: pointer;
+      touch-action: none;
     }
 
     @media (max-width: 820px) {
@@ -437,6 +440,8 @@
     let timer = null;
     let remainingSeconds = PER_QUESTION_SECONDS;
     let currentDrag = null;
+    let dragMoveHandler = null;
+    let dragEndHandler = null;
     let inExam = false;
     let isTransitioning = false;
 
@@ -557,6 +562,7 @@
     function bindCustomDrag(optionEl) {
       optionEl.addEventListener("pointerdown", (e) => {
         if (!inExam || isTransitioning) return;
+
         e.preventDefault();
 
         const ghost = document.createElement("div");
@@ -564,37 +570,45 @@
         ghost.textContent = optionEl.dataset.icon;
         document.body.appendChild(ghost);
 
-        currentDrag = { optionEl, ghost, pointerId: e.pointerId };
-        optionEl.setPointerCapture?.(e.pointerId);
-        moveGhost(e.clientX, e.clientY);
-      });
-
-      optionEl.addEventListener("pointermove", (e) => {
-        if (!currentDrag) return;
-        if (currentDrag.optionEl !== optionEl) return;
-        if (currentDrag.pointerId !== e.pointerId) return;
+        currentDrag = {
+          optionEl,
+          ghost,
+          pointerId: e.pointerId,
+          icon: optionEl.dataset.icon
+        };
 
         moveGhost(e.clientX, e.clientY);
         clearSlotHover();
 
-        const slot = getTargetSlotByPoint(e.clientX, e.clientY);
-        if (slot) slot.classList.add("drag-over");
-      });
+        dragMoveHandler = function(ev) {
+          if (!currentDrag) return;
+          if (ev.pointerId !== currentDrag.pointerId) return;
 
-      optionEl.addEventListener("pointerup", (e) => {
-        if (!currentDrag) return;
-        if (currentDrag.optionEl !== optionEl) return;
-        if (currentDrag.pointerId !== e.pointerId) return;
+          ev.preventDefault();
+          moveGhost(ev.clientX, ev.clientY);
+          clearSlotHover();
 
-        const slot = getTargetSlotByPoint(e.clientX, e.clientY);
-        if (slot) placeOptionInSlot(optionEl.dataset.icon, slot);
-        endDrag(optionEl, e.pointerId);
-      });
+          const slot = getTargetSlotByPoint(ev.clientX, ev.clientY);
+          if (slot) {
+            slot.classList.add("drag-over");
+          }
+        };
 
-      optionEl.addEventListener("pointercancel", (e) => {
-        if (!currentDrag) return;
-        if (currentDrag.optionEl !== optionEl) return;
-        endDrag(optionEl, e.pointerId);
+        dragEndHandler = function(ev) {
+          if (!currentDrag) return;
+          if (ev.pointerId !== currentDrag.pointerId) return;
+
+          const slot = getTargetSlotByPoint(ev.clientX, ev.clientY);
+          if (slot) {
+            placeOptionInSlot(currentDrag.icon, slot);
+          }
+
+          finishCurrentDrag();
+        };
+
+        window.addEventListener("pointermove", dragMoveHandler, { passive: false });
+        window.addEventListener("pointerup", dragEndHandler, { passive: false });
+        window.addEventListener("pointercancel", dragEndHandler, { passive: false });
       });
     }
 
@@ -604,10 +618,22 @@
       currentDrag.ghost.style.top = `${y}px`;
     }
 
-    function endDrag(optionEl, pointerId) {
+    function finishCurrentDrag() {
       clearSlotHover();
-      optionEl.releasePointerCapture?.(pointerId);
-      if (currentDrag?.ghost) currentDrag.ghost.remove();
+
+      if (dragMoveHandler) {
+        window.removeEventListener("pointermove", dragMoveHandler);
+        dragMoveHandler = null;
+      }
+      if (dragEndHandler) {
+        window.removeEventListener("pointerup", dragEndHandler);
+        window.removeEventListener("pointercancel", dragEndHandler);
+        dragEndHandler = null;
+      }
+
+      if (currentDrag?.ghost) {
+        currentDrag.ghost.remove();
+      }
       currentDrag = null;
     }
 
@@ -663,6 +689,7 @@
 
       isTransitioning = true;
       clearInterval(timer);
+      finishCurrentDrag();
 
       if (currentQuestionIndex < TOTAL_QUESTIONS - 1) {
         currentQuestionIndex++;
@@ -676,6 +703,7 @@
       inExam = false;
       isTransitioning = false;
       clearInterval(timer);
+      finishCurrentDrag();
 
       pageQuestion.classList.add("hidden");
       pageAnswer.classList.add("hidden");
@@ -753,7 +781,7 @@
         const desc = document.createElement("div");
         desc.className = "review-desc";
         desc.innerHTML = `
-          解析：本题不是找变化规律，而是记忆顺序。<br>
+          解析：本��不是找变化规律，而是记忆顺序。<br>
           题目从左到右的正确顺序为：<strong>${q.sequence.join(" → ")}</strong>。<br>
           作答时应将图片按出现顺序依次拖入作答区。
         `;
@@ -779,6 +807,7 @@
 
     restartBtn.addEventListener("click", () => {
       clearInterval(timer);
+      finishCurrentDrag();
       generateExam();
       renderMemoryPage();
     });
