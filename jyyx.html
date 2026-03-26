@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>序列题模拟训练</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background: #eef7e7;
+      color: #333;
+    }
+    .page {
+      width: min(96vw, 1024px);
+      margin: 0 auto;
+      padding: 18px 18px 28px;
+      min-height: 100vh;
+    }
+    .hidden { display: none; }
+
+    .top-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .top-time {
+      font-size: clamp(22px, 3vw, 30px);
+      color: #666;
+      letter-spacing: 1px;
+      text-align: center;
+      flex: 1;
+    }
+    .q-index {
+      font-size: 16px;
+      color: #666;
+      font-weight: 700;
+      min-width: 90px;
+      text-align: right;
+    }
+
+    .title {
+      font-size: clamp(16px, 2vw, 22px);
+      line-height: 1.8;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .title span { font-weight: 400; }
+
+    .section-tag {
+      display: inline-block;
+      background: #f0bf73;
+      color: #fff;
+      border-radius: 18px;
+      padding: 8px 18px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      font-size: 16px;
+    }
+
+    .box-card,
+    .answer-slot,
+    .option,
+    .review-card {
+      width: clamp(90px, 10vw, 120px);
+      height: clamp(90px, 10vw, 120px);
+      border: 2px solid #bfc5c9;
+      background: #fff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      user-select: none;
+      font-size: clamp(40px, 4.8vw, 58px);
+    }
+
+    .memory-row,
+    .answer-row,
+    .review-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .memory-row { margin: 12px 0 28px; }
+
+    .start-area {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .select-btn {
+      background: #6fbf45;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 40px;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .progress {
+      flex: 1;
+      height: 6px;
+      background: #ececec;
+      border-radius: 999px;
+      position: relative;
+      overflow: visible;
+      margin-left: 6px;
+      margin-right: 6px;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: #66c847;
+      border-radius: 999px;
+      transition: width 1s linear;
+    }
+
+    .rocket {
+      position: absolute;
+      left: 0%;
+      top: 50%;
+      width: 34px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      transition: left 1s linear;
+      pointer-events: none;
+    }
+    .rocket .body {
+      position: absolute;
+      left: 8px;
+      top: 2px;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 18px solid #67c948;
+    }
+    .rocket .window {
+      position: absolute;
+      left: 17px;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      z-index: 2;
+    }
+    .rocket .tail-top {
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 0;
+      height: 0;
+      border-top: 5px solid transparent;
+      border-right: 8px solid #f3a42f;
+      transform: rotate(-18deg);
+    }
+    .rocket .tail-bottom {
+      position: absolute;
+      left: 4px;
+      top: 12px;
+      width: 0;
+      height: 0;
+      border-bottom: 5px solid transparent;
+      border-right: 8px solid #f3a42f;
+      transform: rotate(18deg);
+    }
+    .timer-box {
+      min-width: 96px;
+      text-align: center;
+      background: #75c92d;
+      color: #fff;
+      border-radius: 4px;
+      padding: 9px 12px;
+      font-weight: 700;
+      font-size: clamp(20px, 2vw, 24px);
+    }
+
+    .label {
+      font-size: 16px;
+      font-weight: 700;
+      color: #666;
+      margin: 18px 0 10px;
+    }
+
+    .answer-slot.drag-over {
+      border-color: #7ab8ff;
+      box-shadow: 0 0 0 2px rgba(122,184,255,.18) inset;
+      background: #f7fbff;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(90px, 1fr));
+      gap: 10px;
+      width: 100%;
+      max-width: 860px;
+    }
+    .option {
+      cursor: grab;
+      transition: transform .12s ease, box-shadow .12s ease;
+      will-change: transform;
+    }
+    .option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    }
+
+    .controls {
+      margin-top: 26px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .action-btn {
+      border: none;
+      color: #fff;
+      padding: 14px 42px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: 700;
+      touch-action: manipulation;
+      background: #6fbf45;
+    }
+
+    .result {
+      margin-top: 14px;
+      min-height: 24px;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .tip {
+      margin-top: 6px;
+      color: #777;
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .drag-ghost {
+      position: fixed;
+      width: 96px;
+      height: 96px;
+      border: 2px solid #8db4ff;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 52px;
+      z-index: 9999;
+      pointer-events: none;
+      box-shadow: 0 10px 24px rgba(0,0,0,.18);
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+
+    .summary-card {
+      background: rgba(255,255,255,.75);
+      border: 1px solid #d9e7cf;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .summary-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: #4a6b2f;
+    }
+    .summary-score {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .summary-sub {
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .review-item {
+      background: rgba(255,255,255,.78);
+      border: 1px solid #d9e7cf;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .review-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #4f6b3d;
+    }
+    .review-desc {
+      line-height: 1.8;
+      color: #555;
+      margin: 10px 0;
+    }
+    .review-label {
+      font-weight: 700;
+      margin: 10px 0 8px;
+      color: #666;
+    }
+    .good { color: #2fa84f; }
+    .bad { color: #e34d4d; }
+
+    .restart-wrap {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .restart-btn {
+      background: #6fbf45;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 40px;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      .options-grid { grid-template-columns: repeat(4, minmax(90px, 1fr)); }
+    }
+    @media (max-width: 820px) {
+      .page { width: 100%; padding: 14px; }
+      .memory-row, .answer-row, .review-row { gap: 10px; }
+      .options-grid { grid-template-columns: repeat(3, minmax(90px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div id="page-question">
+      <div class="top-title-row">
+        <div class="top-time" id="memoryTopTime">03:00</div>
+        <div class="q-index" id="questionIndexTop">第1题 / 共5题</div>
+      </div>
+
+      <div class="title">
+        序列题-有序-拖曳
+        <span>【家长指导语：请记住图案，并在之后的新页面上按从左到右的顺序，从选项区按序拖进答案区对应位置】</span>
+      </div>
+
+      <div class="memory-row" id="memoryRow"></div>
+
+      <div class="start-area">
+        <button class="select-btn" id="enterAnswerBtn">请选择</button>
+      </div>
+    </div>
+
+    <div id="page-answer" class="hidden">
+      <div class="section-tag">序列题</div>
+
+      <div class="progress-wrap">
+        <div class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+          <div class="rocket" id="rocket">
+            <span class="tail-top"></span>
+            <span class="tail-bottom"></span>
+            <span class="body"></span>
+            <span class="window"></span>
+          </div>
+        </div>
+        <div class="timer-box" id="timerBox">03:00</div>
+      </div>
+
+      <div class="q-index" id="questionIndexAnswer" style="text-align:left; margin-bottom:10px;">第1题 / 共5题</div>
+
+      <div class="label">作答区</div>
+      <div class="answer-row" id="answerRow"></div>
+
+      <div class="label">选项区</div>
+      <div class="options-grid" id="optionsGrid"></div>
+
+      <div class="controls">
+        <button class="action-btn" id="submitBtn">下一题</button>
+      </div>
+
+      <div class="result" id="result"></div>
+      <div class="tip">请将下方选项拖到上方作答区，作答区已有图片时也可重新拖拽替换。</div>
+    </div>
+
+    <div id="page-summary" class="hidden">
+      <div class="summary-card">
+        <div class="summary-title">作答结果</div>
+        <div class="summary-score" id="summaryScore"></div>
+        <div class="summary-sub" id="summarySub"></div>
+      </div>
+
+      <div id="reviewContainer"></div>
+
+      <div class="restart-wrap">
+        <button class="restart-btn" id="restartBtn">重新答题</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const THEME_LIBRARY = [
+      { name: "昆虫与小动物", correctPool: ["🐌","🐞","🪲","🐝","🐑","🐻","🐢","🐇"], distractors: ["🐼","🐄","🐘","🦒","🦋","🐙","🦊","🐸","🐵","🦁"] },
+      { name: "海洋生物", correctPool: ["🐟","🐠","🐡","🦀","🐙","🦐","🦑","🐬"], distractors: ["🐘","🐓","🦒","🐌","🦋","🐝","🐢","🦁","🐻","🐮"] },
+      { name: "水果", correctPool: ["🍎","🍊","🍋","🍇","🍉","🍓","🍍","🥝"], distractors: ["🥕","🌽","🍄","🥦","🍞","🧀","🥚","🍪","🧁","🥔"] },
+      { name: "蔬菜与食物", correctPool: ["🥕","🌽","🍅","🥒","🍆","🥔","🥦","🍄"], distractors: ["🍎","🍇","🍉","🍋","🧀","🍪","🧁","🍓","🍍","🥚"] },
+      { name: "交通工具", correctPool: ["🚗","🚌","🚕","🚙","🚑","🚒","🚜","🏍️"], distractors: ["✈️","🚀","⛵","🚁","🚲","🛴","🚂","🛸","🛶","🛻"] },
+      { name: "学习用品", correctPool: ["✏️","🖍️","📘","📗","📕","📏","✂️","🖇️"], distractors: ["🍎","🎈","⚽","🧩","🎲","🎯","🎹","🎨","🪁","🧸"] },
+      { name: "玩具与娱乐", correctPool: ["🧸","⚽","🏀","🎲","🧩","🎈","🪁","🎯"], distractors: ["✏️","📘","🍎","🚗","🍓","🐠","🥕","🎹","🚀","🦋"] },
+      { name: "自然天气", correctPool: ["☀️","🌙","⭐","☁️","🌈","⛄","⚡","🌧️"], distractors: ["🍎","🐟","🚗","🧸","🦋","🍄","🚀","🎈","🌽","🐻"] },
+      { name: "花草植物", correctPool: ["🌹","🌷","🌻","🌼","🪴","🌵","🍀","🌿"], distractors: ["🍎","🐠","🚗","🧸","🌈","⚽","🍄","🦋","☀️","🍋"] },
+      { name: "厨房餐具", correctPool: ["🥣","🍽️","🥄","🍴","🫖","☕","🧂","🥛"], distractors: ["🍎","🐟","🚗","🧸","🌈","⚽","🍄","🦋","🥕","🎈"] }
+    ];
+
+    const TOTAL_QUESTIONS = 5;
+    const QUESTION_LEN = 6;
+    const OPTIONS_COUNT = 12;
+    const PER_QUESTION_SECONDS = 180;
+
+    let examQuestions = [];
+    let currentQuestionIndex = 0;
+    let userAnswers = [];
+    let timer = null;
+    let remainingSeconds = PER_QUESTION_SECONDS;
+    let currentDrag = null;
+    let inExam = false;
+    let isTransitioning = false;
+
+    const pageQuestion = document.getElementById("page-question");
+    const pageAnswer = document.getElementById("page-answer");
+    const pageSummary = document.getElementById("page-summary");
+    const memoryTopTime = document.getElementById("memoryTopTime");
+    const questionIndexTop = document.getElementById("questionIndexTop");
+    const questionIndexAnswer = document.getElementById("questionIndexAnswer");
+    const memoryRow = document.getElementById("memoryRow");
+    const answerRow = document.getElementById("answerRow");
+    const optionsGrid = document.getElementById("optionsGrid");
+    const enterAnswerBtn = document.getElementById("enterAnswerBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const result = document.getElementById("result");
+    const timerBox = document.getElementById("timerBox");
+    const progressBar = document.getElementById("progressBar");
+    const rocket = document.getElementById("rocket");
+    const summaryScore = document.getElementById("summaryScore");
+    const summarySub = document.getElementById("summarySub");
+    const reviewContainer = document.getElementById("reviewContainer");
+    const restartBtn = document.getElementById("restartBtn");
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function pickUnique(arr, count) {
+      return shuffle(arr).slice(0, count);
+    }
+
+    function generateQuestion(theme) {
+      const correctSequence = pickUnique(theme.correctPool, QUESTION_LEN);
+      const distractorCandidates = theme.distractors.filter(x => !correctSequence.includes(x));
+      let distractors = pickUnique(distractorCandidates, OPTIONS_COUNT - QUESTION_LEN);
+
+      if (distractors.length < OPTIONS_COUNT - QUESTION_LEN) {
+        const allOthers = THEME_LIBRARY.flatMap(t => t.correctPool.concat(t.distractors));
+        const pool = [...new Set(allOthers)].filter(x => !correctSequence.includes(x) && !distractors.includes(x));
+        distractors = distractors.concat(pickUnique(pool, OPTIONS_COUNT - QUESTION_LEN - distractors.length));
+      }
+
+      const options = shuffle([...correctSequence, ...distractors]);
+      return { theme: theme.name, sequence: correctSequence, options };
+    }
+
+    function generateExam() {
+      const pickedThemes = pickUnique(THEME_LIBRARY, TOTAL_QUESTIONS);
+      examQuestions = pickedThemes.map(theme => generateQuestion(theme));
+      userAnswers = Array.from({ length: TOTAL_QUESTIONS }, () => Array(QUESTION_LEN).fill(""));
+      currentQuestionIndex = 0;
+      inExam = true;
+      isTransitioning = false;
+    }
+
+    function renderMemoryPage() {
+      isTransitioning = false;
+      clearInterval(timer);
+
+      const q = examQuestions[currentQuestionIndex];
+      pageQuestion.classList.remove("hidden");
+      pageAnswer.classList.add("hidden");
+      pageSummary.classList.add("hidden");
+
+      questionIndexTop.textContent = `第${currentQuestionIndex + 1}题 / 共${TOTAL_QUESTIONS}题`;
+      memoryTopTime.textContent = "03:00";
+      memoryRow.innerHTML = "";
+
+      q.sequence.forEach(icon => {
+        const div = document.createElement("div");
+        div.className = "box-card";
+        div.textContent = icon;
+        memoryRow.appendChild(div);
+      });
+    }
+
+    function renderAnswerPage() {
+      isTransitioning = false;
+      const q = examQuestions[currentQuestionIndex];
+      pageQuestion.classList.add("hidden");
+      pageAnswer.classList.remove("hidden");
+      pageSummary.classList.add("hidden");
+
+      questionIndexAnswer.textContent = `第${currentQuestionIndex + 1}题 / 共${TOTAL_QUESTIONS}题`;
+      result.textContent = "";
+
+      answerRow.innerHTML = "";
+      for (let i = 0; i < QUESTION_LEN; i++) {
+        const slot = document.createElement("div");
+        slot.className = "answer-slot";
+        slot.dataset.index = i;
+        slot.textContent = userAnswers[currentQuestionIndex][i] || "";
+        answerRow.appendChild(slot);
+      }
+
+      renderOptions(q.options);
+      remainingSeconds = PER_QUESTION_SECONDS;
+      startTimer();
+    }
+
+    function renderOptions(optionIcons) {
+      optionsGrid.innerHTML = "";
+      optionIcons.forEach(icon => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.dataset.icon = icon;
+        div.innerHTML = `<div>${icon}</div>`;
+        bindCustomDrag(div);
+        optionsGrid.appendChild(div);
+      });
+    }
+
+    function bindCustomDrag(optionEl) {
+      optionEl.addEventListener("pointerdown", (e) => {
+        if (!inExam || isTransitioning) return;
+        e.preventDefault();
+
+        const ghost = document.createElement("div");
+        ghost.className = "drag-ghost";
+        ghost.textContent = optionEl.dataset.icon;
+        document.body.appendChild(ghost);
+
+        currentDrag = { optionEl, ghost, pointerId: e.pointerId };
+        optionEl.setPointerCapture?.(e.pointerId);
+        moveGhost(e.clientX, e.clientY);
+      });
+
+      optionEl.addEventListener("pointermove", (e) => {
+        if (!currentDrag) return;
+        if (currentDrag.optionEl !== optionEl) return;
+        if (currentDrag.pointerId !== e.pointerId) return;
+
+        moveGhost(e.clientX, e.clientY);
+        clearSlotHover();
+
+        const slot = getTargetSlotByPoint(e.clientX, e.clientY);
+        if (slot) slot.classList.add("drag-over");
+      });
+
+      optionEl.addEventListener("pointerup", (e) => {
+        if (!currentDrag) return;
+        if (currentDrag.optionEl !== optionEl) return;
+        if (currentDrag.pointerId !== e.pointerId) return;
+
+        const slot = getTargetSlotByPoint(e.clientX, e.clientY);
+        if (slot) placeOptionInSlot(optionEl.dataset.icon, slot);
+        endDrag(optionEl, e.pointerId);
+      });
+
+      optionEl.addEventListener("pointercancel", (e) => {
+        if (!currentDrag) return;
+        if (currentDrag.optionEl !== optionEl) return;
+        endDrag(optionEl, e.pointerId);
+      });
+    }
+
+    function moveGhost(x, y) {
+      if (!currentDrag || !currentDrag.ghost) return;
+      currentDrag.ghost.style.left = `${x}px`;
+      currentDrag.ghost.style.top = `${y}px`;
+    }
+
+    function endDrag(optionEl, pointerId) {
+      clearSlotHover();
+      optionEl.releasePointerCapture?.(pointerId);
+      if (currentDrag?.ghost) currentDrag.ghost.remove();
+      currentDrag = null;
+    }
+
+    function getSlots() {
+      return Array.from(document.querySelectorAll(".answer-slot"));
+    }
+
+    function clearSlotHover() {
+      getSlots().forEach(slot => slot.classList.remove("drag-over"));
+    }
+
+    function getTargetSlotByPoint(x, y) {
+      const el = document.elementFromPoint(x, y);
+      const slot = el && el.closest ? el.closest(".answer-slot") : null;
+      return slot || null;
+    }
+
+    function placeOptionInSlot(icon, slot) {
+      slot.textContent = icon;
+      userAnswers[currentQuestionIndex][Number(slot.dataset.index)] = icon;
+      result.textContent = "";
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      updateTimerUI();
+
+      timer = setInterval(() => {
+        remainingSeconds--;
+        updateTimerUI();
+        if (remainingSeconds <= 0) {
+          remainingSeconds = 0;
+          updateTimerUI();
+          clearInterval(timer);
+          goNextQuestion();
+        }
+      }, 1000);
+    }
+
+    function updateTimerUI() {
+      const m = String(Math.floor(remainingSeconds / 60)).padStart(2, "0");
+      const s = String(remainingSeconds % 60).padStart(2, "0");
+      timerBox.textContent = `${m}:${s}`;
+
+      const elapsed = PER_QUESTION_SECONDS - remainingSeconds;
+      const percent = Math.max(0, Math.min(100, (elapsed / PER_QUESTION_SECONDS) * 100));
+      progressBar.style.width = `${percent}%`;
+      rocket.style.left = `${percent}%`;
+    }
+
+    function goNextQuestion() {
+      if (isTransitioning) return;
+
+      isTransitioning = true;
+      clearInterval(timer);
+
+      if (currentQuestionIndex < TOTAL_QUESTIONS - 1) {
+        currentQuestionIndex++;
+        renderMemoryPage();
+      } else {
+        showSummary();
+      }
+    }
+
+    function showSummary() {
+      inExam = false;
+      isTransitioning = false;
+      clearInterval(timer);
+
+      pageQuestion.classList.add("hidden");
+      pageAnswer.classList.add("hidden");
+      pageSummary.classList.remove("hidden");
+
+      let correctCount = 0;
+      examQuestions.forEach((q, idx) => {
+        const ok = q.sequence.every((v, i) => v === userAnswers[idx][i]);
+        if (ok) correctCount++;
+      });
+
+      summaryScore.textContent = `共 ${TOTAL_QUESTIONS} 题，答对 ${correctCount} 题，答错 ${TOTAL_QUESTIONS - correctCount} 题`;
+      summarySub.textContent = correctCount === TOTAL_QUESTIONS ? "全部答对，表现很棒！" : "以下为错题解析：";
+
+      reviewContainer.innerHTML = "";
+
+      examQuestions.forEach((q, idx) => {
+        const user = userAnswers[idx];
+        const ok = q.sequence.every((v, i) => v === user[i]);
+        if (ok) return;
+
+        const item = document.createElement("div");
+        item.className = "review-item";
+
+        const title = document.createElement("div");
+        title.className = "review-title";
+        title.innerHTML = `第 ${idx + 1} 题（${q.theme}） <span class="bad">答错</span>`;
+        item.appendChild(title);
+
+        const label1 = document.createElement("div");
+        label1.className = "review-label";
+        label1.textContent = "题目图片顺序：";
+        item.appendChild(label1);
+
+        const row1 = document.createElement("div");
+        row1.className = "review-row";
+        q.sequence.forEach(icon => {
+          const d = document.createElement("div");
+          d.className = "review-card";
+          d.textContent = icon;
+          row1.appendChild(d);
+        });
+        item.appendChild(row1);
+
+        const label2 = document.createElement("div");
+        label2.className = "review-label";
+        label2.textContent = "你的答案：";
+        item.appendChild(label2);
+
+        const row2 = document.createElement("div");
+        row2.className = "review-row";
+        user.forEach(icon => {
+          const d = document.createElement("div");
+          d.className = "review-card";
+          d.textContent = icon || "";
+          row2.appendChild(d);
+        });
+        item.appendChild(row2);
+
+        const label3 = document.createElement("div");
+        label3.className = "review-label";
+        label3.textContent = "正确答案：";
+        item.appendChild(label3);
+
+        const row3 = document.createElement("div");
+        row3.className = "review-row";
+        q.sequence.forEach(icon => {
+          const d = document.createElement("div");
+          d.className = "review-card";
+          d.textContent = icon;
+          row3.appendChild(d);
+        });
+        item.appendChild(row3);
+
+        const desc = document.createElement("div");
+        desc.className = "review-desc";
+        desc.innerHTML = `
+          解析：本题不是找变化规律，而是记忆顺序。<br>
+          题目从左到右的正确顺序为：<strong>${q.sequence.join(" → ")}</strong>。<br>
+          作答时应将图片按出现顺序依次拖入作答区。
+        `;
+        item.appendChild(desc);
+
+        reviewContainer.appendChild(item);
+      });
+
+      if (correctCount === TOTAL_QUESTIONS) {
+        const item = document.createElement("div");
+        item.className = "review-item";
+        item.innerHTML = `<div class="review-title good">5题全部正确</div><div class="review-desc">本轮没有错题，无需解析。</div>`;
+        reviewContainer.appendChild(item);
+      }
+    }
+
+    enterAnswerBtn.addEventListener("click", () => {
+      if (isTransitioning) return;
+      renderAnswerPage();
+    });
+
+    submitBtn.addEventListener("click", goNextQuestion);
+
+    restartBtn.addEventListener("click", () => {
+      clearInterval(timer);
+      generateExam();
+      renderMemoryPage();
+    });
+
+    generateExam();
+    renderMemoryPage();
+  </script>
+</body>
+</html>
