@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0" />
   <title>分类补空题 5题随机练习</title>
   <style>
     * {
@@ -13,11 +13,17 @@
       -webkit-touch-callout: none;
     }
 
+    html, body {
+      touch-action: manipulation;
+      overscroll-behavior: none;
+    }
+
     body {
       margin: 0;
       background: #f7f7f2;
       font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
       color: #555;
+      -webkit-text-size-adjust: 100%;
     }
 
     .page {
@@ -61,6 +67,7 @@
       width: 28px;
       height: 20px;
       transition: left .2s linear;
+      pointer-events: none;
     }
 
     .rocket .body {
@@ -175,6 +182,8 @@
       border-radius: 2px;
       cursor: default;
       padding: 1px;
+      transition: transform .06s ease, border-color .1s ease, background-color .1s ease;
+      touch-action: manipulation;
     }
 
     .cell.blank {
@@ -184,6 +193,11 @@
 
     .cell.blank.filled {
       background: #dff3cf;
+    }
+
+    .cell.touching,
+    .option.touching {
+      transform: scale(0.97);
     }
 
     .emoji-fit {
@@ -196,6 +210,7 @@
       line-height: 1;
       transform: scale(1.18);
       transform-origin: center;
+      pointer-events: none;
     }
 
     .option-section {
@@ -233,8 +248,9 @@
       background: #fff;
       border-radius: 4px;
       cursor: pointer;
-      transition: .15s ease;
+      transition: transform .06s ease, border-color .1s ease, box-shadow .1s ease;
       padding: 1px;
+      touch-action: manipulation;
     }
 
     .option.active {
@@ -261,7 +277,12 @@
       font-weight: 700;
       padding: 12px 28px;
       cursor: pointer;
-      transition: .15s ease;
+      transition: transform .06s ease, opacity .15s ease, background .15s ease;
+      touch-action: manipulation;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
     }
 
     .btn:disabled {
@@ -522,7 +543,6 @@
       { category: "工具分类", themeKey: "tool", family: "tool", type: "double", rule: "左边是敲打工具，右边是剪切工具。", leftPool: ["🔨", "🪓", "🔧", "⛏️"], rightPool: ["✂️", "🔪", "🪚", "🪒"] }
     ];
 
-    // 已剔除玩具主题、礼物主题
     const SINGLE_THEME_POOL = [
       { category: "动物", themeKey: "animal", family: "animal", type: "single", rule: "这一行都是动物。", pool: ["🐶","🐱","🐰","🐼","🐯","🐵","🦊","🐮"] },
       { category: "海洋生物", themeKey: "seaLife", family: "animal", type: "single", rule: "这一行都是海洋生物。", pool: ["🐟","🐠","🐡","🐬","🐳","🦀","🦑","🐙"] },
@@ -540,7 +560,7 @@
       { category: "家具", themeKey: "furniture", family: "home", type: "single", rule: "这一行都是家具。", pool: ["🪑","🛏️","🛋️","🚪","🪞","🧺","🪟","🚽"] },
       { category: "电子设备", themeKey: "device", family: "device", type: "single", rule: "这一行都是电子设备。", pool: ["📱","💻","⌨️","🖥️","🖨️","🖱️","🎧","📷"] },
       { category: "清洁用品", themeKey: "cleaning", family: "clean", type: "single", rule: "这一行都是清洁用品。", pool: ["🧹","🧽","🪣","🧴","🧼","🚿","🪠","🧺"] },
-      { category: "钟表计时", themeKey: "clock", family: "clock", type: "single", rule: "这一行都是钟表计时相关物品。", pool: ["⏰","⏱️","⏲️","🕰️","⌚","⏳","⌛","📆"] },
+      { category: "钟表计时", themeKey: "clock", family: "clock", type: "single", rule: "这一行都是钟表计时相关物品。", pool: ["⏰","⏱️","⌚","⏳","⌛","📅","📆","🗓️"] },
       { category: "建筑物", themeKey: "building", family: "building", type: "single", rule: "这一行都是建筑物。", pool: ["🏠","🏡","🏢","🏫","🏥","🏦","🏪","🏛️"] }
     ];
 
@@ -614,6 +634,45 @@
       span.className = "emoji-fit";
       span.textContent = emoji || "";
       return span;
+    }
+
+    function bindTap(el, handler) {
+      let moved = false;
+
+      el.addEventListener("pointerdown", (e) => {
+        moved = false;
+        el.classList.add("touching");
+        if (e.pointerType !== "mouse") {
+          try { el.setPointerCapture(e.pointerId); } catch {}
+        }
+      }, { passive: true });
+
+      el.addEventListener("pointermove", () => {
+        moved = true;
+      }, { passive: true });
+
+      const clearTouch = () => el.classList.remove("touching");
+      el.addEventListener("pointerup", clearTouch, { passive: true });
+      el.addEventListener("pointercancel", clearTouch, { passive: true });
+      el.addEventListener("pointerleave", clearTouch, { passive: true });
+
+      el.addEventListener("pointerup", (e) => {
+        if (moved) return;
+        e.preventDefault();
+        handler(e);
+      });
+
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+      });
+    }
+
+    function scrollToTopInstant() {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
 
     function buildDoubleRow(theme) {
@@ -893,7 +952,7 @@
               div.classList.add("filled");
               div.appendChild(emojiNode(currentAnswers[key]));
             }
-            div.addEventListener("click", () => onBlankClick(rowIndex, colIndex));
+            bindTap(div, () => onBlankClick(rowIndex, colIndex));
           } else {
             div.appendChild(emojiNode(cell));
           }
@@ -921,7 +980,7 @@
         }
 
         div.appendChild(emojiNode(emoji));
-        div.addEventListener("click", () => onOptionClick(index, emoji));
+        bindTap(div, () => onOptionClick(index, emoji));
         optionsGrid.appendChild(div);
       });
     }
@@ -1033,6 +1092,7 @@
       selectedOption = null;
       currentAnswers = {};
 
+      scrollToTopInstant();
       renderMeta();
       renderQuestion();
       renderOptions();
@@ -1225,6 +1285,7 @@
         }
       }
 
+      scrollToTopInstant();
       renderFinalResult();
     }
 
@@ -1241,18 +1302,21 @@
       finalPanel.classList.remove("show");
       quizPanel.style.display = "block";
 
+      scrollToTopInstant();
       renderMeta();
       renderQuestion();
       renderOptions();
       startTimerForCurrentQuestion();
     }
 
-    nextBtn.addEventListener("click", () => {
+    nextBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       if (nextBtn.disabled) return;
       goNextQuestion();
     });
 
-    clearBtn.addEventListener("click", () => {
+    clearBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       currentAnswers = {};
       selectedOption = null;
       result.textContent = "";
@@ -1260,9 +1324,28 @@
       renderQuestion();
       renderOptions();
       updateNextState();
+      scrollToTopInstant();
     });
 
-    restartBtn.addEventListener("click", resetQuiz);
+    restartBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      resetQuiz();
+    });
+
+    document.addEventListener("gesturestart", e => e.preventDefault());
+    document.addEventListener("gesturechange", e => e.preventDefault());
+    document.addEventListener("gestureend", e => e.preventDefault());
+    document.addEventListener("contextmenu", e => e.preventDefault());
+    document.addEventListener("dragstart", e => e.preventDefault());
+
+    let lastTouchEnd = 0;
+    document.addEventListener("touchend", function (event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
 
     resetQuiz();
   </script>
