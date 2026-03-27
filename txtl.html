@@ -56,7 +56,6 @@
       height: 100%;
       background: #6ec24a;
       border-radius: 999px;
-      transition: width .2s linear;
     }
 
     .rocket {
@@ -66,7 +65,6 @@
       transform: translate(-50%, -50%);
       width: 28px;
       height: 20px;
-      transition: left .2s linear;
       pointer-events: none;
     }
 
@@ -884,19 +882,35 @@
       rocket.style.left = `${percent}%`;
     }
 
-    function renderTimerOnly() {
+    function renderTimerTextOnly() {
       const m = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
       const s = String(totalSeconds % 60).padStart(2, "0");
       timerBox.textContent = `${m}:${s}`;
+    }
 
-      const used = TOTAL_SECONDS - totalSeconds;
-      const percent = Math.max(0, Math.min(100, (used / TOTAL_SECONDS) * 100));
-      progressFill.style.width = `${percent}%`;
-      rocket.style.left = `${percent}%`;
+    function resetProgressAnimation() {
+      progressFill.style.transition = "none";
+      rocket.style.transition = "none";
+      progressFill.style.width = "0%";
+      rocket.style.left = "0%";
+
+      // 强制刷新，确保下一次动画能重新开始
+      void progressFill.offsetWidth;
+      void rocket.offsetWidth;
+    }
+
+    function startProgressAnimation() {
+      progressFill.style.transition = `width ${TOTAL_SECONDS}s linear`;
+      rocket.style.transition = `left ${TOTAL_SECONDS}s linear`;
+
+      requestAnimationFrame(() => {
+        progressFill.style.width = "100%";
+        rocket.style.left = "100%";
+      });
     }
 
     function updateTimer() {
-      renderTimerOnly();
+      renderTimerTextOnly();
       if (totalSeconds > 0) {
         totalSeconds--;
       } else {
@@ -906,10 +920,15 @@
 
     function startTimerForCurrentQuestion() {
       if (timerId) clearInterval(timerId);
+
       totalSeconds = TOTAL_SECONDS;
-      progressFill.style.width = "0%";
-      rocket.style.left = "0%";
-      renderTimerOnly();
+      renderTimerTextOnly();
+
+      resetProgressAnimation();
+      requestAnimationFrame(() => {
+        startProgressAnimation();
+      });
+
       timerId = setInterval(updateTimer, 1000);
     }
 
