@@ -196,7 +196,8 @@
     }
 
     .cell.touching,
-    .option.touching {
+    .option.touching,
+    .btn.touching {
       transform: scale(0.97);
     }
 
@@ -279,10 +280,6 @@
       cursor: pointer;
       transition: transform .06s ease, opacity .15s ease, background .15s ease;
       touch-action: manipulation;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
     }
 
     .btn:disabled {
@@ -637,30 +634,57 @@
     }
 
     function bindTap(el, handler) {
+      let startX = 0;
+      let startY = 0;
       let moved = false;
+      let activePointerId = null;
+      const MOVE_LIMIT = 8;
+
+      function clearState() {
+        moved = false;
+        activePointerId = null;
+        el.classList.remove("touching");
+      }
 
       el.addEventListener("pointerdown", (e) => {
+        activePointerId = e.pointerId;
+        startX = e.clientX;
+        startY = e.clientY;
         moved = false;
         el.classList.add("touching");
+
         if (e.pointerType !== "mouse") {
           try { el.setPointerCapture(e.pointerId); } catch {}
         }
       }, { passive: true });
 
-      el.addEventListener("pointermove", () => {
-        moved = true;
+      el.addEventListener("pointermove", (e) => {
+        if (activePointerId !== e.pointerId) return;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > MOVE_LIMIT) {
+          moved = true;
+          el.classList.remove("touching");
+        }
       }, { passive: true });
 
-      const clearTouch = () => el.classList.remove("touching");
-      el.addEventListener("pointerup", clearTouch, { passive: true });
-      el.addEventListener("pointercancel", clearTouch, { passive: true });
-      el.addEventListener("pointerleave", clearTouch, { passive: true });
-
       el.addEventListener("pointerup", (e) => {
-        if (moved) return;
-        e.preventDefault();
-        handler(e);
+        if (activePointerId !== e.pointerId) return;
+
+        const shouldTrigger = !moved;
+        clearState();
+
+        if (shouldTrigger) {
+          e.preventDefault();
+          handler(e);
+        }
       });
+
+      el.addEventListener("pointercancel", clearState, { passive: true });
+      el.addEventListener("pointerleave", clearState, { passive: true });
 
       el.addEventListener("click", (e) => {
         e.preventDefault();
@@ -1309,14 +1333,12 @@
       startTimerForCurrentQuestion();
     }
 
-    nextBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+    bindTap(nextBtn, () => {
       if (nextBtn.disabled) return;
       goNextQuestion();
     });
 
-    clearBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+    bindTap(clearBtn, () => {
       currentAnswers = {};
       selectedOption = null;
       result.textContent = "";
@@ -1327,8 +1349,7 @@
       scrollToTopInstant();
     });
 
-    restartBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+    bindTap(restartBtn, () => {
       resetQuiz();
     });
 
