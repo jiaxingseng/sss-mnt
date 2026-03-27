@@ -1188,6 +1188,45 @@
       return createEmojiBase(found);
     }
 
+    function buildRowByPattern(base, pool, usedAcrossRows, rule, pattern) {
+      if (pattern === "same") {
+        return {
+          left: { ...base, mode: "keep" },
+          right: { ...base, mode: "keep" },
+          result: buildAnswerResult(base, rule)
+        };
+      } else {
+        const d = differentEmojiBase(base, pool, usedAcrossRows);
+        return {
+          left: { ...base, mode: "keep" },
+          right: { ...d, mode: "keep" },
+          result: EMPTY_ICON
+        };
+      }
+    }
+
+    function pickThirdRowPatternByRule(rule) {
+      return rule === "empty" ? "diff" : "same";
+    }
+
+    function oppositePattern(pattern) {
+      return pattern === "same" ? "diff" : "same";
+    }
+
+    function decideDemoPatterns(targetPattern) {
+      // 50%：两行都和第3行同推导
+      // 50%：只有1行和第3行同推导，另一行展示另一种推导
+      if (Math.random() < 0.5) {
+        return [targetPattern, targetPattern];
+      }
+
+      if (Math.random() < 0.5) {
+        return [targetPattern, oppositePattern(targetPattern)];
+      } else {
+        return [oppositePattern(targetPattern), targetPattern];
+      }
+    }
+
     function generateOneQuestion() {
       const rowThemes = buildThemeRows();
 
@@ -1225,38 +1264,30 @@
         const b2 = row2Bases[i];
         const b3 = row3Bases[i];
 
-        if (rule === "empty") {
-          const d1 = differentEmojiBase(b1, row1Pool, usedAcrossRows);
-          const d2 = differentEmojiBase(b2, row2Pool, usedAcrossRows);
-          const d3 = differentEmojiBase(b3, row3Pool, usedAcrossRows);
+        const row3Pattern = pickThirdRowPatternByRule(rule);
+        const [row1Pattern, row2Pattern] = decideDemoPatterns(row3Pattern);
 
-          row1A.push({ ...b1, mode: "keep" });
-          row1B.push({ ...d1, mode: "keep" });
-          row1R.push(EMPTY_ICON);
+        const row1Data = buildRowByPattern(b1, row1Pool, usedAcrossRows, rule, row1Pattern);
+        const row2Data = buildRowByPattern(b2, row2Pool, usedAcrossRows, rule, row2Pattern);
+        const row3Data = buildRowByPattern(b3, row3Pool, usedAcrossRows, rule, row3Pattern);
 
-          row2A.push({ ...b2, mode: "keep" });
-          row2B.push({ ...d2, mode: "keep" });
-          row2R.push(EMPTY_ICON);
+        row1A.push(row1Data.left);
+        row1B.push(row1Data.right);
+        row1R.push(row1Data.result);
 
-          row3A.push({ ...b3, mode: "keep" });
-          row3B.push({ ...d3, mode: "keep" });
-          correctAnswers.push(EMPTY_ICON);
+        row2A.push(row2Data.left);
+        row2B.push(row2Data.right);
+        row2R.push(row2Data.result);
 
-          explanations.push(`第${i + 1}格：这一列规律是“前两个图片不同，结果为空白图片”。第3行前两个图片不同，所以答案应为空白图片。`);
+        row3A.push(row3Data.left);
+        row3B.push(row3Data.right);
+
+        correctAnswers.push(row3Data.result);
+
+        if (row3Pattern === "same") {
+          explanations.push(`第${i + 1}格：这一列第3行前两个图片相同。观察前两行，至少有一行也是“前两个图片相同，结果应${modeLabel(rule)}”，所以第3行答案应${modeLabel(rule)}。`);
         } else {
-          row1A.push({ ...b1, mode: "keep" });
-          row1B.push({ ...b1, mode: "keep" });
-          row1R.push(buildAnswerResult(b1, rule));
-
-          row2A.push({ ...b2, mode: "keep" });
-          row2B.push({ ...b2, mode: "keep" });
-          row2R.push(buildAnswerResult(b2, rule));
-
-          row3A.push({ ...b3, mode: "keep" });
-          row3B.push({ ...b3, mode: "keep" });
-          correctAnswers.push(buildAnswerResult(b3, rule));
-
-          explanations.push(`第${i + 1}格：这一列规律是“前两个图片相同，结果应${modeLabel(rule)}”。第3行前两个图片相同，所以答案应${modeLabel(rule)}。`);
+          explanations.push(`第${i + 1}格：这一列第3行前两个图片不同。观察前两行，至少有一行也是“前两个图片不同，结果为空白图片”，所以第3行答案应为空白图片。`);
         }
       }
 
