@@ -70,7 +70,7 @@
       width: 100%;
     }
 
-    /* 题目田字格放大一档，且去掉中间 + 和 = */
+    /* 题目田字格放大一档，去掉中间+和= */
     .box {
       width: 180px;
       height: 180px;
@@ -188,7 +188,7 @@
     .compact-wrap {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
       align-items: flex-start;
     }
 
@@ -237,6 +237,7 @@
       justify-content: center;
     }
 
+    /* 选项区 2 行排列 */
     .options {
       display: grid;
       grid-template-columns: repeat(7, 96px);
@@ -499,13 +500,20 @@
 
     <div class="screen" id="screen-answer">
       <div class="answer-head">
-        <div class="section-title" id="answerTitle">第1题 · 作答区</div>
+        <div class="section-title" id="answerTitle">第1题 · 作答</div>
         <div class="progress" id="answerProgress">第 1 / 5 题</div>
       </div>
 
       <div class="compact-wrap">
-        <div class="answer-area" id="answerArea"></div>
-        <div class="options" id="options"></div>
+        <div>
+          <div class="section-title" style="margin-bottom:8px;">作答区</div>
+          <div class="answer-area" id="answerArea"></div>
+        </div>
+
+        <div>
+          <div class="section-title" style="margin-bottom:8px;">选项区</div>
+          <div class="options" id="options"></div>
+        </div>
       </div>
 
       <div class="foot-actions">
@@ -849,7 +857,6 @@
         const rowEl = document.createElement("div");
         rowEl.className = "row";
 
-        // 去掉中间 + 和 =
         rowEl.appendChild(createBox(row.state1));
         rowEl.appendChild(createBox(row.state2));
 
@@ -862,7 +869,7 @@
 
     function renderAnswerPage() {
       const q = questions[currentQuestionIndex];
-      document.getElementById("answerTitle").textContent = `第${currentQuestionIndex + 1}题 · 作答区`;
+      document.getElementById("answerTitle").textContent = `第${currentQuestionIndex + 1}题 · 作答`;
       document.getElementById("answerProgress").textContent = `第 ${currentQuestionIndex + 1} / ${QUESTION_COUNT} 题`;
 
       const answerArea = document.getElementById("answerArea");
