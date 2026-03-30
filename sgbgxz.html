@@ -3,68 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>图形规律模拟题</title>
+  <title>5题图形规律模拟题</title>
   <style>
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
+      margin: 0;
+      padding: 16px 12px 24px;
       font-family: "Microsoft YaHei", Arial, sans-serif;
       background: #fff;
-      margin: 0;
-      padding: 24px 20px 32px;
       color: #222;
     }
     .page {
-      width: 100%;
-      max-width: 1100px;
+      max-width: 1080px;
       margin: 0 auto;
     }
+
     .screen { display: none; }
     .screen.active { display: block; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
 
     .title {
       font-size: 22px;
       font-weight: 700;
-      margin-bottom: 16px;
     }
+
+    .progress {
+      font-size: 14px;
+      color: #4b9b52;
+      font-weight: 700;
+      background: #edf9ed;
+      padding: 6px 12px;
+      border-radius: 14px;
+    }
+
     .desc {
       font-size: 14px;
       color: #666;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
       line-height: 1.7;
     }
 
     .rows {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      margin-bottom: 28px;
+      gap: 14px;
+      margin-bottom: 18px;
       width: 100%;
     }
+
     .row {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 10px;
       flex-wrap: wrap;
       width: 100%;
     }
+
     .plus, .eq {
-      font-size: 30px;
+      font-size: 26px;
       color: #666;
       font-weight: 700;
-      width: 24px;
+      width: 20px;
       text-align: center;
       flex: 0 0 auto;
     }
 
     .box {
-      width: 180px;
-      height: 180px;
+      width: 156px;
+      height: 156px;
       border: 3px solid #333;
       position: relative;
       background: #fff;
       flex: 0 0 auto;
     }
+
     .box::before {
       content: "";
       position: absolute;
@@ -75,6 +97,7 @@
       border-left: 2px dashed #bdbdbd;
       z-index: 1;
     }
+
     .box::after {
       content: "";
       position: absolute;
@@ -93,10 +116,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
       z-index: 2;
       user-select: none;
     }
+
     .tl { left: 0; top: 0; }
     .tr { right: 0; top: 0; }
     .bl { left: 0; bottom: 0; }
@@ -106,16 +129,14 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      width: 42px;
+      height: 42px;
+      font-size: 34px;
       transform-origin: center center;
-      transition: transform 0.2s ease;
-      width: 52px;
-      height: 52px;
-      font-size: 44px;
-      user-select: none;
     }
 
     .qmark {
-      font-size: 48px;
+      font-size: 40px;
       font-weight: 700;
       color: #222;
       display: flex;
@@ -123,33 +144,48 @@
       align-items: center;
       line-height: 1;
     }
+
     .qnum {
-      font-size: 22px;
-      margin-top: 6px;
+      font-size: 18px;
+      margin-top: 4px;
     }
 
     .action-bar {
-      width: 100%;
       display: flex;
       justify-content: center;
-      align-items: center;
-      margin-top: 28px;
+      margin-top: 16px;
     }
-    .choose-btn {
-      min-width: 180px;
-      height: 52px;
-      padding: 0 28px;
+
+    .green-btn, .white-btn {
+      min-width: 136px;
+      height: 42px;
+      padding: 0 18px;
       border: none;
-      border-radius: 26px;
-      background: #62b357;
-      color: #fff;
-      font-size: 18px;
+      border-radius: 21px;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
+    }
+
+    .green-btn {
+      background: #62b357;
+      color: #fff;
       box-shadow: 0 4px 10px rgba(98,179,87,0.25);
-      display: inline-flex;
+    }
+
+    .white-btn {
+      background: #fff;
+      color: #555;
+      border: 1px solid #d8d8d8;
+    }
+
+    .answer-head {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
     }
 
     .section-title {
@@ -157,25 +193,28 @@
       background: #dff5df;
       color: #4b9b52;
       font-weight: 700;
-      font-size: 20px;
-      padding: 8px 14px;
+      font-size: 17px;
+      padding: 6px 12px;
       border-radius: 8px;
-      margin-bottom: 14px;
     }
 
-    .answer-area-wrap {
-      margin-bottom: 28px;
+    .compact-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+
     .answer-area {
       display: grid;
-      grid-template-columns: repeat(4, 96px);
-      gap: 14px;
+      grid-template-columns: repeat(4, 74px);
+      gap: 8px;
       justify-content: start;
     }
+
     .answer-slot {
       position: relative;
-      width: 96px;
-      height: 96px;
+      width: 74px;
+      height: 74px;
       border: 2px solid #d9d9d9;
       background: #fff;
       display: flex;
@@ -183,20 +222,23 @@
       justify-content: center;
       overflow: hidden;
     }
+
     .answer-slot.drag-over {
       border-color: #62b357;
       background: #f5fff3;
     }
+
     .slot-num {
       position: absolute;
-      left: 10px;
-      top: 8px;
-      font-size: 18px;
+      left: 6px;
+      top: 4px;
+      font-size: 13px;
       font-weight: 700;
       color: #555;
       z-index: 2;
       pointer-events: none;
     }
+
     .slot-content {
       width: 100%;
       height: 100%;
@@ -207,23 +249,25 @@
 
     .options {
       display: grid;
-      grid-template-columns: repeat(7, 96px);
-      gap: 14px;
+      grid-template-columns: repeat(7, 74px);
+      gap: 8px;
       justify-content: start;
     }
+
     .opt {
       position: relative;
-      width: 96px;
-      height: 96px;
+      width: 74px;
+      height: 74px;
       border: 1px solid #ececec;
       background: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
       overflow: hidden;
       cursor: grab;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
+
     .opt-inner {
       display: flex;
       align-items: center;
@@ -233,105 +277,214 @@
       pointer-events: none;
     }
 
-    .placeholder-svg,
-    .pending-svg {
-      width: 72px;
-      height: 72px;
-      pointer-events: none;
-    }
-
     .watermark {
       position: absolute;
       inset: 0;
       pointer-events: none;
       opacity: 0.06;
-      background-image: repeating-linear-gradient(
-        -25deg,
-        transparent 0 50px,
-        rgba(0,0,0,0.04) 50px 52px
-      );
+      background-image: repeating-linear-gradient(-25deg, transparent 0 50px, rgba(0,0,0,0.04) 50px 52px);
     }
 
-    .back-bar {
-      margin-top: 24px;
+    .placeholder-svg, .pending-svg {
+      width: 56px;
+      height: 56px;
+      pointer-events: none;
+    }
+
+    .foot-actions {
+      margin-top: 14px;
       display: flex;
       justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .back-btn {
-      min-width: 140px;
-      height: 42px;
-      border: 1px solid #cfd8e3;
-      border-radius: 21px;
+
+    .result-card, .analysis-card {
+      border: 1px solid #eaeaea;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
       background: #fff;
-      color: #4b4b4b;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .result-main {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .result-sub {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .analysis-title {
       font-size: 16px;
-      cursor: pointer;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #d9534f;
+    }
+
+    .analysis-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #444;
+      margin-bottom: 12px;
+    }
+
+    .mini-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mini-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mini-box {
+      width: 110px;
+      height: 110px;
+      border: 2px solid #333;
+      position: relative;
+      background: #fff;
+      flex: 0 0 auto;
+    }
+
+    .mini-box::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      height: 100%;
+      transform: translateX(-50%);
+      border-left: 2px dashed #c7c7c7;
+      z-index: 1;
+    }
+
+    .mini-box::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      transform: translateY(-50%);
+      border-top: 2px dashed #c7c7c7;
+      z-index: 1;
+    }
+
+    .mini-cell {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .mini-icon {
+      font-size: 26px;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+    }
+
+    .correct {
+      color: #3c9b46;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .box { width: 144px; height: 144px; }
+      .icon { font-size: 32px; width: 38px; height: 38px; }
+      .options { grid-template-columns: repeat(4, 74px); }
+    }
+
+    @media (max-width: 520px) {
+      .box { width: 122px; height: 122px; }
+      .icon { font-size: 28px; width: 34px; height: 34px; }
+      .plus, .eq { font-size: 22px; width: 16px; }
+      .qmark { font-size: 34px; }
+      .qnum { font-size: 14px; }
+      .answer-area { grid-template-columns: repeat(4, 64px); }
+      .answer-slot { width: 64px; height: 64px; }
+      .options { grid-template-columns: repeat(3, 64px); }
+      .opt { width: 64px; height: 64px; }
     }
   </style>
 </head>
 <body>
-  <div class="page">
+  <div class="page" id="pageTop">
 
     <div class="screen active" id="screen-question">
-      <div class="title">图形规律模拟题</div>
+      <div class="topbar">
+        <div class="title">图形规律模拟题</div>
+        <div class="progress" id="progressText">第 1 / 5 题</div>
+      </div>
       <div class="desc">观察每一行前两个田字格的变化规律，选择合适的图形填入后面的问号位置。</div>
       <div class="rows" id="rows"></div>
       <div class="action-bar">
-        <button class="choose-btn" id="goAnswer">请选择</button>
+        <button class="green-btn" id="goAnswer">请选择</button>
       </div>
     </div>
 
     <div class="screen" id="screen-answer">
-      <div class="answer-area-wrap">
-        <div class="section-title">作答区</div>
-        <div class="answer-area" id="answerArea"></div>
+      <div class="answer-head">
+        <div class="section-title" id="answerTitle">第1题 · 作答区</div>
+        <div class="progress" id="answerProgress">第 1 / 5 题</div>
       </div>
 
-      <div>
-        <div class="section-title">选项区</div>
+      <div class="compact-wrap">
+        <div class="answer-area" id="answerArea"></div>
         <div class="options" id="options"></div>
       </div>
 
-      <div class="back-bar">
-        <button class="back-btn" id="goBack">返回题目</button>
+      <div class="foot-actions">
+        <button class="green-btn" id="nextQuestionBtn">下一题</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-result">
+      <div class="topbar">
+        <div class="title">答题结果</div>
+      </div>
+      <div id="resultContainer"></div>
+      <div class="foot-actions">
+        <button class="green-btn" id="restartBtn">重新答题</button>
       </div>
     </div>
   </div>
 
   <script>
-    const rowData = [
-      {
-        showAnswer: true,
-        items: [
-          { key: "car", icon: "🚗", asymmetric: true },
-          { key: "camera", icon: "📷", asymmetric: true },
-          { key: "scooter", icon: "🛵", asymmetric: true },
-          { key: "pear", icon: "🍐", asymmetric: true }
-        ]
-      },
-      {
-        showAnswer: false,
-        qStart: 1,
-        items: [
-          { key: "luggage", icon: "🧳", asymmetric: true },
-          { key: "chair", icon: "🪑", asymmetric: true },
-          { key: "cucumber", icon: "🥒", asymmetric: true },
-          { key: "kettle", icon: "🫖", asymmetric: true }
-        ]
-      },
-      {
-        showAnswer: false,
-        qStart: 5,
-        items: [
-          { key: "cooker", icon: "🍚", asymmetric: true },
-          { key: "duck", icon: "🦆", asymmetric: true },
-          { key: "shoe", icon: "👟", asymmetric: true },
-          { key: "guitar", icon: "🎸", asymmetric: true }
-        ]
-      }
+    const QUESTION_COUNT = 5;
+
+    const themePools = [
+      ["🚗","📷","🛵","🍐"],
+      ["🧳","🪑","🥒","🫖"],
+      ["🍚","🦆","👟","🎸"],
+      ["🚲","🎁","🍋","🪁"],
+      ["🐟","🍎","🧲","🪥"],
+      ["🛶","🧤","🌶️","🔦"],
+      ["🎺","🧹","🥕","🧢"],
+      ["🚂","🪄","🍆","📯"],
+      ["🛺","🪛","🥭","🧴"],
+      ["🚜","🧰","🌽","🎻"]
     ];
 
     const posNames = ["tl", "tr", "bl", "br"];
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let currentDragPayload = null;
 
     function randomInt(n) {
       return Math.floor(Math.random() * n);
@@ -349,18 +502,6 @@
       }
       return a;
     }
-
-    // 1. 整体方格旋转规律随机
-    const rotateDirection = Math.random() < 0.5 ? "ccw" : "cw";
-    const rotateStep = Math.random() < 0.5 ? 1 : 2;
-
-    // 2. 图片跟随整体方格旋转规律
-    const imageRotateSignedAngle = rotateDirection === "ccw"
-      ? (rotateStep === 1 ? 90 : 180)
-      : (rotateStep === 1 ? -90 : -180);
-
-    // 3. 三行随机选中的图片位置相同
-    const sharedRotatingPositionIndex = randomInt(4);
 
     function rotateGridCCW1(arr) {
       return [arr[2], arr[0], arr[3], arr[1]];
@@ -401,72 +542,117 @@
       }
     }
 
-    function createBox(cells, questionStart = null) {
-      const box = document.createElement("div");
-      box.className = "box";
-
-      posNames.forEach((pos, i) => {
-        const cell = document.createElement("div");
-        cell.className = `cell ${pos}`;
-
-        if (cells[i] === null && questionStart !== null) {
-          const q = document.createElement("div");
-          q.className = "qmark";
-          q.innerHTML = `?<div class="qnum">${questionStart + i}</div>`;
-          cell.appendChild(q);
-        } else {
-          const icon = document.createElement("span");
-          icon.className = "icon";
-          icon.textContent = cells[i].icon;
-          icon.style.transform = `rotate(${normalizeAngle(cells[i].angle || 0)}deg)`;
-          cell.appendChild(icon);
-        }
-        box.appendChild(cell);
-      });
-
-      return box;
-    }
-
-    function buildRowStates(row, rowIndex) {
-      const rotatingKey = row.items[sharedRotatingPositionIndex].key;
-
-      const state1 = row.items.map(item => ({
-        ...item,
-        angle: 0,
-        rotatesSelf: item.key === rotatingKey,
-        answerIndex: null
+    function buildRowItemsFromTheme(theme, rowIndex) {
+      const keys = ["a","b","c","d"];
+      return theme.map((icon, i) => ({
+        key: `r${rowIndex}_${keys[i]}_${icon.codePointAt(0)}`,
+        icon,
+        asymmetric: true
       }));
-
-      const state2 = rotateGrid(cloneState(state1), rotateDirection, rotateStep);
-      state2.forEach(item => {
-        item.angle = item.rotatesSelf ? normalizeAngle(item.angle + imageRotateSignedAngle) : 0;
-      });
-
-      const state3 = rotateGrid(cloneState(state2), rotateDirection, rotateStep);
-      state3.forEach(item => {
-        item.angle = item.rotatesSelf ? normalizeAngle(item.angle + imageRotateSignedAngle) : 0;
-      });
-
-      if (!row.showAnswer) assignAnswerIndices(state3, rowIndex);
-
-      return { state1, state2, state3, rotatingKey };
     }
 
-    const finalAnswers = [];
-    const rotatedAnswerInfo = [];
+    function pickThreeThemes() {
+      return shuffle(themePools).slice(0, 3);
+    }
 
-    function renderRows() {
-      const rowsEl = document.getElementById("rows");
-      finalAnswers.length = 0;
-      rotatedAnswerInfo.length = 0;
+    function optionSignature(item) {
+      if (item.type !== "emoji") return item.type;
+      return `${item.icon}_${normalizeAngle(item.angle || 0)}`;
+    }
 
-      rowData.forEach((row, rowIndex) => {
-        const { state1, state2, state3, rotatingKey } = buildRowStates(row, rowIndex);
-        const rowEl = document.createElement("div");
-        rowEl.className = "row";
+    function buildOptions(finalAnswers, rotatedAnswerInfo, extraIcons) {
+      const options = [];
+      const used = new Set();
 
+      finalAnswers.forEach(ans => {
+        const sig = optionSignature(ans);
+        if (!used.has(sig)) {
+          options.push({ ...ans });
+          used.add(sig);
+        }
+      });
+
+      rotatedAnswerInfo.forEach(info => {
+        const distractorAngles = shuffle([0, 90, 180, 270]).filter(a => a !== info.correctAngle);
+        for (const angle of distractorAngles) {
+          if (options.length >= 12) break;
+          const candidate = { type: "emoji", icon: info.icon, key: info.key, angle };
+          const sig = optionSignature(candidate);
+          if (!used.has(sig)) {
+            options.push(candidate);
+            used.add(sig);
+            break;
+          }
+        }
+      });
+
+      const allAngles = [0, 90, 180, 270];
+      for (const icon of extraIcons) {
+        for (const angle of allAngles) {
+          if (options.length >= 12) break;
+          const candidate = { type: "emoji", icon, angle };
+          const sig = optionSignature(candidate);
+          if (!used.has(sig)) {
+            options.push(candidate);
+            used.add(sig);
+          }
+        }
+        if (options.length >= 12) break;
+      }
+
+      options.push({ type: "placeholder" });
+      options.push({ type: "pending" });
+
+      return shuffle(options);
+    }
+
+    function makeQuestion() {
+      const themes = pickThreeThemes();
+      const rowsSource = themes.map((theme, i) => buildRowItemsFromTheme(theme, i));
+
+      const rotateDirection = Math.random() < 0.5 ? "ccw" : "cw";
+      const rotateStep = Math.random() < 0.5 ? 1 : 2;
+      const imageRotateSignedAngle = rotateDirection === "ccw"
+        ? (rotateStep === 1 ? 90 : 180)
+        : (rotateStep === 1 ? -90 : -180);
+
+      const sharedRotatingPositionIndex = randomInt(4);
+
+      const rows = rowsSource.map((items, rowIndex) => {
+        const rotatingKey = items[sharedRotatingPositionIndex].key;
+
+        const state1 = items.map(item => ({
+          ...item,
+          angle: 0,
+          rotatesSelf: item.key === rotatingKey,
+          answerIndex: null
+        }));
+
+        const state2 = rotateGrid(cloneState(state1), rotateDirection, rotateStep);
+        state2.forEach(item => {
+          item.angle = item.rotatesSelf ? normalizeAngle(item.angle + imageRotateSignedAngle) : 0;
+        });
+
+        const state3 = rotateGrid(cloneState(state2), rotateDirection, rotateStep);
+        state3.forEach(item => {
+          item.angle = item.rotatesSelf ? normalizeAngle(item.angle + imageRotateSignedAngle) : 0;
+        });
+
+        if (rowIndex === 1 || rowIndex === 2) assignAnswerIndices(state3, rowIndex);
+
+        return {
+          showAnswer: rowIndex === 0,
+          qStart: rowIndex === 1 ? 1 : rowIndex === 2 ? 5 : null,
+          state1, state2, state3, rotatingKey
+        };
+      });
+
+      const finalAnswers = [];
+      const rotatedAnswerInfo = [];
+
+      rows.forEach((row, rowIndex) => {
         if (!row.showAnswer) {
-          state3.forEach(item => {
+          row.state3.forEach(item => {
             finalAnswers.push({
               type: "emoji",
               icon: item.icon,
@@ -475,7 +661,7 @@
               answerIndex: item.answerIndex
             });
 
-            if (item.key === rotatingKey) {
+            if (item.key === row.rotatingKey) {
               rotatedAnswerInfo.push({
                 icon: item.icon,
                 key: item.key,
@@ -485,49 +671,52 @@
             }
           });
         }
-
-        rowEl.appendChild(createBox(state1));
-
-        const plus = document.createElement("div");
-        plus.className = "plus";
-        plus.textContent = "+";
-        rowEl.appendChild(plus);
-
-        rowEl.appendChild(createBox(state2));
-
-        const eq = document.createElement("div");
-        eq.className = "eq";
-        eq.textContent = "=";
-        rowEl.appendChild(eq);
-
-        if (row.showAnswer) {
-          rowEl.appendChild(createBox(state3));
-        } else {
-          rowEl.appendChild(createBox([null, null, null, null], row.qStart));
-        }
-
-        rowsEl.appendChild(rowEl);
       });
+
+      const extraIcons = shuffle(themePools.flat()).filter((v, i, arr) => arr.indexOf(v) === i);
+      const options = buildOptions(finalAnswers, rotatedAnswerInfo, extraIcons);
+
+      return {
+        rotateDirection,
+        rotateStep,
+        imageRotateSignedAngle,
+        sharedRotatingPositionIndex,
+        rows,
+        finalAnswers,
+        rotatedAnswerInfo,
+        options,
+        userAnswers: Array(8).fill(null)
+      };
     }
 
-    function renderAnswerArea() {
-      const answerArea = document.getElementById("answerArea");
-      for (let i = 1; i <= 8; i++) {
-        const slot = document.createElement("div");
-        slot.className = "answer-slot";
-        slot.dataset.index = i;
+    function createBox(cells, questionStart = null, mini = false) {
+      const box = document.createElement("div");
+      box.className = mini ? "mini-box" : "box";
 
-        const num = document.createElement("div");
-        num.className = "slot-num";
-        num.textContent = i;
+      posNames.forEach((pos, i) => {
+        const cell = document.createElement("div");
+        cell.className = `${mini ? "mini-cell" : "cell"} ${pos}`;
 
-        const content = document.createElement("div");
-        content.className = "slot-content";
+        if (cells[i] === null && questionStart !== null) {
+          const q = document.createElement("div");
+          q.className = "qmark";
+          q.innerHTML = `?<div class="qnum">${questionStart + i}</div>`;
+          if (mini) {
+            q.style.fontSize = "28px";
+            q.querySelector(".qnum").style.fontSize = "13px";
+          }
+          cell.appendChild(q);
+        } else {
+          const icon = document.createElement("span");
+          icon.className = mini ? "mini-icon" : "icon";
+          icon.textContent = cells[i].icon;
+          icon.style.transform = `rotate(${normalizeAngle(cells[i].angle || 0)}deg)`;
+          cell.appendChild(icon);
+        }
+        box.appendChild(cell);
+      });
 
-        slot.appendChild(num);
-        slot.appendChild(content);
-        answerArea.appendChild(slot);
-      }
+      return box;
     }
 
     function makeEmojiOption(icon, angle = 0) {
@@ -563,61 +752,6 @@
       return wrap.firstElementChild;
     }
 
-    function optionSignature(item) {
-      if (item.type !== "emoji") return item.type;
-      return `${item.icon}_${normalizeAngle(item.angle || 0)}`;
-    }
-
-    function buildOptions() {
-      const options = [];
-      const used = new Set();
-
-      // 放入8个真实答案
-      finalAnswers.forEach(ans => {
-        const sig = optionSignature(ans);
-        if (!used.has(sig)) {
-          options.push({ ...ans });
-          used.add(sig);
-        }
-      });
-
-      // 第2、3行旋转答案分别加入1个不同角度干扰项
-      rotatedAnswerInfo.forEach(info => {
-        const distractorAngles = shuffle([0, 90, 180, 270]).filter(a => a !== info.correctAngle);
-        for (const angle of distractorAngles) {
-          if (options.length >= 12) break;
-          const candidate = { type: "emoji", icon: info.icon, key: info.key, angle };
-          const sig = optionSignature(candidate);
-          if (!used.has(sig)) {
-            options.push(candidate);
-            used.add(sig);
-            break;
-          }
-        }
-      });
-
-      // 不足12补普通干扰项
-      const allIcons = ["🚗","📷","🛵","🍐","🧳","🪑","🥒","🫖","🍚","🦆","👟","🎸"];
-      const allAngles = [0, 90, 180, 270];
-      for (const icon of allIcons) {
-        for (const angle of allAngles) {
-          if (options.length >= 12) break;
-          const candidate = { type: "emoji", icon, angle };
-          const sig = optionSignature(candidate);
-          if (!used.has(sig)) {
-            options.push(candidate);
-            used.add(sig);
-          }
-        }
-        if (options.length >= 12) break;
-      }
-
-      options.push({ type: "placeholder" });
-      options.push({ type: "pending" });
-
-      return shuffle(options);
-    }
-
     function createOption(contentEl, payload) {
       const opt = document.createElement("div");
       opt.className = "opt";
@@ -636,19 +770,80 @@
       return opt;
     }
 
-    function renderOptions() {
+    function renderQuestionPage() {
+      const q = questions[currentQuestionIndex];
+      document.getElementById("progressText").textContent = `第 ${currentQuestionIndex + 1} / ${QUESTION_COUNT} 题`;
+
+      const rowsEl = document.getElementById("rows");
+      rowsEl.innerHTML = "";
+
+      q.rows.forEach((row) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "row";
+
+        rowEl.appendChild(createBox(row.state1));
+
+        const plus = document.createElement("div");
+        plus.className = "plus";
+        plus.textContent = "+";
+        rowEl.appendChild(plus);
+
+        rowEl.appendChild(createBox(row.state2));
+
+        const eq = document.createElement("div");
+        eq.className = "eq";
+        eq.textContent = "=";
+        rowEl.appendChild(eq);
+
+        if (row.showAnswer) rowEl.appendChild(createBox(row.state3));
+        else rowEl.appendChild(createBox([null, null, null, null], row.qStart));
+
+        rowsEl.appendChild(rowEl);
+      });
+    }
+
+    function renderAnswerPage() {
+      const q = questions[currentQuestionIndex];
+      document.getElementById("answerTitle").textContent = `第${currentQuestionIndex + 1}题 · 作答区`;
+      document.getElementById("answerProgress").textContent = `第 ${currentQuestionIndex + 1} / ${QUESTION_COUNT} 题`;
+
+      const answerArea = document.getElementById("answerArea");
+      answerArea.innerHTML = "";
+      for (let i = 0; i < 8; i++) {
+        const slot = document.createElement("div");
+        slot.className = "answer-slot";
+        slot.dataset.index = i;
+
+        const num = document.createElement("div");
+        num.className = "slot-num";
+        num.textContent = i + 1;
+
+        const content = document.createElement("div");
+        content.className = "slot-content";
+
+        slot.appendChild(num);
+        slot.appendChild(content);
+        answerArea.appendChild(slot);
+
+        if (q.userAnswers[i]) renderPayloadToSlot(slot, q.userAnswers[i], false);
+      }
+
       const optionsEl = document.getElementById("options");
-      buildOptions().forEach(item => {
+      optionsEl.innerHTML = "";
+      q.options.forEach(item => {
         let content;
         if (item.type === "emoji") content = makeEmojiOption(item.icon, item.angle || 0);
         else if (item.type === "placeholder") content = makePlaceholderM();
         else content = makePendingN();
-
         optionsEl.appendChild(createOption(content, item));
       });
+
+      bindDragDropForCurrentQuestion();
+      document.getElementById("nextQuestionBtn").textContent =
+        currentQuestionIndex === QUESTION_COUNT - 1 ? "提交答卷" : "下一题";
     }
 
-    function renderPayloadToSlot(slot, payload) {
+    function renderPayloadToSlot(slot, payload, save = true) {
       const content = slot.querySelector(".slot-content");
       content.innerHTML = "";
 
@@ -663,16 +858,23 @@
       wrapper.dataset.payload = JSON.stringify(payload);
       wrapper.appendChild(node);
       content.appendChild(wrapper);
+
+      if (save) {
+        const idx = Number(slot.dataset.index);
+        questions[currentQuestionIndex].userAnswers[idx] = payload;
+      }
     }
 
-    function bindDragDrop() {
-      let dragPayload = null;
+    function bindDragDropForCurrentQuestion() {
+      currentDragPayload = null;
 
-      document.addEventListener("dragstart", (e) => {
-        const source = e.target.closest("[data-payload]");
-        if (!source) return;
-        dragPayload = source.dataset.payload;
-        e.dataTransfer.setData("text/plain", dragPayload);
+      document.querySelectorAll(".opt, .slot-content .opt-inner").forEach(el => {
+        el.addEventListener("dragstart", (e) => {
+          const source = e.currentTarget.closest("[data-payload]");
+          if (!source) return;
+          currentDragPayload = source.dataset.payload;
+          e.dataTransfer.setData("text/plain", currentDragPayload);
+        });
       });
 
       document.querySelectorAll(".answer-slot").forEach(slot => {
@@ -680,39 +882,199 @@
           e.preventDefault();
           slot.classList.add("drag-over");
         });
-
         slot.addEventListener("dragleave", () => {
           slot.classList.remove("drag-over");
         });
-
         slot.addEventListener("drop", (e) => {
           e.preventDefault();
           slot.classList.remove("drag-over");
-          const data = e.dataTransfer.getData("text/plain") || dragPayload;
+          const data = e.dataTransfer.getData("text/plain") || currentDragPayload;
           if (!data) return;
           renderPayloadToSlot(slot, JSON.parse(data));
         });
       });
     }
 
-    function bindPageSwitch() {
-      const screenQuestion = document.getElementById("screen-question");
-      const screenAnswer = document.getElementById("screen-answer");
-      document.getElementById("goAnswer").addEventListener("click", () => {
-        screenQuestion.classList.remove("active");
-        screenAnswer.classList.add("active");
+    function sameAnswer(a, b) {
+      if (!a || !b) return false;
+      if (a.type !== b.type) return false;
+      if (a.type !== "emoji") return a.type === b.type;
+      return a.icon === b.icon && normalizeAngle(a.angle || 0) === normalizeAngle(b.angle || 0);
+    }
+
+    function analyzeQuestion(q, index) {
+      const wrongs = [];
+      for (let i = 0; i < 8; i++) {
+        const user = q.userAnswers[i];
+        const correct = q.finalAnswers[i];
+        if (!sameAnswer(user, correct)) {
+          wrongs.push({ slot: i + 1, user, correct });
+        }
+      }
+      return { index, wrongs };
+    }
+
+    function payloadText(p) {
+      if (!p) return "未作答";
+      if (p.type === "placeholder") return "空选项";
+      if (p.type === "pending") return "待定选项";
+      return `${p.icon}（旋转${normalizeAngle(p.angle || 0)}°）`;
+    }
+
+    function renderMiniQuestionAnalysis(q) {
+      const wrap = document.createElement("div");
+      wrap.className = "mini-rows";
+
+      q.rows.forEach(row => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "mini-row";
+
+        rowEl.appendChild(createBox(row.state1, null, true));
+
+        const plus = document.createElement("div");
+        plus.className = "plus";
+        plus.style.fontSize = "20px";
+        plus.textContent = "+";
+        rowEl.appendChild(plus);
+
+        rowEl.appendChild(createBox(row.state2, null, true));
+
+        const eq = document.createElement("div");
+        eq.className = "eq";
+        eq.style.fontSize = "20px";
+        eq.textContent = "=";
+        rowEl.appendChild(eq);
+
+        rowEl.appendChild(createBox(row.state3, null, true));
+        wrap.appendChild(rowEl);
       });
-      document.getElementById("goBack").addEventListener("click", () => {
-        screenAnswer.classList.remove("active");
-        screenQuestion.classList.add("active");
+
+      return wrap;
+    }
+
+    function renderResultPage() {
+      const container = document.getElementById("resultContainer");
+      container.innerHTML = "";
+
+      let totalCorrect = 0;
+      const analyses = questions.map((q, i) => {
+        const result = analyzeQuestion(q, i);
+        totalCorrect += 8 - result.wrongs.length;
+        return result;
+      });
+
+      const total = QUESTION_COUNT * 8;
+
+      const summary = document.createElement("div");
+      summary.className = "result-card";
+      summary.innerHTML = `
+        <div class="result-main">总分：${totalCorrect} / ${total}</div>
+        <div class="result-sub">
+          共 ${QUESTION_COUNT} 题，每题 8 空。<br>
+          正确 ${totalCorrect} 空，错误 ${total - totalCorrect} 空。
+        </div>
+      `;
+      container.appendChild(summary);
+
+      const wrongOnly = analyses.filter(a => a.wrongs.length > 0);
+
+      if (wrongOnly.length === 0) {
+        const ok = document.createElement("div");
+        ok.className = "result-card";
+        ok.innerHTML = `
+          <div class="result-main correct">全部答对，做得很好！</div>
+          <div class="result-sub">你已经正确掌握了整体方格旋转与图片跟随旋转的规律。</div>
+        `;
+        container.appendChild(ok);
+        return;
+      }
+
+      wrongOnly.forEach(a => {
+        const q = questions[a.index];
+        const card = document.createElement("div");
+        card.className = "analysis-card";
+
+        const title = document.createElement("div");
+        title.className = "analysis-title";
+        title.textContent = `第 ${a.index + 1} 题错题分析`;
+        card.appendChild(title);
+
+        const text = document.createElement("div");
+        text.className = "analysis-text";
+        const ruleText =
+          `原题规律：整体方格按“${q.rotateDirection === "ccw" ? "逆时针" : "顺时针"}旋转${q.rotateStep}格”变化。` +
+          `三行中同一个初始位置的图片会跟随整体规律一起旋转；` +
+          `由于本题整体转${q.rotateStep}格，所以该图片每一步自身旋转${q.rotateStep === 1 ? "90" : "180"}度，且旋转方向与整体一致。`;
+
+        const wrongList = a.wrongs.map(w =>
+          `第${w.slot}空：你的答案是【${payloadText(w.user)}】，正确答案是【${payloadText(w.correct)}】。`
+        ).join("<br>");
+
+        text.innerHTML = `${ruleText}<br><br>${wrongList}`;
+        card.appendChild(text);
+
+        const miniTitle = document.createElement("div");
+        miniTitle.style.fontWeight = "700";
+        miniTitle.style.marginBottom = "10px";
+        miniTitle.textContent = "原题图分析：";
+        card.appendChild(miniTitle);
+
+        card.appendChild(renderMiniQuestionAnalysis(q));
+        container.appendChild(card);
       });
     }
 
-    renderRows();
-    renderAnswerArea();
-    renderOptions();
-    bindDragDrop();
-    bindPageSwitch();
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function buildPaper() {
+      questions = Array.from({ length: QUESTION_COUNT }, () => makeQuestion());
+      currentQuestionIndex = 0;
+    }
+
+    function openCurrentQuestion() {
+      renderQuestionPage();
+      showScreen("screen-question");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openCurrentAnswerPage() {
+      renderAnswerPage();
+      showScreen("screen-answer");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex < QUESTION_COUNT - 1) {
+        currentQuestionIndex++;
+        openCurrentQuestion();
+      } else {
+        renderResultPage();
+        showScreen("screen-result");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    function bindGlobalEvents() {
+      document.getElementById("goAnswer").addEventListener("click", () => {
+        openCurrentAnswerPage();
+      });
+
+      document.getElementById("nextQuestionBtn").addEventListener("click", () => {
+        nextQuestion();
+      });
+
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        buildPaper();
+        openCurrentQuestion();
+      });
+    }
+
+    buildPaper();
+    bindGlobalEvents();
+    openCurrentQuestion();
   </script>
 </body>
 </html>
