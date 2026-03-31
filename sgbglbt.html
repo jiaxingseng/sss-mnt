@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>OpenMoji 图片规律模拟题（扩充版）</title>
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:"Microsoft YaHei", Arial, sans-serif;
+      background:#f5f5f5;
+      color:#222;
+      user-select:none;
+      -webkit-user-select:none;
+      overflow:hidden;
+      touch-action:manipulation;
+    }
+    .page{
+      width:100vw;
+      height:100vh;
+      display:none;
+      padding:20px 16px 28px;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    .page.active{display:block}
+    .wrap{
+      max-width:1180px;
+      margin:0 auto;
+      text-align:center;
+    }
+
+    .panel{
+      background:#fff;
+      border-radius:18px;
+      padding:18px 12px 24px;
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
+      margin-bottom:22px;
+    }
+
+    h2{
+      margin:0 0 14px;
+      font-size:24px;
+      line-height:1.6;
+      font-weight:700;
+      padding:0 12px;
+    }
+
+    .qno{
+      font-size:22px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .board{
+      display:grid;
+      grid-template-columns:repeat(3, 180px);
+      gap:18px;
+      justify-content:center;
+      margin:16px auto 10px;
+    }
+    .big{
+      width:180px;
+      height:180px;
+      background:#fff;
+      border:3px solid #222;
+      position:relative;
+    }
+    .big::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:8px;
+      bottom:8px;
+      border-left:2px dashed #9a9a9a;
+      transform:translateX(-1px);
+    }
+    .big::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      left:8px;
+      right:8px;
+      border-top:2px dashed #9a9a9a;
+      transform:translateY(-1px);
+    }
+
+    .slot{
+      position:absolute;
+      width:64px;
+      height:64px;
+      transform:translate(-50%,-50%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+    }
+    .tl{left:45px;top:45px}
+    .tr{left:135px;top:45px}
+    .bl{left:45px;top:135px}
+    .br{left:135px;top:135px}
+
+    .qmark{
+      font-size:42px;
+      font-weight:700;
+      color:#111;
+      line-height:1;
+    }
+    .qmark sub{
+      font-size:18px;
+      vertical-align:sub;
+    }
+
+    .green-btn{
+      display:inline-block;
+      min-width:180px;
+      padding:14px 30px;
+      border:none;
+      border-radius:12px;
+      background:#2db256;
+      color:#fff;
+      font-size:24px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 4px 10px rgba(45,178,86,.25);
+      margin:10px 8px 0;
+    }
+    .green-btn:hover{background:#27a34e}
+
+    .title-tag{
+      display:inline-block;
+      background:#dff3df;
+      color:#2f8f3a;
+      font-size:22px;
+      font-weight:700;
+      padding:8px 16px;
+      border-radius:8px;
+      margin:6px 0 16px;
+    }
+
+    .answer-row{
+      display:grid;
+      grid-template-columns:repeat(4, 112px);
+      gap:18px;
+      justify-content:center;
+      margin:8px 0 18px;
+    }
+    .answer-box{
+      width:112px;
+      height:112px;
+      background:#fff;
+      border:3px solid #d9d9d9;
+      border-radius:12px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .answer-box .index{
+      position:absolute;
+      left:8px;
+      top:6px;
+      font-size:20px;
+      font-weight:700;
+      color:#555;
+      pointer-events:none;
+    }
+    .answer-box.drag-over{
+      border-color:#49b96b;
+      box-shadow:0 0 0 4px rgba(73,185,107,.16) inset;
+      background:#fbfffc;
+    }
+
+    .options{
+      display:grid;
+      grid-template-columns:repeat(5, 112px);
+      gap:16px;
+      justify-content:center;
+      margin-top:4px;
+    }
+    .opt{
+      width:112px;
+      height:112px;
+      background:#fff;
+      border:2px solid #e4e4e4;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 1px 3px rgba(0,0,0,.04);
+      position:relative;
+      touch-action:none;
+    }
+
+    .result-card{
+      background:#fff;
+      border-radius:18px;
+      padding:22px 16px 28px;
+      box-shadow:0 2px 10px rgba(0,0,0,.06);
+    }
+    .score{
+      font-size:28px;
+      font-weight:700;
+      color:#2f8f3a;
+      margin-bottom:18px;
+    }
+    .wrong-block{
+      text-align:left;
+      border:1px solid #ececec;
+      border-radius:12px;
+      padding:18px 14px;
+      margin:16px auto;
+      max-width:980px;
+      background:#fcfcfc;
+    }
+    .wrong-title{
+      font-size:18px;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+    .wrong-text{
+      line-height:1.9;
+      color:#444;
+      font-size:15px;
+      margin-bottom:14px;
+    }
+
+    .emoji-wrap{
+      width:64px;
+      height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transform-origin:center center;
+      pointer-events:none;
+    }
+    .emoji-img{
+      width:56px;
+      height:56px;
+      object-fit:contain;
+      display:block;
+      user-drag:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
+    }
+
+    .small{transform:scale(.72)}
+    .bigsize{transform:scale(1.18)}
+    .flipX{transform:scaleX(-1)}
+    .flipY{transform:scaleY(-1)}
+    .rot90{transform:rotate(90deg)}
+    .rot180{transform:rotate(180deg)}
+    .rot270{transform:rotate(270deg)}
+
+    .blankpic{
+      width:60px;
+      height:60px;
+      position:relative;
+      background:#fff;
+      border:3px solid #d3d3d3;
+    }
+    .blankpic svg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    .clone{pointer-events:none}
+    .drag-ghost{
+      position:fixed;
+      left:0;
+      top:0;
+      width:88px;
+      height:88px;
+      margin-left:-44px;
+      margin-top:-44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fff;
+      border:2px solid #dfe8df;
+      border-radius:14px;
+      box-shadow:0 8px 18px rgba(0,0,0,.16);
+      pointer-events:none;
+      z-index:9999;
+    }
+    .hidden{display:none !important}
+
+    @media (max-width:1024px){
+      .wrap{max-width:980px}
+      h2{font-size:22px}
+      .qno{font-size:20px}
+      .board{
+        grid-template-columns:repeat(3, 160px);
+        gap:14px;
+      }
+      .big{width:160px;height:160px}
+      .tl{left:40px;top:40px}
+      .tr{left:120px;top:40px}
+      .bl{left:40px;top:120px}
+      .br{left:120px;top:120px}
+      .answer-row{
+        grid-template-columns:repeat(4, 100px);
+        gap:14px;
+      }
+      .answer-box{
+        width:100px;height:100px;
+      }
+      .options{
+        grid-template-columns:repeat(5, 100px);
+        gap:14px;
+      }
+      .opt{
+        width:100px;height:100px;
+      }
+      .green-btn{
+        font-size:22px;
+        min-width:170px;
+      }
+    }
+
+    @media (max-width:820px){
+      .page{padding:16px 10px 24px}
+      .board{
+        grid-template-columns:repeat(3, 144px);
+        gap:10px;
+      }
+      .big{width:144px;height:144px}
+      .big::before{top:6px;bottom:6px}
+      .big::after{left:6px;right:6px}
+      .tl{left:36px;top:36px}
+      .tr{left:108px;top:36px}
+      .bl{left:36px;top:108px}
+      .br{left:108px;top:108px}
+      .slot{width:56px;height:56px}
+      .answer-row{
+        grid-template-columns:repeat(4, 88px);
+        gap:10px;
+      }
+      .answer-box{
+        width:88px;height:88px;
+      }
+      .options{
+        grid-template-columns:repeat(5, 88px);
+        gap:10px;
+      }
+      .opt{
+        width:88px;height:88px;
+      }
+      .emoji-wrap,.blankpic{transform:scale(.9)}
+      .green-btn{
+        min-width:160px;
+        font-size:20px;
+        padding:12px 24px;
+      }
+      .title-tag{
+        font-size:20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 题目页 -->
+  <section class="page active" id="questionOnlyPage">
+    <div class="wrap">
+      <div class="panel">
+        <div class="qno" id="qnoText"></div>
+        <h2>观察每一行前两个田字格的变化规律，选择合适的图形填入后面的问号位置。</h2>
+        <div id="questionOnlyArea"></div>
+        <button class="green-btn" id="chooseBtn">请选择</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 作答页 -->
+  <section class="page" id="answerOnlyPage">
+    <div class="wrap">
+      <div class="panel">
+        <div class="qno" id="answerQnoText"></div>
+        <div class="title-tag">作答区</div>
+        <div class="answer-row">
+          <div class="answer-box" data-slot="tl"><span class="index">1</span></div>
+          <div class="answer-box" data-slot="tr"><span class="index">2</span></div>
+          <div class="answer-box" data-slot="bl"><span class="index">3</span></div>
+          <div class="answer-box" data-slot="br"><span class="index">4</span></div>
+        </div>
+
+        <div class="title-tag">选项区</div>
+        <div class="options" id="optionsArea"></div>
+
+        <button class="green-btn" id="nextBtn">下一题</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 结果页 -->
+  <section class="page" id="resultPage">
+    <div class="wrap">
+      <div class="result-card">
+        <div class="score" id="scoreText"></div>
+        <div id="wrongList"></div>
+        <button class="green-btn" id="retryBtn">重新答题</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="dragGhost" class="drag-ghost hidden"></div>
+
+  <script>
+    // OpenMoji 扩充图片库
+    // 可继续往里加，只要是有效 unicode 码点即可
+    const OPENMOJI = {
+      // 动物
+      fox: '1F98A',
+      dog: '1F436',
+      gorilla: '1F98D',
+      leopard: '1F406',
+      rooster: '1F413',
+      duck: '1F986',
+      chick: '1F424',
+      penguin: '1F427',
+      monkey: '1F435',
+      owl: '1F989',
+      tiger: '1F405',
+      cat: '1F431',
+      rabbit: '1F430',
+      bear: '1F43B',
+      koala: '1F428',
+      pig: '1F437',
+      frog: '1F438',
+      cow: '1F42E',
+
+      // 水果食物
+      strawberry: '1F353',
+      pear: '1F350',
+      apple: '1F34E',
+      orange: '1F34A',
+      watermelon: '1F349',
+      lemon: '1F34B',
+      banana: '1F34C',
+      grapes: '1F347',
+      peach: '1F351',
+      cherry: '1F352',
+      pineapple: '1F34D',
+      carrot: '1F955',
+      corn: '1F33D',
+      mushroom: '1F344',
+      cupcake: '1F9C1',
+      donut: '1F369',
+      candy: '1F36C',
+      cookie: '1F36A',
+      icecream: '1F366',
+      lollipop: '1F36D',
+
+      // 植物花卉
+      flower: '1F338',
+      tulip: '1F337',
+      sunflower: '1F33B',
+      blossom: '1F33C',
+      rose: '1F339',
+      leaf: '1F343',
+      shamrock: '2618',
+      cactus: '1F335',
+
+      // 交通工具
+      bicycle: '1F6B2',
+      scooter: '1F6F4',
+      car: '1F697',
+      bus: '1F68C',
+      train: '1F686',
+      airplane: '2708-FE0F',
+      ship: '1F6A2',
+      rocket: '1F680',
+
+      // 学习用品 / 物品
+      backpack: '1F392',
+      book: '1F4D5',
+      books: '1F4DA',
+      pencil: '270F-FE0F',
+      ruler: '1F4CF',
+      scissors: '2702-FE0F',
+      paint: '1F3A8',
+      ball: '26BD',
+
+      // 穿戴 / 生活
+      hat: '1F9E2',
+      crown: '1F451',
+      shirt: '1F455',
+      dress: '1F457',
+      shoe: '1F45F',
+      ring: '1F48D',
+      watch: '231A',
+      umbrella: '2602-FE0F'
+    };
+
+    const ICONS = Object.keys(OPENMOJI);
+    const POS = ['tl','tr','bl','br'];
+    const TRANSFORMS = ['rot90','rot180','rot270','flipX','flipY','small','bigsize'];
+
+    let quizData = [];
+    let currentIndex = 0;
+    let userAnswers = [];
+    let touchDragData = null;
+
+    const questionOnlyPage = document.getElementById('questionOnlyPage');
+    const answerOnlyPage = document.getElementById('answerOnlyPage');
+    const resultPage = document.getElementById('resultPage');
+
+    const qnoText = document.getElementById('qnoText');
+    const answerQnoText = document.getElementById('answerQnoText');
+    const questionOnlyArea = document.getElementById('questionOnlyArea');
+    const optionsArea = document.getElementById('optionsArea');
+    const chooseBtn = document.getElementById('chooseBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const scoreText = document.getElementById('scoreText');
+    const wrongList = document.getElementById('wrongList');
+    const dragGhost = document.getElementById('dragGhost');
+
+    function openmojiUrl(name){
+      return `https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/color/618x618/${OPENMOJI[name]}.png`;
+    }
+
+    function blankPicHTML(){
+      return `
+        <div class="blankpic">
+          <svg viewBox="0 0 60 60" aria-hidden="true">
+            <circle cx="16" cy="14" r="6.5" fill="none" stroke="#bcbcbc" stroke-width="3"/>
+            <path d="M10 45 L21 30 L31 37 L40 23 L50 36 L50 45 Z"
+                  fill="none"
+                  stroke="#bcbcbc"
+                  stroke-width="3"
+                  stroke-linejoin="round"
+                  stroke-linecap="round"/>
+          </svg>
+        </div>
+      `;
+    }
+
+    function iconHTML(name, transform=''){
+      if(name==='blank') return blankPicHTML();
+      return `
+        <div class="emoji-wrap ${transform||''}">
+          <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}">
+        </div>
+      `;
+    }
+
+    function randomOf(arr){
+      return arr[Math.floor(Math.random()*arr.length)];
+    }
+
+    function sample(arr, n){
+      const copy = [...arr];
+      const out = [];
+      while(out.length<n && copy.length){
+        const i = Math.floor(Math.random()*copy.length);
+        out.push(copy.splice(i,1)[0]);
+      }
+      return out;
+    }
+
+    function shuffle(arr){
+      const a=[...arr];
+      for(let i=a.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+
+    function buildQuestion(index){
+      const row1Positions = sample(POS, 3);
+      const row1Common = row1Positions[0];
+      const row1UniqueA = row1Positions[1];
+      const row1UniqueB = row1Positions[2];
+
+      const row2Positions = sample(POS, 3);
+      const row2Common = row2Positions[0];
+      const row2UniqueA = row2Positions[1];
+      const row2UniqueB = row2Positions[2];
+
+      const r3Common = randomOf(POS);
+      const remain = POS.filter(p=>p!==r3Common);
+      const [r3OnlyA1, r3OnlyA2, r3OnlyB] = remain;
+
+      const icons = sample(ICONS, 8);
+      const row1A = {}, row1B = {}, row1C = {};
+      const row2A = {}, row2B = {}, row2C = {};
+      const row3A = {}, row3B = {}, answer = {};
+
+      row1A[row1Common] = icons[0];
+      row1B[row1Common] = icons[0];
+      row1A[row1UniqueA] = icons[1];
+      row1B[row1UniqueB] = icons[2];
+      row1C[row1Common] = {type:'blank'};
+      row1C[row1UniqueA] = {type:icons[1], t:randomOf(TRANSFORMS)};
+      row1C[row1UniqueB] = {type:icons[2], t:randomOf(TRANSFORMS)};
+
+      row2A[row2Common] = icons[3];
+      row2B[row2Common] = icons[3];
+      row2A[row2UniqueA] = icons[4];
+      row2B[row2UniqueB] = icons[5];
+      row2C[row2Common] = {type:'blank'};
+      row2C[row2UniqueA] = {type:icons[4], t:randomOf(TRANSFORMS)};
+      row2C[row2UniqueB] = {type:icons[5], t:randomOf(TRANSFORMS)};
+
+      row3A[r3Common] = icons[6];
+      row3B[r3Common] = icons[6];
+      row3A[r3OnlyA1] = icons[7];
+      row3A[r3OnlyA2] = icons[0];
+      row3B[r3OnlyB] = icons[1];
+
+      answer[r3Common] = {type:'blank'};
+      answer[r3OnlyA1] = {type:icons[7], t:randomOf(TRANSFORMS)};
+      answer[r3OnlyA2] = {type:icons[0], t:randomOf(TRANSFORMS)};
+      answer[r3OnlyB] = {type:icons[1], t:randomOf(TRANSFORMS)};
+
+      const correctOptions = [
+        answer.tl || null,
+        answer.tr || null,
+        answer.bl || null,
+        answer.br || null
+      ];
+
+      const distractors = [];
+      while(distractors.length < 6){
+        const base = randomOf(ICONS);
+        const t = randomOf(TRANSFORMS);
+        const cand = {type:base, t};
+        const dup = [...correctOptions.filter(Boolean), ...distractors].some(x => x.type===cand.type && (x.t||'')===(cand.t||''));
+        if(!dup) distractors.push(cand);
+      }
+
+      const options = shuffle([...correctOptions.filter(Boolean), ...distractors]);
+
+      return {
+        index,
+        rows: [
+          [row1A,row1B,row1C],
+          [row2A,row2B,row2C],
+          [row3A,row3B,'question']
+        ],
+        answer,
+        options
+      };
+    }
+
+    function renderCellMap(map){
+      let html = '';
+      POS.forEach(pos=>{
+        if(map[pos]){
+          if(map[pos].type){
+            html += `<div class="slot ${pos}">${iconHTML(map[pos].type, map[pos].t||'')}</div>`;
+          }else{
+            html += `<div class="slot ${pos}">${iconHTML(map[pos])}</div>`;
+          }
+        }
+      });
+      return html;
+    }
+
+    function renderQuestionBoard(q){
+      return `
+        <div class="board">
+          <div class="big">${renderCellMap(q.rows[0][0])}</div>
+          <div class="big">${renderCellMap(q.rows[0][1])}</div>
+          <div class="big">${renderCellMap(q.rows[0][2])}</div>
+
+          <div class="big">${renderCellMap(q.rows[1][0])}</div>
+          <div class="big">${renderCellMap(q.rows[1][1])}</div>
+          <div class="big">${renderCellMap(q.rows[1][2])}</div>
+
+          <div class="big">${renderCellMap(q.rows[2][0])}</div>
+          <div class="big">${renderCellMap(q.rows[2][1])}</div>
+          <div class="big">
+            <div class="slot tl"><div class="qmark">?<sub>1</sub></div></div>
+            <div class="slot tr"><div class="qmark">?<sub>2</sub></div></div>
+            <div class="slot bl"><div class="qmark">?<sub>3</sub></div></div>
+            <div class="slot br"><div class="qmark">?<sub>4</sub></div></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderOptions(q){
+      return q.options.map((opt, i)=>`
+        <div class="opt" draggable="true" data-id="q${q.index}-opt${i}" data-type="${opt.type}" data-t="${opt.t||''}">
+          ${iconHTML(opt.type, opt.t||'')}
+        </div>
+      `).join('');
+    }
+
+    function clearAnswerBoxes(){
+      document.querySelectorAll('.answer-box').forEach(box=>{
+        const clone = box.querySelector('.clone');
+        if(clone) clone.remove();
+      });
+    }
+
+    function restoreAnswerBoxes(){
+      clearAnswerBoxes();
+      const ans = userAnswers[currentIndex] || {};
+      document.querySelectorAll('.answer-box').forEach(box=>{
+        const data = ans[box.dataset.slot];
+        if(data){
+          const holder = document.createElement('div');
+          holder.className = 'clone';
+          holder.dataset.type = data.type;
+          holder.dataset.t = data.t || '';
+          holder.innerHTML = iconHTML(data.type, data.t || '');
+          box.appendChild(holder);
+        }
+      });
+    }
+
+    function saveCurrentAnswer(){
+      const ans = {};
+      document.querySelectorAll('.answer-box').forEach(box=>{
+        const c = box.querySelector('.clone');
+        if(c){
+          ans[box.dataset.slot] = {
+            type: c.dataset.type,
+            t: c.dataset.t || ''
+          };
+        }
+      });
+      userAnswers[currentIndex] = ans;
+    }
+
+    function placeToBox(box, data){
+      const oldClone = box.querySelector('.clone');
+      if(oldClone) oldClone.remove();
+
+      const holder = document.createElement('div');
+      holder.className = 'clone';
+      holder.dataset.type = data.type;
+      holder.dataset.t = data.t || '';
+      holder.innerHTML = iconHTML(data.type, data.t || '');
+      box.appendChild(holder);
+      saveCurrentAnswer();
+    }
+
+    function clearDragOver(){
+      document.querySelectorAll('.answer-box').forEach(b=>b.classList.remove('drag-over'));
+    }
+
+    function bindMouseDrag(){
+      const options = document.querySelectorAll('.opt');
+      const answerBoxes = document.querySelectorAll('.answer-box');
+
+      options.forEach(opt=>{
+        opt.addEventListener('dragstart', e=>{
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            type: opt.dataset.type,
+            t: opt.dataset.t
+          }));
+        });
+      });
+
+      answerBoxes.forEach(box=>{
+        box.ondragover = e=>{
+          e.preventDefault();
+          box.classList.add('drag-over');
+        };
+        box.ondragleave = ()=>{
+          box.classList.remove('drag-over');
+        };
+        box.ondrop = e=>{
+          e.preventDefault();
+          box.classList.remove('drag-over');
+          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+          placeToBox(box, data);
+        };
+      });
+    }
+
+    function bindTouchDrag(){
+      const options = document.querySelectorAll('.opt');
+
+      options.forEach(opt=>{
+        opt.addEventListener('touchstart', e=>{
+          const touch = e.touches[0];
+          touchDragData = {
+            type: opt.dataset.type,
+            t: opt.dataset.t || '',
+            source: opt
+          };
+          dragGhost.innerHTML = opt.innerHTML;
+          dragGhost.classList.remove('hidden');
+          dragGhost.style.left = touch.clientX + 'px';
+          dragGhost.style.top = touch.clientY + 'px';
+        }, {passive:true});
+
+        opt.addEventListener('touchmove', e=>{
+          if(!touchDragData) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          dragGhost.style.left = touch.clientX + 'px';
+          dragGhost.style.top = touch.clientY + 'px';
+
+          clearDragOver();
+          const target = document.elementFromPoint(touch.clientX, touch.clientY);
+          const box = target && target.closest('.answer-box');
+          if(box) box.classList.add('drag-over');
+        }, {passive:false});
+
+        opt.addEventListener('touchend', e=>{
+          if(!touchDragData) return;
+          const touch = e.changedTouches[0];
+          clearDragOver();
+          const target = document.elementFromPoint(touch.clientX, touch.clientY);
+          const box = target && target.closest('.answer-box');
+          if(box){
+            placeToBox(box, touchDragData);
+          }
+          dragGhost.classList.add('hidden');
+          dragGhost.innerHTML = '';
+          touchDragData = null;
+        });
+
+        opt.addEventListener('touchcancel', ()=>{
+          clearDragOver();
+          dragGhost.classList.add('hidden');
+          dragGhost.innerHTML = '';
+          touchDragData = null;
+        });
+      });
+    }
+
+    function bindDrag(){
+      bindMouseDrag();
+      bindTouchDrag();
+    }
+
+    function showQuestionPage(index){
+      currentIndex = index;
+      const q = quizData[index];
+      qnoText.textContent = `第 ${index+1} / 5 题`;
+      answerQnoText.textContent = `第 ${index+1} / 5 题`;
+      questionOnlyArea.innerHTML = renderQuestionBoard(q);
+      optionsArea.innerHTML = renderOptions(q);
+      restoreAnswerBoxes();
+      bindDrag();
+      nextBtn.textContent = index === 4 ? '提交答案' : '下一题';
+
+      questionOnlyPage.classList.add('active');
+      answerOnlyPage.classList.remove('active');
+      resultPage.classList.remove('active');
+      window.scrollTo(0,0);
+    }
+
+    function showAnswerPage(){
+      questionOnlyPage.classList.remove('active');
+      answerOnlyPage.classList.add('active');
+      resultPage.classList.remove('active');
+      window.scrollTo(0,0);
+    }
+
+    function answerEqual(a,b){
+      return (a.type===b.type) && ((a.t||'')===(b.t||''));
+    }
+
+    function analysisText(slot, correct){
+      const nameMap = {tl:'?1', tr:'?2', bl:'?3', br:'?4'};
+      if(correct.type === 'blank'){
+        return `${nameMap[slot]}位置：前两个田字格该位置图形相同，所以结果应为空白图片。`;
+      }
+      return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形，并进行变化，正确结果应为该选项所示图形。`;
+    }
+
+    function submitAll(){
+      saveCurrentAnswer();
+      let correctCount = 0;
+      wrongList.innerHTML = '';
+
+      quizData.forEach((q, i)=>{
+        const user = userAnswers[i] || {};
+        let ok = true;
+        POS.forEach(pos=>{
+          const right = q.answer[pos];
+          const mine = user[pos];
+          if(!mine || !answerEqual(mine, right)) ok = false;
+        });
+
+        if(ok){
+          correctCount++;
+        }else{
+          let analysis = '';
+          POS.forEach(pos=>{
+            const right = q.answer[pos];
+            const mine = user[pos];
+            if(!mine || !answerEqual(mine, right)){
+              analysis += `<div>${analysisText(pos, right)}</div>`;
+            }
+          });
+
+          wrongList.insertAdjacentHTML('beforeend', `
+            <div class="wrong-block">
+              <div class="wrong-title">第${i+1}题答错</div>
+              <div class="wrong-text">${analysis}</div>
+              <div class="wrong-title">原题图</div>
+              ${renderQuestionBoard(q)}
+            </div>
+          `);
+        }
+      });
+
+      scoreText.textContent = `答对 ${correctCount} / 5 题`;
+      if(correctCount === 5){
+        wrongList.innerHTML = `<div class="wrong-block" style="text-align:center">全部答对，表现很棒！</div>`;
+      }
+
+      questionOnlyPage.classList.remove('active');
+      answerOnlyPage.classList.remove('active');
+      resultPage.classList.add('active');
+      window.scrollTo(0,0);
+    }
+
+    function generateQuiz(){
+      quizData = Array.from({length:5}, (_,i)=>buildQuestion(i));
+      userAnswers = Array.from({length:5}, ()=>({}));
+      currentIndex = 0;
+    }
+
+    chooseBtn.addEventListener('click', ()=>{
+      showAnswerPage();
+    });
+
+    nextBtn.addEventListener('click', ()=>{
+      saveCurrentAnswer();
+      if(currentIndex < 4){
+        showQuestionPage(currentIndex + 1);
+      }else{
+        submitAll();
+      }
+    });
+
+    document.getElementById('retryBtn').addEventListener('click', ()=>{
+      generateQuiz();
+      showQuestionPage(0);
+    });
+
+    generateQuiz();
+    showQuestionPage(0);
+  </script>
+</body>
+</html>
