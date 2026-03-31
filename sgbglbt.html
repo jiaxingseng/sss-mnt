@@ -123,8 +123,11 @@
       cursor:pointer;
       box-shadow:0 4px 10px rgba(106,160,111,.22);
       margin:10px 8px 0;
+      transition:transform .08s ease, background .12s ease;
+      will-change:transform;
     }
     .green-btn:hover{background:#5f9464}
+    .green-btn.active-touch{transform:scale(.97)}
 
     .title-tag{
       display:inline-block;
@@ -190,6 +193,12 @@
       position:relative;
       touch-action:none;
       cursor:pointer;
+      transition:transform .06s ease, box-shadow .08s ease;
+      will-change:transform;
+    }
+    .opt.active-touch{
+      transform:scale(.97);
+      box-shadow:0 2px 8px rgba(70,90,70,.10);
     }
 
     .result-card{
@@ -275,8 +284,6 @@
       top:0;
       width:88px;
       height:88px;
-      margin-left:-44px;
-      margin-top:-44px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -286,6 +293,8 @@
       box-shadow:0 8px 18px rgba(70,90,70,.14);
       pointer-events:none;
       z-index:9999;
+      will-change:transform, opacity;
+      transform:translate3d(-9999px,-9999px,0);
     }
     .hidden{display:none !important}
 
@@ -922,6 +931,25 @@
       document.querySelectorAll('.answer-box').forEach(b=>b.classList.remove('drag-over'));
     }
 
+    function getAnswerBoxes(){
+      return [...document.querySelectorAll('.answer-box')];
+    }
+
+    function hitTestBox(x, y, boxes){
+      for(const box of boxes){
+        const rect = box.getBoundingClientRect();
+        if(
+          x >= rect.left &&
+          x <= rect.right &&
+          y >= rect.top &&
+          y <= rect.bottom
+        ){
+          return box;
+        }
+      }
+      return null;
+    }
+
     function bindMouseDrag(){
       const options = document.querySelectorAll('.opt');
       const answerBoxes = document.querySelectorAll('.answer-box');
@@ -954,6 +982,7 @@
 
     function bindTouchDrag(){
       const options = document.querySelectorAll('.opt');
+      const answerBoxes = getAnswerBoxes();
 
       options.forEach(opt=>{
         opt.addEventListener('touchstart', e=>{
@@ -962,43 +991,44 @@
             type: opt.dataset.type,
             t: opt.dataset.t || ''
           };
+          opt.classList.add('active-touch');
           dragGhost.innerHTML = opt.innerHTML;
           dragGhost.classList.remove('hidden');
-          dragGhost.style.left = touch.clientX + 'px';
-          dragGhost.style.top = touch.clientY + 'px';
+          dragGhost.style.transform = `translate3d(${touch.clientX - 44}px, ${touch.clientY - 44}px, 0)`;
         }, {passive:true});
 
         opt.addEventListener('touchmove', e=>{
           if(!touchDragData) return;
           e.preventDefault();
           const touch = e.touches[0];
-          dragGhost.style.left = touch.clientX + 'px';
-          dragGhost.style.top = touch.clientY + 'px';
+          dragGhost.style.transform = `translate3d(${touch.clientX - 44}px, ${touch.clientY - 44}px, 0)`;
 
           clearDragOver();
-          const target = document.elementFromPoint(touch.clientX, touch.clientY);
-          const box = target && target.closest('.answer-box');
+          const box = hitTestBox(touch.clientX, touch.clientY, answerBoxes);
           if(box) box.classList.add('drag-over');
         }, {passive:false});
 
         opt.addEventListener('touchend', e=>{
+          opt.classList.remove('active-touch');
           if(!touchDragData) return;
           const touch = e.changedTouches[0];
           clearDragOver();
-          const target = document.elementFromPoint(touch.clientX, touch.clientY);
-          const box = target && target.closest('.answer-box');
+          const box = hitTestBox(touch.clientX, touch.clientY, answerBoxes);
           if(box){
             placeToBox(box, touchDragData);
           }
           dragGhost.classList.add('hidden');
           dragGhost.innerHTML = '';
+          dragGhost.style.transform = 'translate3d(-9999px,-9999px,0)';
           touchDragData = null;
         });
 
         opt.addEventListener('touchcancel', ()=>{
+          opt.classList.remove('active-touch');
           clearDragOver();
           dragGhost.classList.add('hidden');
           dragGhost.innerHTML = '';
+          dragGhost.style.transform = 'translate3d(-9999px,-9999px,0)';
           touchDragData = null;
         });
       });
@@ -1007,6 +1037,22 @@
     function bindDrag(){
       bindMouseDrag();
       bindTouchDrag();
+    }
+
+    function bindButtonTouchFeedback(){
+      document.querySelectorAll('.green-btn').forEach(btn=>{
+        btn.addEventListener('touchstart', ()=>{
+          btn.classList.add('active-touch');
+        }, {passive:true});
+
+        btn.addEventListener('touchend', ()=>{
+          btn.classList.remove('active-touch');
+        });
+
+        btn.addEventListener('touchcancel', ()=>{
+          btn.classList.remove('active-touch');
+        });
+      });
     }
 
     function showQuestionPage(index){
@@ -1166,6 +1212,7 @@
       showQuestionPage(0);
     });
 
+    bindButtonTouchFeedback();
     generateQuiz();
     showQuestionPage(0);
 
