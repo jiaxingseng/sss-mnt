@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（优化版）</title>
+  <title>OpenMoji 图片规律模拟题（最终整合版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -30,7 +30,6 @@
       margin:0 auto;
       text-align:center;
     }
-
     .panel{
       background:#fff;
       border-radius:18px;
@@ -38,7 +37,6 @@
       box-shadow:0 2px 12px rgba(0,0,0,.06);
       margin-bottom:22px;
     }
-
     h2{
       margin:0 0 12px;
       font-size:20px;
@@ -47,7 +45,6 @@
       padding:0 12px;
       color:#333;
     }
-
     .qno{
       font-size:20px;
       font-weight:600;
@@ -86,7 +83,6 @@
       border-top:2px dashed #9a9a9a;
       transform:translateY(-1px);
     }
-
     .slot{
       position:absolute;
       width:64px;
@@ -400,8 +396,6 @@
   <div id="dragGhost" class="drag-ghost hidden"></div>
 
   <script>
-    // 使用稳定、常见、加载正常的 OpenMoji 码点
-    // 图片改用小尺寸 72x72，提升加载速度
     const OPENMOJI = {
       fox: '1F98A',
       dog: '1F436',
@@ -415,7 +409,6 @@
       chick: '1F424',
       duck: '1F986',
       rooster: '1F413',
-
       strawberry: '1F353',
       pear: '1F350',
       apple: '1F34E',
@@ -427,7 +420,6 @@
       cherry: '1F352',
       pineapple: '1F34D',
       watermelon: '1F349',
-
       carrot: '1F955',
       corn: '1F33D',
       mushroom: '1F344',
@@ -437,7 +429,6 @@
       cookie: '1F36A',
       icecream: '1F366',
       lollipop: '1F36D',
-
       flower: '1F338',
       tulip: '1F337',
       sunflower: '1F33B',
@@ -445,14 +436,12 @@
       rose: '1F339',
       leaf: '1F343',
       cactus: '1F335',
-
       bicycle: '1F6B2',
       car: '1F697',
       bus: '1F68C',
       train: '1F686',
       ship: '1F6A2',
       rocket: '1F680',
-
       backpack: '1F392',
       book: '1F4D5',
       books: '1F4DA',
@@ -464,7 +453,9 @@
 
     const ICONS = Object.keys(OPENMOJI);
     const POS = ['tl','tr','bl','br'];
-    const TRANSFORMS = ['rot90','rot180','rot270','flipX','flipY','small','bigsize'];
+
+    // 加入 '' 代表“不变”
+    const TRANSFORMS = ['', 'rot90','rot180','rot270','flipX','flipY','small','bigsize'];
 
     let quizData = [];
     let currentIndex = 0;
@@ -529,7 +520,7 @@
     }
 
     function shuffle(arr){
-      const a=[...arr];
+      const a = [...arr];
       for(let i=a.length-1;i>0;i--){
         const j=Math.floor(Math.random()*(i+1));
         [a[i],a[j]]=[a[j],a[i]];
@@ -541,52 +532,48 @@
       return `${item.type}|${item.t||''}`;
     }
 
+    // 每一行4个位置全部覆盖：
+    // 1个位置前2相同 -> 第3空白
+    // 3个位置前2一空一图 -> 第3保留非空图，可变化也可不变
+    function buildRow(iconPool){
+      const positions = shuffle([...POS]);
+      const commonPos = positions[0];
+      const rest = positions.slice(1);
+
+      const A = {};
+      const B = {};
+      const C = {};
+
+      A[commonPos] = iconPool[0];
+      B[commonPos] = iconPool[0];
+      C[commonPos] = {type:'blank'};
+
+      rest.forEach((pos, idx)=>{
+        const icon = iconPool[idx + 1];
+        const putInA = Math.random() < 0.5;
+
+        if(putInA){
+          A[pos] = icon;
+        }else{
+          B[pos] = icon;
+        }
+
+        C[pos] = {type: icon, t: randomOf(TRANSFORMS)};
+      });
+
+      return {A,B,C};
+    }
+
     function buildQuestion(index){
-      const row1Positions = sample(POS, 3);
-      const row1Common = row1Positions[0];
-      const row1UniqueA = row1Positions[1];
-      const row1UniqueB = row1Positions[2];
+      const icons1 = sample(ICONS, 4);
+      const icons2 = sample(ICONS.filter(x=>!icons1.includes(x)), 4);
+      const icons3 = sample(ICONS.filter(x=>!icons1.includes(x) && !icons2.includes(x)), 4);
 
-      const row2Positions = sample(POS, 3);
-      const row2Common = row2Positions[0];
-      const row2UniqueA = row2Positions[1];
-      const row2UniqueB = row2Positions[2];
+      const row1 = buildRow(icons1);
+      const row2 = buildRow(icons2);
+      const row3 = buildRow(icons3);
 
-      const r3Common = randomOf(POS);
-      const remain = POS.filter(p=>p!==r3Common);
-      const [r3OnlyA1, r3OnlyA2, r3OnlyB] = remain;
-
-      const icons = sample(ICONS, 8);
-      const row1A = {}, row1B = {}, row1C = {};
-      const row2A = {}, row2B = {}, row2C = {};
-      const row3A = {}, row3B = {}, answer = {};
-
-      row1A[row1Common] = icons[0];
-      row1B[row1Common] = icons[0];
-      row1A[row1UniqueA] = icons[1];
-      row1B[row1UniqueB] = icons[2];
-      row1C[row1Common] = {type:'blank'};
-      row1C[row1UniqueA] = {type:icons[1], t:randomOf(TRANSFORMS)};
-      row1C[row1UniqueB] = {type:icons[2], t:randomOf(TRANSFORMS)};
-
-      row2A[row2Common] = icons[3];
-      row2B[row2Common] = icons[3];
-      row2A[row2UniqueA] = icons[4];
-      row2B[row2UniqueB] = icons[5];
-      row2C[row2Common] = {type:'blank'};
-      row2C[row2UniqueA] = {type:icons[4], t:randomOf(TRANSFORMS)};
-      row2C[row2UniqueB] = {type:icons[5], t:randomOf(TRANSFORMS)};
-
-      row3A[r3Common] = icons[6];
-      row3B[r3Common] = icons[6];
-      row3A[r3OnlyA1] = icons[7];
-      row3A[r3OnlyA2] = icons[0];
-      row3B[r3OnlyB] = icons[1];
-
-      answer[r3Common] = {type:'blank'};
-      answer[r3OnlyA1] = {type:icons[7], t:randomOf(TRANSFORMS)};
-      answer[r3OnlyA2] = {type:icons[0], t:randomOf(TRANSFORMS)};
-      answer[r3OnlyB] = {type:icons[1], t:randomOf(TRANSFORMS)};
+      const answer = row3.C;
 
       const correctOptions = [
         answer.tl,
@@ -595,23 +582,14 @@
         answer.br
       ];
 
-      const uniqueCorrect = [];
-      const correctSet = new Set();
-      correctOptions.forEach(item=>{
-        const key = itemKey(item);
-        if(!correctSet.has(key)){
-          correctSet.add(key);
-          uniqueCorrect.push(item);
-        }
-      });
-
-      // 为了保证正确答案唯一，若4个正确项内部意外重复，则整题重建
-      if(uniqueCorrect.length !== 4){
+      // 正确项唯一检查
+      const correctKeys = new Set(correctOptions.map(itemKey));
+      if(correctKeys.size !== 4){
         return buildQuestion(index);
       }
 
       const distractors = [];
-      const used = new Set(uniqueCorrect.map(itemKey));
+      const used = new Set([...correctKeys]);
 
       while(distractors.length < 6){
         const base = randomOf(ICONS);
@@ -624,14 +602,14 @@
         }
       }
 
-      const options = shuffle([...uniqueCorrect, ...distractors]);
+      const options = shuffle([...correctOptions, ...distractors]);
 
       return {
         index,
         rows: [
-          [row1A,row1B,row1C],
-          [row2A,row2B,row2C],
-          [row3A,row3B,'question']
+          [row1.A,row1.B,row1.C],
+          [row2.A,row2.B,row2.C],
+          [row3.A,row3.B,'question']
         ],
         answer,
         options
@@ -775,8 +753,7 @@
           const touch = e.touches[0];
           touchDragData = {
             type: opt.dataset.type,
-            t: opt.dataset.t || '',
-            source: opt
+            t: opt.dataset.t || ''
           };
           dragGhost.innerHTML = opt.innerHTML;
           dragGhost.classList.remove('hidden');
@@ -858,6 +835,9 @@
       if(correct.type === 'blank'){
         return `${nameMap[slot]}位置：前两个田字格该位置图形相同，所以结果应为空白图片。`;
       }
+      if(correct.t === ''){
+        return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形，本题此处不发生变化。`;
+      }
       return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形，并进行变化，正确结果应为该选项所示图形。`;
     }
 
@@ -911,7 +891,7 @@
 
     function preloadImages(names){
       names.forEach(name=>{
-        if(name==='blank') return;
+        if(name === 'blank') return;
         const img = new Image();
         img.src = openmojiUrl(name);
       });
@@ -922,7 +902,6 @@
       userAnswers = Array.from({length:5}, ()=>({}));
       currentIndex = 0;
 
-      // 预加载本轮会用到的素材
       const need = new Set();
       quizData.forEach(q=>{
         q.options.forEach(opt=>need.add(opt.type));
