@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（iPad丝滑拖拽版）</title>
+  <title>Emoji 图片规律模拟题（稳定版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -241,14 +241,10 @@
       justify-content:center;
       pointer-events:none;
     }
-    .emoji-img{
-      width:54px;
-      height:54px;
-      object-fit:contain;
-      display:block;
-      user-drag:none;
-      -webkit-user-drag:none;
-      pointer-events:none;
+    .emoji-char{
+      font-size:48px;
+      line-height:1;
+      display:inline-block;
       transform-origin:center center;
       -webkit-transform-origin:center center;
       backface-visibility:hidden;
@@ -353,7 +349,7 @@
       }
       .title-tag{font-size:18px}
       h2{font-size:17px}
-      .emoji-img{width:48px;height:48px}
+      .emoji-char{font-size:42px}
       .blankpic{transform:scale(.9)}
     }
   </style>
@@ -404,65 +400,64 @@
   <div id="dragGhost" class="drag-ghost hidden"></div>
 
   <script>
-    const OPENMOJI = {
-      fox: '1F98A',
-      dog: '1F436',
-      tiger: '1F405',
-      rabbit: '1F430',
-      bear: '1F43B',
-      frog: '1F438',
-      monkey: '1F435',
-      owl: '1F989',
-      penguin: '1F427',
-      chick: '1F424',
-      duck: '1F986',
-      rooster: '1F413',
-      strawberry: '1F353',
-      pear: '1F350',
-      apple: '1F34E',
-      orange: '1F34A',
-      lemon: '1F34B',
-      banana: '1F34C',
-      grapes: '1F347',
-      peach: '1F351',
-      cherry: '1F352',
-      pineapple: '1F34D',
-      watermelon: '1F349',
-      carrot: '1F955',
-      corn: '1F33D',
-      mushroom: '1F344',
-      cupcake: '1F9C1',
-      donut: '1F369',
-      candy: '1F36C',
-      cookie: '1F36A',
-      icecream: '1F366',
-      lollipop: '1F36D',
-      flower: '1F338',
-      tulip: '1F337',
-      sunflower: '1F33B',
-      blossom: '1F33C',
-      rose: '1F339',
-      leaf: '1F343',
-      cactus: '1F335',
-      bicycle: '1F6B2',
-      car: '1F697',
-      bus: '1F68C',
-      train: '1F686',
-      ship: '1F6A2',
-      rocket: '1F680',
-      backpack: '1F392',
-      book: '1F4D5',
-      books: '1F4DA',
-      pencil: '270F',
-      ruler: '1F4CF',
-      scissors: '2702',
-      umbrella: '2602'
+    const EMOJI_MAP = {
+      fox:'🦊',
+      dog:'🐶',
+      tiger:'🐯',
+      rabbit:'🐰',
+      bear:'🐻',
+      frog:'🐸',
+      monkey:'🐵',
+      owl:'🦉',
+      penguin:'🐧',
+      chick:'🐥',
+      duck:'🦆',
+      rooster:'🐓',
+      strawberry:'🍓',
+      pear:'🍐',
+      apple:'🍎',
+      orange:'🍊',
+      lemon:'🍋',
+      banana:'🍌',
+      grapes:'🍇',
+      peach:'🍑',
+      cherry:'🍒',
+      pineapple:'🍍',
+      watermelon:'🍉',
+      carrot:'🥕',
+      corn:'🌽',
+      mushroom:'🍄',
+      cupcake:'🧁',
+      donut:'🍩',
+      candy:'🍬',
+      cookie:'🍪',
+      icecream:'🍦',
+      lollipop:'🍭',
+      flower:'🌸',
+      tulip:'🌷',
+      sunflower:'🌻',
+      blossom:'🌼',
+      rose:'🌹',
+      leaf:'🍃',
+      cactus:'🌵',
+      bicycle:'🚲',
+      car:'🚗',
+      bus:'🚌',
+      train:'🚆',
+      ship:'🚢',
+      rocket:'🚀',
+      backpack:'🎒',
+      book:'📕',
+      books:'📚',
+      pencil:'✏️',
+      ruler:'📏',
+      scissors:'✂️',
+      umbrella:'☂️'
     };
 
-    const ICONS = Object.keys(OPENMOJI);
+    const ICONS = Object.keys(EMOJI_MAP);
     const POS = ['tl','tr','bl','br'];
 
-    // 非对称图：所有变化都可见
     const ASYMMETRIC_TRANSFORMS = [
       '',
       'scale(0.58)',
@@ -474,7 +469,6 @@
       'rotate(270deg)'
     ];
 
-    // 对称图：避免旋转翻转“看不出来”
     const SYMMETRIC_TRANSFORMS = [
       '',
       'scale(0.58)',
@@ -513,10 +507,6 @@
     const wrongList = document.getElementById('wrongList');
     const dragGhost = document.getElementById('dragGhost');
 
-    function openmojiUrl(name){
-      return `https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/color/72x72/${OPENMOJI[name]}.png`;
-    }
-
     function blankPicHTML(){
       return `
         <div class="blankpic">
@@ -542,7 +532,7 @@
 
       return `
         <div class="emoji-wrap">
-          <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}" loading="eager" style="${style}">
+          <span class="emoji-char" style="${style}">${EMOJI_MAP[name]}</span>
         </div>
       `;
     }
@@ -610,6 +600,11 @@
       return { A, B, C };
     }
 
+    function optionsContainAllAnswers(options, answer){
+      const optionKeys = new Set(options.map(itemKey));
+      return POS.every(pos => optionKeys.has(itemKey(answer[pos])));
+    }
+
     function buildQuestion(index){
       const icons1 = sample(ICONS, 4);
       const icons2 = sample(ICONS.filter(x => !icons1.includes(x)), 4);
@@ -628,13 +623,11 @@
         answer.br
       ];
 
-      // 保证4个正确答案彼此唯一
       const correctKeys = new Set(correctOptions.map(itemKey));
       if(correctKeys.size !== 4){
         return buildQuestion(index);
       }
 
-      // 干扰项也不能重复，且不能与正确项重复
       const distractors = [];
       const used = new Set([...correctKeys]);
 
@@ -643,6 +636,7 @@
         const t = randomOf(getTransformsByIcon(base));
         const cand = { type: base, t };
         const key = itemKey(cand);
+
         if(!used.has(key)){
           used.add(key);
           distractors.push(cand);
@@ -650,6 +644,15 @@
       }
 
       const options = shuffle([...correctOptions, ...distractors]);
+
+      if(!optionsContainAllAnswers(options, answer)){
+        return buildQuestion(index);
+      }
+
+      const optionKeys = new Set(options.map(itemKey));
+      if(optionKeys.size !== options.length){
+        return buildQuestion(index);
+      }
 
       return {
         index,
@@ -941,34 +944,10 @@
       window.scrollTo(0,0);
     }
 
-    function preloadImages(names){
-      names.forEach(name=>{
-        if(name === 'blank') return;
-        const img = new Image();
-        img.src = openmojiUrl(name);
-      });
-    }
-
     function generateQuiz(){
       quizData = Array.from({length:5}, (_, i)=>buildQuestion(i));
       userAnswers = Array.from({length:5}, ()=>({}));
       currentIndex = 0;
-
-      const need = new Set();
-      quizData.forEach(q=>{
-        q.options.forEach(opt=>need.add(opt.type));
-        q.rows.forEach(row=>{
-          row.forEach(cell=>{
-            if(cell && cell !== 'question'){
-              Object.values(cell).forEach(v=>{
-                if(typeof v === 'string') need.add(v);
-                else if(v && v.type) need.add(v.type);
-              });
-            }
-          });
-        });
-      });
-      preloadImages([...need]);
     }
 
     chooseBtn.addEventListener('click', ()=>{
