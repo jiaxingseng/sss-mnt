@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（最终规范版）</title>
+  <title>OpenMoji 图片规律模拟题（护眼版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
     body{
       font-family:"Microsoft YaHei", Arial, sans-serif;
-      background:#f5f5f5;
+      background:#eef7e8;
       color:#222;
       user-select:none;
       -webkit-user-select:none;
@@ -31,10 +31,10 @@
       text-align:center;
     }
     .panel{
-      background:#fff;
+      background:#ffffff;
       border-radius:18px;
       padding:18px 12px 24px;
-      box-shadow:0 2px 12px rgba(0,0,0,.06);
+      box-shadow:0 2px 12px rgba(97,122,89,.10);
       margin-bottom:22px;
     }
     h2{
@@ -43,12 +43,13 @@
       line-height:1.6;
       font-weight:400;
       padding:0 12px;
-      color:#333;
+      color:#364133;
     }
     .qno{
       font-size:20px;
       font-weight:600;
       margin-bottom:6px;
+      color:#3d4a39;
     }
 
     .board{
@@ -62,7 +63,7 @@
       width:180px;
       height:180px;
       background:#fff;
-      border:3px solid #222;
+      border:3px solid #2f352d;
       position:relative;
     }
     .big::before{
@@ -71,7 +72,7 @@
       left:50%;
       top:8px;
       bottom:8px;
-      border-left:2px dashed #9a9a9a;
+      border-left:2px dashed #9aa596;
       transform:translateX(-1px);
     }
     .big::after{
@@ -80,7 +81,7 @@
       top:50%;
       left:8px;
       right:8px;
-      border-top:2px dashed #9a9a9a;
+      border-top:2px dashed #9aa596;
       transform:translateY(-1px);
     }
     .slot{
@@ -115,19 +116,19 @@
       padding:13px 28px;
       border:none;
       border-radius:12px;
-      background:#2db256;
+      background:#47ad61;
       color:#fff;
       font-size:22px;
       font-weight:700;
       cursor:pointer;
-      box-shadow:0 4px 10px rgba(45,178,86,.25);
+      box-shadow:0 4px 10px rgba(71,173,97,.24);
       margin:10px 8px 0;
     }
-    .green-btn:hover{background:#27a34e}
+    .green-btn:hover{background:#3f9c56}
 
     .title-tag{
       display:inline-block;
-      background:#dff3df;
+      background:#e2f2df;
       color:#2f8f3a;
       font-size:20px;
       font-weight:700;
@@ -147,7 +148,7 @@
       width:112px;
       height:112px;
       background:#fff;
-      border:3px solid #d9d9d9;
+      border:3px solid #d6ddd2;
       border-radius:12px;
       position:relative;
       display:flex;
@@ -160,7 +161,7 @@
       top:6px;
       font-size:19px;
       font-weight:700;
-      color:#555;
+      color:#5c6858;
       pointer-events:none;
     }
     .answer-box.drag-over{
@@ -180,7 +181,7 @@
       width:112px;
       height:112px;
       background:#fff;
-      border:2px solid #e4e4e4;
+      border:2px solid #dde5d8;
       border-radius:12px;
       display:flex;
       align-items:center;
@@ -194,7 +195,7 @@
       background:#fff;
       border-radius:18px;
       padding:22px 16px 28px;
-      box-shadow:0 2px 10px rgba(0,0,0,.06);
+      box-shadow:0 2px 10px rgba(97,122,89,.10);
     }
     .score{
       font-size:28px;
@@ -204,21 +205,22 @@
     }
     .wrong-block{
       text-align:left;
-      border:1px solid #ececec;
+      border:1px solid #e5ebe1;
       border-radius:12px;
       padding:18px 14px;
       margin:16px auto;
       max-width:980px;
-      background:#fcfcfc;
+      background:#fcfefb;
     }
     .wrong-title{
       font-size:18px;
       font-weight:700;
       margin-bottom:8px;
+      color:#3b4638;
     }
     .wrong-text{
       line-height:1.9;
-      color:#444;
+      color:#465042;
       font-size:15px;
       margin-bottom:14px;
     }
@@ -454,7 +456,6 @@
     const ICONS = Object.keys(OPENMOJI);
     const POS = ['tl','tr','bl','br'];
 
-    // 允许：原样保留、缩小、放大、左右翻转、上下翻转、旋转90/180/270
     const TRANSFORMS = [
       '',
       'small',
@@ -541,9 +542,6 @@
       return `${item.type}|${item.t || ''}`;
     }
 
-    // 每行4个位置全部覆盖
-    // 1个位置：前2相同 -> 第3空白
-    // 3个位置：前2一空一图 -> 第3保留非空图，可变化也可不变
     function buildRow(iconPool){
       const positions = shuffle([...POS]);
       const commonPos = positions[0];
@@ -553,12 +551,10 @@
       const B = {};
       const C = {};
 
-      // 前2相同
       A[commonPos] = iconPool[0];
       B[commonPos] = iconPool[0];
       C[commonPos] = { type: 'blank' };
 
-      // 其余3格：一个为空，一个有图
       rest.forEach((pos, idx)=>{
         const icon = iconPool[idx + 1];
         const putInA = Math.random() < 0.5;
@@ -597,8 +593,6 @@
       ];
 
       const correctKeys = new Set(correctOptions.map(itemKey));
-
-      // 保证4个正确项唯一
       if(correctKeys.size !== 4){
         return buildQuestion(index);
       }
