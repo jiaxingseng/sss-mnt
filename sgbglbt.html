@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（扩充版）</title>
+  <title>OpenMoji 图片规律模拟题（优化版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -40,16 +40,17 @@
     }
 
     h2{
-      margin:0 0 14px;
-      font-size:24px;
+      margin:0 0 12px;
+      font-size:20px;
       line-height:1.6;
-      font-weight:700;
+      font-weight:400;
       padding:0 12px;
+      color:#333;
     }
 
     .qno{
-      font-size:22px;
-      font-weight:700;
+      font-size:20px;
+      font-weight:600;
       margin-bottom:6px;
     }
 
@@ -102,25 +103,25 @@
     .br{left:135px;top:135px}
 
     .qmark{
-      font-size:42px;
+      font-size:40px;
       font-weight:700;
       color:#111;
       line-height:1;
     }
     .qmark sub{
-      font-size:18px;
+      font-size:17px;
       vertical-align:sub;
     }
 
     .green-btn{
       display:inline-block;
-      min-width:180px;
-      padding:14px 30px;
+      min-width:170px;
+      padding:13px 28px;
       border:none;
       border-radius:12px;
       background:#2db256;
       color:#fff;
-      font-size:24px;
+      font-size:22px;
       font-weight:700;
       cursor:pointer;
       box-shadow:0 4px 10px rgba(45,178,86,.25);
@@ -132,7 +133,7 @@
       display:inline-block;
       background:#dff3df;
       color:#2f8f3a;
-      font-size:22px;
+      font-size:20px;
       font-weight:700;
       padding:8px 16px;
       border-radius:8px;
@@ -161,7 +162,7 @@
       position:absolute;
       left:8px;
       top:6px;
-      font-size:20px;
+      font-size:19px;
       font-weight:700;
       color:#555;
       pointer-events:none;
@@ -236,8 +237,8 @@
       pointer-events:none;
     }
     .emoji-img{
-      width:56px;
-      height:56px;
+      width:54px;
+      height:54px;
       object-fit:contain;
       display:block;
       user-drag:none;
@@ -291,8 +292,8 @@
 
     @media (max-width:1024px){
       .wrap{max-width:980px}
-      h2{font-size:22px}
-      .qno{font-size:20px}
+      h2{font-size:18px}
+      .qno{font-size:18px}
       .board{
         grid-template-columns:repeat(3, 160px);
         gap:14px;
@@ -306,19 +307,15 @@
         grid-template-columns:repeat(4, 100px);
         gap:14px;
       }
-      .answer-box{
-        width:100px;height:100px;
-      }
+      .answer-box{width:100px;height:100px}
       .options{
         grid-template-columns:repeat(5, 100px);
         gap:14px;
       }
-      .opt{
-        width:100px;height:100px;
-      }
+      .opt{width:100px;height:100px}
       .green-btn{
-        font-size:22px;
-        min-width:170px;
+        font-size:20px;
+        min-width:160px;
       }
     }
 
@@ -340,31 +337,25 @@
         grid-template-columns:repeat(4, 88px);
         gap:10px;
       }
-      .answer-box{
-        width:88px;height:88px;
-      }
+      .answer-box{width:88px;height:88px}
       .options{
         grid-template-columns:repeat(5, 88px);
         gap:10px;
       }
-      .opt{
-        width:88px;height:88px;
-      }
+      .opt{width:88px;height:88px}
       .emoji-wrap,.blankpic{transform:scale(.9)}
       .green-btn{
-        min-width:160px;
-        font-size:20px;
-        padding:12px 24px;
+        min-width:150px;
+        font-size:18px;
+        padding:11px 22px;
       }
-      .title-tag{
-        font-size:20px;
-      }
+      .title-tag{font-size:18px}
+      h2{font-size:17px}
     }
   </style>
 </head>
 <body>
 
-  <!-- 题目页 -->
   <section class="page active" id="questionOnlyPage">
     <div class="wrap">
       <div class="panel">
@@ -376,7 +367,6 @@
     </div>
   </section>
 
-  <!-- 作答页 -->
   <section class="page" id="answerOnlyPage">
     <div class="wrap">
       <div class="panel">
@@ -397,7 +387,6 @@
     </div>
   </section>
 
-  <!-- 结果页 -->
   <section class="page" id="resultPage">
     <div class="wrap">
       <div class="result-card">
@@ -411,41 +400,34 @@
   <div id="dragGhost" class="drag-ghost hidden"></div>
 
   <script>
-    // OpenMoji 扩充图片库
-    // 可继续往里加，只要是有效 unicode 码点即可
+    // 使用稳定、常见、加载正常的 OpenMoji 码点
+    // 图片改用小尺寸 72x72，提升加载速度
     const OPENMOJI = {
-      // 动物
       fox: '1F98A',
       dog: '1F436',
-      gorilla: '1F98D',
-      leopard: '1F406',
-      rooster: '1F413',
-      duck: '1F986',
-      chick: '1F424',
-      penguin: '1F427',
-      monkey: '1F435',
-      owl: '1F989',
       tiger: '1F405',
-      cat: '1F431',
       rabbit: '1F430',
       bear: '1F43B',
-      koala: '1F428',
-      pig: '1F437',
       frog: '1F438',
-      cow: '1F42E',
+      monkey: '1F435',
+      owl: '1F989',
+      penguin: '1F427',
+      chick: '1F424',
+      duck: '1F986',
+      rooster: '1F413',
 
-      // 水果食物
       strawberry: '1F353',
       pear: '1F350',
       apple: '1F34E',
       orange: '1F34A',
-      watermelon: '1F349',
       lemon: '1F34B',
       banana: '1F34C',
       grapes: '1F347',
       peach: '1F351',
       cherry: '1F352',
       pineapple: '1F34D',
+      watermelon: '1F349',
+
       carrot: '1F955',
       corn: '1F33D',
       mushroom: '1F344',
@@ -456,45 +438,28 @@
       icecream: '1F366',
       lollipop: '1F36D',
 
-      // 植物花卉
       flower: '1F338',
       tulip: '1F337',
       sunflower: '1F33B',
       blossom: '1F33C',
       rose: '1F339',
       leaf: '1F343',
-      shamrock: '2618',
       cactus: '1F335',
 
-      // 交通工具
       bicycle: '1F6B2',
-      scooter: '1F6F4',
       car: '1F697',
       bus: '1F68C',
       train: '1F686',
-      airplane: '2708-FE0F',
       ship: '1F6A2',
       rocket: '1F680',
 
-      // 学习用品 / 物品
       backpack: '1F392',
       book: '1F4D5',
       books: '1F4DA',
-      pencil: '270F-FE0F',
+      pencil: '270F',
       ruler: '1F4CF',
-      scissors: '2702-FE0F',
-      paint: '1F3A8',
-      ball: '26BD',
-
-      // 穿戴 / 生活
-      hat: '1F9E2',
-      crown: '1F451',
-      shirt: '1F455',
-      dress: '1F457',
-      shoe: '1F45F',
-      ring: '1F48D',
-      watch: '231A',
-      umbrella: '2602-FE0F'
+      scissors: '2702',
+      umbrella: '2602'
     };
 
     const ICONS = Object.keys(OPENMOJI);
@@ -521,7 +486,7 @@
     const dragGhost = document.getElementById('dragGhost');
 
     function openmojiUrl(name){
-      return `https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/color/618x618/${OPENMOJI[name]}.png`;
+      return `https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/color/72x72/${OPENMOJI[name]}.png`;
     }
 
     function blankPicHTML(){
@@ -544,7 +509,7 @@
       if(name==='blank') return blankPicHTML();
       return `
         <div class="emoji-wrap ${transform||''}">
-          <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}">
+          <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}" loading="eager">
         </div>
       `;
     }
@@ -570,6 +535,10 @@
         [a[i],a[j]]=[a[j],a[i]];
       }
       return a;
+    }
+
+    function itemKey(item){
+      return `${item.type}|${item.t||''}`;
     }
 
     function buildQuestion(index){
@@ -620,22 +589,42 @@
       answer[r3OnlyB] = {type:icons[1], t:randomOf(TRANSFORMS)};
 
       const correctOptions = [
-        answer.tl || null,
-        answer.tr || null,
-        answer.bl || null,
-        answer.br || null
+        answer.tl,
+        answer.tr,
+        answer.bl,
+        answer.br
       ];
 
+      const uniqueCorrect = [];
+      const correctSet = new Set();
+      correctOptions.forEach(item=>{
+        const key = itemKey(item);
+        if(!correctSet.has(key)){
+          correctSet.add(key);
+          uniqueCorrect.push(item);
+        }
+      });
+
+      // 为了保证正确答案唯一，若4个正确项内部意外重复，则整题重建
+      if(uniqueCorrect.length !== 4){
+        return buildQuestion(index);
+      }
+
       const distractors = [];
+      const used = new Set(uniqueCorrect.map(itemKey));
+
       while(distractors.length < 6){
         const base = randomOf(ICONS);
         const t = randomOf(TRANSFORMS);
         const cand = {type:base, t};
-        const dup = [...correctOptions.filter(Boolean), ...distractors].some(x => x.type===cand.type && (x.t||'')===(cand.t||''));
-        if(!dup) distractors.push(cand);
+        const key = itemKey(cand);
+        if(!used.has(key)){
+          used.add(key);
+          distractors.push(cand);
+        }
       }
 
-      const options = shuffle([...correctOptions.filter(Boolean), ...distractors]);
+      const options = shuffle([...uniqueCorrect, ...distractors]);
 
       return {
         index,
@@ -920,10 +909,35 @@
       window.scrollTo(0,0);
     }
 
+    function preloadImages(names){
+      names.forEach(name=>{
+        if(name==='blank') return;
+        const img = new Image();
+        img.src = openmojiUrl(name);
+      });
+    }
+
     function generateQuiz(){
       quizData = Array.from({length:5}, (_,i)=>buildQuestion(i));
       userAnswers = Array.from({length:5}, ()=>({}));
       currentIndex = 0;
+
+      // 预加载本轮会用到的素材
+      const need = new Set();
+      quizData.forEach(q=>{
+        q.options.forEach(opt=>need.add(opt.type));
+        q.rows.forEach(row=>{
+          row.forEach(cell=>{
+            if(cell && cell !== 'question'){
+              Object.values(cell).forEach(v=>{
+                if(typeof v === 'string') need.add(v);
+                else if(v && v.type) need.add(v.type);
+              });
+            }
+          });
+        });
+      });
+      preloadImages([...need]);
     }
 
     chooseBtn.addEventListener('click', ()=>{
