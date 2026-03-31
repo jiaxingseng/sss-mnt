@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（最终版）</title>
+  <title>OpenMoji 图片规律模拟题（iPad适配最终版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -287,6 +287,31 @@
     }
     .hidden{display:none !important}
 
+    @media (max-width:1366px){
+      .wrap{max-width:1100px}
+      .board{
+        grid-template-columns:repeat(3, 170px);
+        gap:16px;
+      }
+      .big{width:170px;height:170px}
+      .tl{left:42.5px;top:42.5px}
+      .tr{left:127.5px;top:42.5px}
+      .bl{left:42.5px;top:127.5px}
+      .br{left:127.5px;top:127.5px}
+
+      .answer-row{
+        grid-template-columns:repeat(4, 104px);
+        gap:14px;
+      }
+      .answer-box{width:104px;height:104px}
+
+      .options{
+        grid-template-columns:repeat(5, 104px);
+        gap:14px;
+      }
+      .opt{width:104px;height:104px}
+    }
+
     @media (max-width:1024px){
       .wrap{max-width:980px}
       h2{font-size:18px}
@@ -348,6 +373,30 @@
       }
       .title-tag{font-size:18px}
       h2{font-size:17px}
+    }
+
+    @media (orientation:portrait) and (max-width:1024px){
+      .page{padding-top:18px}
+      .board{
+        grid-template-columns:repeat(3, 148px);
+        gap:10px;
+      }
+      .big{width:148px;height:148px}
+      .tl{left:37px;top:37px}
+      .tr{left:111px;top:37px}
+      .bl{left:37px;top:111px}
+      .br{left:111px;top:111px}
+      .slot{width:56px;height:56px}
+      .options{
+        grid-template-columns:repeat(5, 86px);
+        gap:10px;
+      }
+      .opt{width:86px;height:86px}
+      .answer-row{
+        grid-template-columns:repeat(4, 86px);
+        gap:10px;
+      }
+      .answer-box{width:86px;height:86px}
     }
   </style>
 </head>
@@ -476,10 +525,23 @@
       'sunflower',
       'tulip',
       'rose',
-      'umbrella',
       'mushroom',
       'cupcake',
       'donut'
+    ]);
+
+    // 只保留方向特别明显、适合全部变化的图形
+    const FULL_TRANSFORM_ICONS = new Set([
+      'car',
+      'bus',
+      'train',
+      'ship',
+      'rocket',
+      'bicycle',
+      'pencil',
+      'scissors',
+      'umbrella',
+      'rooster'
     ]);
 
     let quizData = [];
@@ -564,36 +626,28 @@
 
     function getAllowedTransforms(icon){
       if(icon === 'blank') return [''];
+
       if(SYMMETRIC_ICONS.has(icon)){
         return ['', 'small', 'bigsize'];
       }
-      return TRANSFORMS;
+
+      if(FULL_TRANSFORM_ICONS.has(icon)){
+        return TRANSFORMS;
+      }
+
+      // 普通图形默认不开放 flipX / flipY / rot180，减少视觉重复
+      return ['', 'small', 'bigsize', 'rot90', 'rot270'];
     }
 
     function buildPositionRules(){
-      let rules = {};
-      let sameCount = 0;
-      let singleCount = 0;
-
-      while(true){
-        rules = {};
-        sameCount = 0;
-        singleCount = 0;
-
-        POS.forEach(pos=>{
-          const differentTo = Math.random() < 0.5 ? 1 : 2;
-          rules[pos] = {
-            differentTo, // 1: 不同->情况1, 2: 不同->情况2
-            sameResult: { type: 'blank', t: '' },
-            singleTransform: null
-          };
-        });
-
-        // 先随机检查一下是否能最终形成至少一个情况1和一个情况2位置
-        const tempCases = POS.map(pos => rules[pos].differentTo);
-        if(tempCases.length === 4) break;
-      }
-
+      const rules = {};
+      POS.forEach(pos=>{
+        rules[pos] = {
+          differentTo: Math.random() < 0.5 ? 1 : 2,
+          sameResult: { type: 'blank', t: '' },
+          singleTransform: null
+        };
+      });
       return rules;
     }
 
