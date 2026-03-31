@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（最终整合版）</title>
+  <title>OpenMoji 图片规律模拟题（最终规范版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -454,8 +454,17 @@
     const ICONS = Object.keys(OPENMOJI);
     const POS = ['tl','tr','bl','br'];
 
-    // 加入 '' 代表“不变”
-    const TRANSFORMS = ['', 'rot90','rot180','rot270','flipX','flipY','small','bigsize'];
+    // 允许：原样保留、缩小、放大、左右翻转、上下翻转、旋转90/180/270
+    const TRANSFORMS = [
+      '',
+      'small',
+      'bigsize',
+      'flipX',
+      'flipY',
+      'rot90',
+      'rot180',
+      'rot270'
+    ];
 
     let quizData = [];
     let currentIndex = 0;
@@ -497,44 +506,44 @@
     }
 
     function iconHTML(name, transform=''){
-      if(name==='blank') return blankPicHTML();
+      if(name === 'blank') return blankPicHTML();
       return `
-        <div class="emoji-wrap ${transform||''}">
+        <div class="emoji-wrap ${transform || ''}">
           <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}" loading="eager">
         </div>
       `;
     }
 
     function randomOf(arr){
-      return arr[Math.floor(Math.random()*arr.length)];
+      return arr[Math.floor(Math.random() * arr.length)];
     }
 
     function sample(arr, n){
       const copy = [...arr];
       const out = [];
-      while(out.length<n && copy.length){
-        const i = Math.floor(Math.random()*copy.length);
-        out.push(copy.splice(i,1)[0]);
+      while(out.length < n && copy.length){
+        const i = Math.floor(Math.random() * copy.length);
+        out.push(copy.splice(i, 1)[0]);
       }
       return out;
     }
 
     function shuffle(arr){
       const a = [...arr];
-      for(let i=a.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1));
-        [a[i],a[j]]=[a[j],a[i]];
+      for(let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
       }
       return a;
     }
 
     function itemKey(item){
-      return `${item.type}|${item.t||''}`;
+      return `${item.type}|${item.t || ''}`;
     }
 
-    // 每一行4个位置全部覆盖：
-    // 1个位置前2相同 -> 第3空白
-    // 3个位置前2一空一图 -> 第3保留非空图，可变化也可不变
+    // 每行4个位置全部覆盖
+    // 1个位置：前2相同 -> 第3空白
+    // 3个位置：前2一空一图 -> 第3保留非空图，可变化也可不变
     function buildRow(iconPool){
       const positions = shuffle([...POS]);
       const commonPos = positions[0];
@@ -544,10 +553,12 @@
       const B = {};
       const C = {};
 
+      // 前2相同
       A[commonPos] = iconPool[0];
       B[commonPos] = iconPool[0];
-      C[commonPos] = {type:'blank'};
+      C[commonPos] = { type: 'blank' };
 
+      // 其余3格：一个为空，一个有图
       rest.forEach((pos, idx)=>{
         const icon = iconPool[idx + 1];
         const putInA = Math.random() < 0.5;
@@ -558,16 +569,19 @@
           B[pos] = icon;
         }
 
-        C[pos] = {type: icon, t: randomOf(TRANSFORMS)};
+        C[pos] = {
+          type: icon,
+          t: randomOf(TRANSFORMS)
+        };
       });
 
-      return {A,B,C};
+      return { A, B, C };
     }
 
     function buildQuestion(index){
       const icons1 = sample(ICONS, 4);
-      const icons2 = sample(ICONS.filter(x=>!icons1.includes(x)), 4);
-      const icons3 = sample(ICONS.filter(x=>!icons1.includes(x) && !icons2.includes(x)), 4);
+      const icons2 = sample(ICONS.filter(x => !icons1.includes(x)), 4);
+      const icons3 = sample(ICONS.filter(x => !icons1.includes(x) && !icons2.includes(x)), 4);
 
       const row1 = buildRow(icons1);
       const row2 = buildRow(icons2);
@@ -582,8 +596,9 @@
         answer.br
       ];
 
-      // 正确项唯一检查
       const correctKeys = new Set(correctOptions.map(itemKey));
+
+      // 保证4个正确项唯一
       if(correctKeys.size !== 4){
         return buildQuestion(index);
       }
@@ -594,7 +609,7 @@
       while(distractors.length < 6){
         const base = randomOf(ICONS);
         const t = randomOf(TRANSFORMS);
-        const cand = {type:base, t};
+        const cand = { type: base, t };
         const key = itemKey(cand);
         if(!used.has(key)){
           used.add(key);
@@ -607,9 +622,9 @@
       return {
         index,
         rows: [
-          [row1.A,row1.B,row1.C],
-          [row2.A,row2.B,row2.C],
-          [row3.A,row3.B,'question']
+          [row1.A, row1.B, row1.C],
+          [row2.A, row2.B, row2.C],
+          [row3.A, row3.B, 'question']
         ],
         answer,
         options
@@ -621,7 +636,7 @@
       POS.forEach(pos=>{
         if(map[pos]){
           if(map[pos].type){
-            html += `<div class="slot ${pos}">${iconHTML(map[pos].type, map[pos].t||'')}</div>`;
+            html += `<div class="slot ${pos}">${iconHTML(map[pos].type, map[pos].t || '')}</div>`;
           }else{
             html += `<div class="slot ${pos}">${iconHTML(map[pos])}</div>`;
           }
@@ -655,8 +670,8 @@
 
     function renderOptions(q){
       return q.options.map((opt, i)=>`
-        <div class="opt" draggable="true" data-id="q${q.index}-opt${i}" data-type="${opt.type}" data-t="${opt.t||''}">
-          ${iconHTML(opt.type, opt.t||'')}
+        <div class="opt" draggable="true" data-id="q${q.index}-opt${i}" data-type="${opt.type}" data-t="${opt.t || ''}">
+          ${iconHTML(opt.type, opt.t || '')}
         </div>
       `).join('');
     }
@@ -827,15 +842,15 @@
     }
 
     function answerEqual(a,b){
-      return (a.type===b.type) && ((a.t||'')===(b.t||''));
+      return (a.type === b.type) && ((a.t || '') === (b.t || ''));
     }
 
     function analysisText(slot, correct){
-      const nameMap = {tl:'?1', tr:'?2', bl:'?3', br:'?4'};
+      const nameMap = { tl:'?1', tr:'?2', bl:'?3', br:'?4' };
       if(correct.type === 'blank'){
         return `${nameMap[slot]}位置：前两个田字格该位置图形相同，所以结果应为空白图片。`;
       }
-      if(correct.t === ''){
+      if((correct.t || '') === ''){
         return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形，本题此处不发生变化。`;
       }
       return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形，并进行变化，正确结果应为该选项所示图形。`;
@@ -849,6 +864,7 @@
       quizData.forEach((q, i)=>{
         const user = userAnswers[i] || {};
         let ok = true;
+
         POS.forEach(pos=>{
           const right = q.answer[pos];
           const mine = user[pos];
@@ -898,7 +914,7 @@
     }
 
     function generateQuiz(){
-      quizData = Array.from({length:5}, (_,i)=>buildQuestion(i));
+      quizData = Array.from({length:5}, (_, i)=>buildQuestion(i));
       userAnswers = Array.from({length:5}, ()=>({}));
       currentIndex = 0;
 
