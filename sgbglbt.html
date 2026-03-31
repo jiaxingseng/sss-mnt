@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（护眼版）</title>
+  <title>OpenMoji 图片规律模拟题（iPad排障增强版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -50,6 +50,19 @@
       font-weight:600;
       margin-bottom:6px;
       color:#3c4a3c;
+    }
+    .debug-info{
+      margin:8px auto 0;
+      padding:8px 12px;
+      max-width:980px;
+      font-size:13px;
+      line-height:1.8;
+      color:#5b6759;
+      background:#f2f6ee;
+      border:1px dashed #c8d3c3;
+      border-radius:10px;
+      text-align:left;
+      word-break:break-all;
     }
 
     .board{
@@ -410,6 +423,7 @@
         <div class="qno" id="qnoText"></div>
         <h2>观察每一行前两个田字格的变化规律，选择合适的图形填入后面的问号位置。</h2>
         <div id="questionOnlyArea"></div>
+        <div id="debugInfo" class="debug-info"></div>
         <button class="green-btn" id="chooseBtn">请选择</button>
       </div>
     </div>
@@ -563,6 +577,7 @@
     const scoreText = document.getElementById('scoreText');
     const wrongList = document.getElementById('wrongList');
     const dragGhost = document.getElementById('dragGhost');
+    const debugInfo = document.getElementById('debugInfo');
 
     function openmojiUrl(name){
       return `https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/color/72x72/${OPENMOJI[name]}.png`;
@@ -979,6 +994,20 @@
       bindTouchDrag();
     }
 
+    function formatDebugItem(item){
+      if(item.type === 'blank') return 'blank|same';
+      return `${item.type}|${item.t || 'same'}`;
+    }
+
+    function updateDebugInfo(q){
+      debugInfo.innerHTML =
+        `调试： ` +
+        `?1=${formatDebugItem(q.answer.tl)}　` +
+        `?2=${formatDebugItem(q.answer.tr)}　` +
+        `?3=${formatDebugItem(q.answer.bl)}　` +
+        `?4=${formatDebugItem(q.answer.br)}`;
+    }
+
     function showQuestionPage(index){
       currentIndex = index;
       const q = quizData[index];
@@ -988,6 +1017,7 @@
       optionsArea.innerHTML = renderOptions(q);
       restoreAnswerBoxes();
       bindDrag();
+      updateDebugInfo(q);
       nextBtn.textContent = index === 4 ? '提交答案' : '下一题';
 
       questionOnlyPage.classList.add('active');
@@ -1138,6 +1168,14 @@
 
     generateQuiz();
     showQuestionPage(0);
+
+    // iPad Safari 如果从页面缓存恢复，强制重新生成题目
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        generateQuiz();
+        showQuestionPage(0);
+      }
+    });
   </script>
 </body>
 </html>
