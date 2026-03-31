@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（iPad修复版）</title>
+  <title>OpenMoji 图片规律模拟题（iPad丝滑拖拽版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -14,7 +14,7 @@
       user-select:none;
       -webkit-user-select:none;
       overflow:hidden;
-      touch-action:manipulation;
+      touch-action:none;
     }
     .page{
       width:100vw;
@@ -84,6 +84,7 @@
       border-top:2px dashed #9aa596;
       transform:translateY(-1px);
     }
+
     .slot{
       position:absolute;
       width:64px;
@@ -154,6 +155,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      transition:border-color .12s ease, box-shadow .12s ease, background .12s ease;
     }
     .answer-box .index{
       position:absolute;
@@ -189,6 +191,12 @@
       box-shadow:0 1px 3px rgba(0,0,0,.04);
       position:relative;
       touch-action:none;
+      cursor:grab;
+      transition:transform .08s ease, box-shadow .08s ease;
+    }
+    .opt:active{
+      cursor:grabbing;
+      transform:scale(.98);
     }
 
     .result-card{
@@ -233,8 +241,6 @@
       justify-content:center;
       pointer-events:none;
     }
-
-    /* 关键修复：transform 直接作用到 img，自带 Safari 兼容参数 */
     .emoji-img{
       width:54px;
       height:54px;
@@ -248,7 +254,6 @@
       backface-visibility:hidden;
       -webkit-backface-visibility:hidden;
       will-change:transform;
-      image-rendering:auto;
     }
 
     .blankpic{
@@ -267,23 +272,24 @@
     }
 
     .clone{pointer-events:none}
+
     .drag-ghost{
       position:fixed;
       left:0;
       top:0;
-      width:88px;
-      height:88px;
-      margin-left:-44px;
-      margin-top:-44px;
+      width:92px;
+      height:92px;
       display:flex;
       align-items:center;
       justify-content:center;
       background:#fff;
       border:2px solid #dfe8df;
       border-radius:14px;
-      box-shadow:0 8px 18px rgba(0,0,0,.16);
+      box-shadow:0 10px 22px rgba(0,0,0,.18);
       pointer-events:none;
       z-index:9999;
+      transform:translate(-50%,-50%);
+      will-change:transform,left,top;
     }
     .hidden{display:none !important}
 
@@ -456,6 +462,7 @@
     const ICONS = Object.keys(OPENMOJI);
     const POS = ['tl','tr','bl','br'];
 
+    // 非对称图：所有变化都可见
     const ASYMMETRIC_TRANSFORMS = [
       '',
       'scale(0.58)',
@@ -467,6 +474,7 @@
       'rotate(270deg)'
     ];
 
+    // 对称图：避免旋转翻转“看不出来”
     const SYMMETRIC_TRANSFORMS = [
       '',
       'scale(0.58)',
@@ -485,7 +493,11 @@
     let quizData = [];
     let currentIndex = 0;
     let userAnswers = [];
-    let touchDragData = null;
+
+    let dragging = null;
+    let rafId = null;
+    let ghostX = 0;
+    let ghostY = 0;
 
     const questionOnlyPage = document.getElementById('questionOnlyPage');
     const answerOnlyPage = document.getElementById('answerOnlyPage');
@@ -521,7 +533,6 @@
       `;
     }
 
-    // 核心修复：直接给 img 写 inline transform，避免 iPad Safari class+缓存异常
     function iconHTML(name, transformValue=''){
       if(name === 'blank') return blankPicHTML();
 
@@ -590,10 +601,9 @@
           B[pos] = icon;
         }
 
-        const transforms = getTransformsByIcon(icon);
         C[pos] = {
           type: icon,
-          t: randomOf(transforms)
+          t: randomOf(getTransformsByIcon(icon))
         };
       });
 
@@ -618,18 +628,19 @@
         answer.br
       ];
 
+      // 保证4个正确答案彼此唯一
       const correctKeys = new Set(correctOptions.map(itemKey));
       if(correctKeys.size !== 4){
         return buildQuestion(index);
       }
 
+      // 干扰项也不能重复，且不能与正确项重复
       const distractors = [];
       const used = new Set([...correctKeys]);
 
       while(distractors.length < 6){
         const base = randomOf(ICONS);
-        const transforms = getTransformsByIcon(base);
-        const t = randomOf(transforms);
+        const t = randomOf(getTransformsByIcon(base));
         const cand = { type: base, t };
         const key = itemKey(cand);
         if(!used.has(key)){
@@ -691,7 +702,7 @@
 
     function renderOptions(q){
       return q.options.map((opt, i)=>`
-        <div class="opt" draggable="true" data-id="q${q.index}-opt${i}" data-type="${opt.type}" data-t="${opt.t || ''}">
+        <div class="opt" data-id="q${q.index}-opt${i}" data-type="${opt.type}" data-t="${opt.t || ''}">
           ${iconHTML(opt.type, opt.t || '')}
         </div>
       `).join('');
@@ -751,91 +762,86 @@
       document.querySelectorAll('.answer-box').forEach(b=>b.classList.remove('drag-over'));
     }
 
-    function bindMouseDrag(){
-      const options = document.querySelectorAll('.opt');
-      const answerBoxes = document.querySelectorAll('.answer-box');
-
-      options.forEach(opt=>{
-        opt.addEventListener('dragstart', e=>{
-          e.dataTransfer.setData('text/plain', JSON.stringify({
-            type: opt.dataset.type,
-            t: opt.dataset.t
-          }));
-        });
-      });
-
-      answerBoxes.forEach(box=>{
-        box.ondragover = e=>{
-          e.preventDefault();
-          box.classList.add('drag-over');
-        };
-        box.ondragleave = ()=>{
-          box.classList.remove('drag-over');
-        };
-        box.ondrop = e=>{
-          e.preventDefault();
-          box.classList.remove('drag-over');
-          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-          placeToBox(box, data);
-        };
-      });
+    function updateGhostPosition(){
+      dragGhost.style.left = ghostX + 'px';
+      dragGhost.style.top = ghostY + 'px';
+      rafId = null;
     }
 
-    function bindTouchDrag(){
+    function scheduleGhostUpdate(x, y){
+      ghostX = x;
+      ghostY = y;
+      if(!rafId){
+        rafId = requestAnimationFrame(updateGhostPosition);
+      }
+    }
+
+    function startDragFromOption(opt, clientX, clientY, pointerId){
+      dragging = {
+        type: opt.dataset.type,
+        t: opt.dataset.t || '',
+        pointerId
+      };
+      dragGhost.innerHTML = opt.innerHTML;
+      dragGhost.classList.remove('hidden');
+      scheduleGhostUpdate(clientX, clientY);
+      opt.setPointerCapture?.(pointerId);
+    }
+
+    function moveDragging(clientX, clientY){
+      if(!dragging) return;
+      scheduleGhostUpdate(clientX, clientY);
+
+      clearDragOver();
+      const target = document.elementFromPoint(clientX, clientY);
+      const box = target && target.closest('.answer-box');
+      if(box) box.classList.add('drag-over');
+    }
+
+    function endDragging(clientX, clientY){
+      if(!dragging) return;
+
+      clearDragOver();
+      const target = document.elementFromPoint(clientX, clientY);
+      const box = target && target.closest('.answer-box');
+      if(box){
+        placeToBox(box, dragging);
+      }
+
+      dragGhost.classList.add('hidden');
+      dragGhost.innerHTML = '';
+      dragging = null;
+    }
+
+    function bindPointerDrag(){
       const options = document.querySelectorAll('.opt');
 
       options.forEach(opt=>{
-        opt.addEventListener('touchstart', e=>{
-          const touch = e.touches[0];
-          touchDragData = {
-            type: opt.dataset.type,
-            t: opt.dataset.t || ''
-          };
-          dragGhost.innerHTML = opt.innerHTML;
-          dragGhost.classList.remove('hidden');
-          dragGhost.style.left = touch.clientX + 'px';
-          dragGhost.style.top = touch.clientY + 'px';
-        }, {passive:true});
-
-        opt.addEventListener('touchmove', e=>{
-          if(!touchDragData) return;
+        opt.addEventListener('pointerdown', e=>{
           e.preventDefault();
-          const touch = e.touches[0];
-          dragGhost.style.left = touch.clientX + 'px';
-          dragGhost.style.top = touch.clientY + 'px';
-
-          clearDragOver();
-          const target = document.elementFromPoint(touch.clientX, touch.clientY);
-          const box = target && target.closest('.answer-box');
-          if(box) box.classList.add('drag-over');
+          startDragFromOption(opt, e.clientX, e.clientY, e.pointerId);
         }, {passive:false});
-
-        opt.addEventListener('touchend', e=>{
-          if(!touchDragData) return;
-          const touch = e.changedTouches[0];
-          clearDragOver();
-          const target = document.elementFromPoint(touch.clientX, touch.clientY);
-          const box = target && target.closest('.answer-box');
-          if(box){
-            placeToBox(box, touchDragData);
-          }
-          dragGhost.classList.add('hidden');
-          dragGhost.innerHTML = '';
-          touchDragData = null;
-        });
-
-        opt.addEventListener('touchcancel', ()=>{
-          clearDragOver();
-          dragGhost.classList.add('hidden');
-          dragGhost.innerHTML = '';
-          touchDragData = null;
-        });
       });
-    }
 
-    function bindDrag(){
-      bindMouseDrag();
-      bindTouchDrag();
+      window.addEventListener('pointermove', e=>{
+        if(!dragging) return;
+        e.preventDefault();
+        moveDragging(e.clientX, e.clientY);
+      }, {passive:false});
+
+      window.addEventListener('pointerup', e=>{
+        if(!dragging) return;
+        e.preventDefault();
+        endDragging(e.clientX, e.clientY);
+      }, {passive:false});
+
+      window.addEventListener('pointercancel', ()=>{
+        if(!dragging) return;
+        clearDragOver();
+        dragGhost.classList.add('hidden');
+        dragGhost.innerHTML = '';
+        dragging = null;
+      });
     }
 
     function showQuestionPage(index){
@@ -846,7 +852,7 @@
       questionOnlyArea.innerHTML = renderQuestionBoard(q);
       optionsArea.innerHTML = renderOptions(q);
       restoreAnswerBoxes();
-      bindDrag();
+      bindPointerDrag();
       nextBtn.textContent = index === 4 ? '提交答案' : '下一题';
 
       questionOnlyPage.classList.add('active');
