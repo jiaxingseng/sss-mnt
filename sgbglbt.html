@@ -1,9 +1,10 @@
+没变过```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（变化可见性优化版）</title>
+  <title>OpenMoji 图片规律模拟题（iPad修复版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -231,9 +232,10 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      transform-origin:center center;
       pointer-events:none;
     }
+
+    /* 关键修复：transform 直接作用到 img，自带 Safari 兼容参数 */
     .emoji-img{
       width:54px;
       height:54px;
@@ -242,16 +244,13 @@
       user-drag:none;
       -webkit-user-drag:none;
       pointer-events:none;
+      transform-origin:center center;
+      -webkit-transform-origin:center center;
+      backface-visibility:hidden;
+      -webkit-backface-visibility:hidden;
+      will-change:transform;
+      image-rendering:auto;
     }
-
-    /* 变化增强：缩放更明显 */
-    .small{transform:scale(.58)}
-    .bigsize{transform:scale(1.30)}
-    .flipX{transform:scaleX(-1)}
-    .flipY{transform:scaleY(-1)}
-    .rot90{transform:rotate(90deg)}
-    .rot180{transform:rotate(180deg)}
-    .rot270{transform:rotate(270deg)}
 
     .blankpic{
       width:60px;
@@ -342,7 +341,6 @@
         gap:10px;
       }
       .opt{width:88px;height:88px}
-      .emoji-wrap,.blankpic{transform:scale(.9)}
       .green-btn{
         min-width:150px;
         font-size:18px;
@@ -350,6 +348,8 @@
       }
       .title-tag{font-size:18px}
       h2{font-size:17px}
+      .emoji-img{width:48px;height:48px}
+      .blankpic{transform:scale(.9)}
     }
   </style>
 </head>
@@ -457,26 +457,23 @@
     const ICONS = Object.keys(OPENMOJI);
     const POS = ['tl','tr','bl','br'];
 
-    // 非对称图：可明显旋转/翻转/缩放/不变
     const ASYMMETRIC_TRANSFORMS = [
       '',
-      'small',
-      'bigsize',
-      'flipX',
-      'flipY',
-      'rot90',
-      'rot180',
-      'rot270'
+      'scale(0.58)',
+      'scale(1.30)',
+      'scaleX(-1)',
+      'scaleY(-1)',
+      'rotate(90deg)',
+      'rotate(180deg)',
+      'rotate(270deg)'
     ];
 
-    // 对称或近似对称图：只做不变/放大/缩小，避免“看起来没变化”
     const SYMMETRIC_TRANSFORMS = [
       '',
-      'small',
-      'bigsize'
+      'scale(0.58)',
+      'scale(1.30)'
     ];
 
-    // 更适合旋转翻转的图
     const ASYMMETRIC_ICONS = new Set([
       'fox','dog','rabbit','duck','rooster','penguin','owl','monkey',
       'carrot','corn','mushroom','cupcake','icecream','lollipop',
@@ -525,11 +522,17 @@
       `;
     }
 
-    function iconHTML(name, transform=''){
+    // 核心修复：直接给 img 写 inline transform，避免 iPad Safari class+缓存异常
+    function iconHTML(name, transformValue=''){
       if(name === 'blank') return blankPicHTML();
+
+      const style = transformValue
+        ? `transform:${transformValue} translateZ(0);-webkit-transform:${transformValue} translateZ(0);`
+        : `transform:translateZ(0);-webkit-transform:translateZ(0);`;
+
       return `
-        <div class="emoji-wrap ${transform || ''}">
-          <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}" loading="eager">
+        <div class="emoji-wrap">
+          <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}" loading="eager" style="${style}">
         </div>
       `;
     }
@@ -574,12 +577,10 @@
       const B = {};
       const C = {};
 
-      // 一个位置前2相同 -> 第3空白
       A[commonPos] = iconPool[0];
       B[commonPos] = iconPool[0];
       C[commonPos] = { type: 'blank' };
 
-      // 其余位置一个为空一个有图 -> 第3保留非空图片，可变或不变
       rest.forEach((pos, idx)=>{
         const icon = iconPool[idx + 1];
         const putInA = Math.random() < 0.5;
@@ -866,15 +867,24 @@
       return (a.type === b.type) && ((a.t || '') === (b.t || ''));
     }
 
+    function transformText(t){
+      if(!t) return '不变';
+      if(t.includes('scale(0.58)')) return '缩小';
+      if(t.includes('scale(1.30)')) return '放大';
+      if(t.includes('scaleX(-1)')) return '左右翻转';
+      if(t.includes('scaleY(-1)')) return '上下翻转';
+      if(t.includes('rotate(90deg)')) return '旋转90°';
+      if(t.includes('rotate(180deg)')) return '旋转180°';
+      if(t.includes('rotate(270deg)')) return '旋转270°';
+      return '变化';
+    }
+
     function analysisText(slot, correct){
       const nameMap = { tl:'?1', tr:'?2', bl:'?3', br:'?4' };
       if(correct.type === 'blank'){
         return `${nameMap[slot]}位置：前两个田字格该位置图形相同，所以结果应为空白图片。`;
       }
-      if((correct.t || '') === ''){
-        return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形，本题此处不发生变化。`;
-      }
-      return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形，并进行变化，正确结果应为该选项所示图形。`;
+      return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形。本题此处应为：${transformText(correct.t || '')}。`;
     }
 
     function submitAll(){
@@ -979,3 +989,4 @@
   </script>
 </body>
 </html>
+```
