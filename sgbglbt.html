@@ -152,7 +152,7 @@
       height:112px;
       background:#fffefb;
       border:3px solid #d7ddd1;
-      border-radius:12px;
+      border-radius:0;
       position:relative;
       display:flex;
       align-items:center;
@@ -185,7 +185,7 @@
       height:112px;
       background:#fffefb;
       border:2px solid #e3e7dd;
-      border-radius:12px;
+      border-radius:0;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -289,7 +289,7 @@
       justify-content:center;
       background:#fffefb;
       border:2px solid #dbe5d8;
-      border-radius:14px;
+      border-radius:0;
       box-shadow:0 8px 18px rgba(70,90,70,.14);
       pointer-events:none;
       z-index:9999;
@@ -1173,7 +1173,11 @@
     }
 
     function generateQuiz(){
-      quizData = Array.from({length:5}, (_, i)=>buildQuestion(i));
+      quizData = [];
+      while(quizData.length < 5){
+        const q = buildQuestion(quizData.length);
+        if(q) quizData.push(q);
+      }
       userAnswers = Array.from({length:5}, ()=>({}));
       currentIndex = 0;
 
