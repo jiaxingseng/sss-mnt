@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenMoji 图片规律模拟题（iPad排障增强版）</title>
+  <title>OpenMoji 图片规律模拟题（iPad修复最终版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
@@ -370,17 +370,33 @@
       .bl{left:36px;top:108px}
       .br{left:108px;top:108px}
       .slot{width:56px;height:56px}
+
       .answer-row{
         grid-template-columns:repeat(4, 88px);
         gap:10px;
       }
       .answer-box{width:88px;height:88px}
+
       .options{
         grid-template-columns:repeat(5, 88px);
         gap:10px;
       }
       .opt{width:88px;height:88px}
-      .emoji-wrap,.blankpic{transform:scale(.9)}
+
+      /* 关键修复：不再用 transform: scale(.9) 覆盖图片变化 */
+      .emoji-wrap{
+        width:56px;
+        height:56px;
+      }
+      .emoji-img{
+        width:48px;
+        height:48px;
+      }
+      .blankpic{
+        width:54px;
+        height:54px;
+      }
+
       .green-btn{
         min-width:150px;
         font-size:18px;
@@ -402,16 +418,31 @@
       .bl{left:37px;top:111px}
       .br{left:111px;top:111px}
       .slot{width:56px;height:56px}
+
       .options{
         grid-template-columns:repeat(5, 86px);
         gap:10px;
       }
       .opt{width:86px;height:86px}
+
       .answer-row{
         grid-template-columns:repeat(4, 86px);
         gap:10px;
       }
       .answer-box{width:86px;height:86px}
+
+      .emoji-wrap{
+        width:56px;
+        height:56px;
+      }
+      .emoji-img{
+        width:48px;
+        height:48px;
+      }
+      .blankpic{
+        width:54px;
+        height:54px;
+      }
     }
   </style>
 </head>
@@ -1169,7 +1200,6 @@
     generateQuiz();
     showQuestionPage(0);
 
-    // iPad Safari 如果从页面缓存恢复，强制重新生成题目
     window.addEventListener('pageshow', (e) => {
       if (e.persisted) {
         generateQuiz();
