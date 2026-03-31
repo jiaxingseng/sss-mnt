@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Emoji 图片规律模拟题（稳定版）</title>
+  <title>OpenMoji 图片规律模拟题（最终版）</title>
   <style>
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0}
     body{
       font-family:"Microsoft YaHei", Arial, sans-serif;
-      background:#eef7e8;
+      background:#f5f5f5;
       color:#222;
       user-select:none;
       -webkit-user-select:none;
       overflow:hidden;
-      touch-action:none;
+      touch-action:manipulation;
     }
     .page{
       width:100vw;
@@ -31,10 +31,10 @@
       text-align:center;
     }
     .panel{
-      background:#ffffff;
+      background:#fff;
       border-radius:18px;
       padding:18px 12px 24px;
-      box-shadow:0 2px 12px rgba(97,122,89,.10);
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
       margin-bottom:22px;
     }
     h2{
@@ -43,13 +43,12 @@
       line-height:1.6;
       font-weight:400;
       padding:0 12px;
-      color:#364133;
+      color:#333;
     }
     .qno{
       font-size:20px;
       font-weight:600;
       margin-bottom:6px;
-      color:#3d4a39;
     }
 
     .board{
@@ -63,7 +62,7 @@
       width:180px;
       height:180px;
       background:#fff;
-      border:3px solid #2f352d;
+      border:3px solid #222;
       position:relative;
     }
     .big::before{
@@ -72,7 +71,7 @@
       left:50%;
       top:8px;
       bottom:8px;
-      border-left:2px dashed #9aa596;
+      border-left:2px dashed #9a9a9a;
       transform:translateX(-1px);
     }
     .big::after{
@@ -81,10 +80,9 @@
       top:50%;
       left:8px;
       right:8px;
-      border-top:2px dashed #9aa596;
+      border-top:2px dashed #9a9a9a;
       transform:translateY(-1px);
     }
-
     .slot{
       position:absolute;
       width:64px;
@@ -117,19 +115,19 @@
       padding:13px 28px;
       border:none;
       border-radius:12px;
-      background:#47ad61;
+      background:#2db256;
       color:#fff;
       font-size:22px;
       font-weight:700;
       cursor:pointer;
-      box-shadow:0 4px 10px rgba(71,173,97,.24);
+      box-shadow:0 4px 10px rgba(45,178,86,.25);
       margin:10px 8px 0;
     }
-    .green-btn:hover{background:#3f9c56}
+    .green-btn:hover{background:#27a34e}
 
     .title-tag{
       display:inline-block;
-      background:#e2f2df;
+      background:#dff3df;
       color:#2f8f3a;
       font-size:20px;
       font-weight:700;
@@ -149,13 +147,12 @@
       width:112px;
       height:112px;
       background:#fff;
-      border:3px solid #d6ddd2;
+      border:3px solid #d9d9d9;
       border-radius:12px;
       position:relative;
       display:flex;
       align-items:center;
       justify-content:center;
-      transition:border-color .12s ease, box-shadow .12s ease, background .12s ease;
     }
     .answer-box .index{
       position:absolute;
@@ -163,7 +160,7 @@
       top:6px;
       font-size:19px;
       font-weight:700;
-      color:#5c6858;
+      color:#555;
       pointer-events:none;
     }
     .answer-box.drag-over{
@@ -183,7 +180,7 @@
       width:112px;
       height:112px;
       background:#fff;
-      border:2px solid #dde5d8;
+      border:2px solid #e4e4e4;
       border-radius:12px;
       display:flex;
       align-items:center;
@@ -191,19 +188,14 @@
       box-shadow:0 1px 3px rgba(0,0,0,.04);
       position:relative;
       touch-action:none;
-      cursor:grab;
-      transition:transform .08s ease, box-shadow .08s ease;
-    }
-    .opt:active{
-      cursor:grabbing;
-      transform:scale(.98);
+      cursor:pointer;
     }
 
     .result-card{
       background:#fff;
       border-radius:18px;
       padding:22px 16px 28px;
-      box-shadow:0 2px 10px rgba(97,122,89,.10);
+      box-shadow:0 2px 10px rgba(0,0,0,.06);
     }
     .score{
       font-size:28px;
@@ -213,22 +205,21 @@
     }
     .wrong-block{
       text-align:left;
-      border:1px solid #e5ebe1;
+      border:1px solid #ececec;
       border-radius:12px;
       padding:18px 14px;
       margin:16px auto;
       max-width:980px;
-      background:#fcfefb;
+      background:#fcfcfc;
     }
     .wrong-title{
       font-size:18px;
       font-weight:700;
       margin-bottom:8px;
-      color:#3b4638;
     }
     .wrong-text{
       line-height:1.9;
-      color:#465042;
+      color:#444;
       font-size:15px;
       margin-bottom:14px;
     }
@@ -239,18 +230,26 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      transform-origin:center center;
       pointer-events:none;
     }
-    .emoji-char{
-      font-size:48px;
-      line-height:1;
-      display:inline-block;
-      transform-origin:center center;
-      -webkit-transform-origin:center center;
-      backface-visibility:hidden;
-      -webkit-backface-visibility:hidden;
-      will-change:transform;
+    .emoji-img{
+      width:54px;
+      height:54px;
+      object-fit:contain;
+      display:block;
+      user-drag:none;
+      -webkit-user-drag:none;
+      pointer-events:none;
     }
+
+    .small{transform:scale(.72)}
+    .bigsize{transform:scale(1.18)}
+    .flipX{transform:scaleX(-1)}
+    .flipY{transform:scaleY(-1)}
+    .rot90{transform:rotate(90deg)}
+    .rot180{transform:rotate(180deg)}
+    .rot270{transform:rotate(270deg)}
 
     .blankpic{
       width:60px;
@@ -268,24 +267,23 @@
     }
 
     .clone{pointer-events:none}
-
     .drag-ghost{
       position:fixed;
       left:0;
       top:0;
-      width:92px;
-      height:92px;
+      width:88px;
+      height:88px;
+      margin-left:-44px;
+      margin-top:-44px;
       display:flex;
       align-items:center;
       justify-content:center;
       background:#fff;
       border:2px solid #dfe8df;
       border-radius:14px;
-      box-shadow:0 10px 22px rgba(0,0,0,.18);
+      box-shadow:0 8px 18px rgba(0,0,0,.16);
       pointer-events:none;
       z-index:9999;
-      transform:translate(-50%,-50%);
-      will-change:transform,left,top;
     }
     .hidden{display:none !important}
 
@@ -342,6 +340,7 @@
         gap:10px;
       }
       .opt{width:88px;height:88px}
+      .emoji-wrap,.blankpic{transform:scale(.9)}
       .green-btn{
         min-width:150px;
         font-size:18px;
@@ -349,8 +348,6 @@
       }
       .title-tag{font-size:18px}
       h2{font-size:17px}
-      .emoji-char{font-size:42px}
-      .blankpic{transform:scale(.9)}
     }
   </style>
 </head>
@@ -400,98 +397,95 @@
   <div id="dragGhost" class="drag-ghost hidden"></div>
 
   <script>
-    const EMOJI_MAP = {
-      fox:'🦊',
-      dog:'🐶',
-      tiger:'🐯',
-      rabbit:'🐰',
-      bear:'🐻',
-      frog:'🐸',
-      monkey:'🐵',
-      owl:'🦉',
-      penguin:'🐧',
-      chick:'🐥',
-      duck:'🦆',
-      rooster:'🐓',
-      strawberry:'🍓',
-      pear:'🍐',
-      apple:'🍎',
-      orange:'🍊',
-      lemon:'🍋',
-      banana:'🍌',
-      grapes:'🍇',
-      peach:'🍑',
-      cherry:'🍒',
-      pineapple:'🍍',
-      watermelon:'🍉',
-      carrot:'🥕',
-      corn:'🌽',
-      mushroom:'🍄',
-      cupcake:'🧁',
-      donut:'🍩',
-      candy:'🍬',
-      cookie:'🍪',
-      icecream:'🍦',
-      lollipop:'🍭',
-      flower:'🌸',
-      tulip:'🌷',
-      sunflower:'🌻',
-      blossom:'🌼',
-      rose:'🌹',
-      leaf:'🍃',
-      cactus:'🌵',
-      bicycle:'🚲',
-      car:'🚗',
-      bus:'🚌',
-      train:'🚆',
-      ship:'🚢',
-      rocket:'🚀',
-      backpack:'🎒',
-      book:'📕',
-      books:'📚',
-      pencil:'✏️',
-      ruler:'📏',
-      scissors:'✂️',
-      umbrella:'☂️'
+    const OPENMOJI = {
+      fox: '1F98A',
+      dog: '1F436',
+      tiger: '1F405',
+      rabbit: '1F430',
+      bear: '1F43B',
+      frog: '1F438',
+      monkey: '1F435',
+      owl: '1F989',
+      penguin: '1F427',
+      chick: '1F424',
+      duck: '1F986',
+      rooster: '1F413',
+      strawberry: '1F353',
+      pear: '1F350',
+      apple: '1F34E',
+      orange: '1F34A',
+      lemon: '1F34B',
+      banana: '1F34C',
+      grapes: '1F347',
+      peach: '1F351',
+      cherry: '1F352',
+      pineapple: '1F34D',
+      watermelon: '1F349',
+      carrot: '1F955',
+      corn: '1F33D',
+      mushroom: '1F344',
+      cupcake: '1F9C1',
+      donut: '1F369',
+      candy: '1F36C',
+      cookie: '1F36A',
+      icecream: '1F366',
+      lollipop: '1F36D',
+      flower: '1F338',
+      tulip: '1F337',
+      sunflower: '1F33B',
+      blossom: '1F33C',
+      rose: '1F339',
+      leaf: '1F343',
+      cactus: '1F335',
+      bicycle: '1F6B2',
+      car: '1F697',
+      bus: '1F68C',
+      train: '1F686',
+      ship: '1F6A2',
+      rocket: '1F680',
+      backpack: '1F392',
+      book: '1F4D5',
+      books: '1F4DA',
+      pencil: '270F',
+      ruler: '1F4CF',
+      scissors: '2702',
+      umbrella: '2602'
     };
 
-    const ICONS = Object.keys(EMOJI_MAP);
+    const ICONS = Object.keys(OPENMOJI);
     const POS = ['tl','tr','bl','br'];
 
-    const ASYMMETRIC_TRANSFORMS = [
+    const TRANSFORMS = [
       '',
-      'scale(0.58)',
-      'scale(1.30)',
-      'scaleX(-1)',
-      'scaleY(-1)',
-      'rotate(90deg)',
-      'rotate(180deg)',
-      'rotate(270deg)'
+      'small',
+      'bigsize',
+      'flipX',
+      'flipY',
+      'rot90',
+      'rot180',
+      'rot270'
     ];
 
-    const SYMMETRIC_TRANSFORMS = [
-      '',
-      'scale(0.58)',
-      'scale(1.30)'
-    ];
-
-    const ASYMMETRIC_ICONS = new Set([
-      'fox','dog','rabbit','duck','rooster','penguin','owl','monkey',
-      'carrot','corn','mushroom','cupcake','icecream','lollipop',
-      'leaf','cactus',
-      'bicycle','car','bus','train','ship','rocket',
-      'backpack','book','books','pencil','ruler','scissors','umbrella',
-      'banana','pear','pineapple'
+    const SYMMETRIC_ICONS = new Set([
+      'frog',
+      'bear',
+      'owl',
+      'chick',
+      'flower',
+      'blossom',
+      'sunflower',
+      'tulip',
+      'rose',
+      'umbrella',
+      'mushroom',
+      'cupcake',
+      'donut'
     ]);
 
     let quizData = [];
     let currentIndex = 0;
     let userAnswers = [];
-
-    let dragging = null;
-    let rafId = null;
-    let ghostX = 0;
-    let ghostY = 0;
+    let touchDragData = null;
 
     const questionOnlyPage = document.getElementById('questionOnlyPage');
     const answerOnlyPage = document.getElementById('answerOnlyPage');
@@ -506,6 +500,10 @@
     const scoreText = document.getElementById('scoreText');
     const wrongList = document.getElementById('wrongList');
     const dragGhost = document.getElementById('dragGhost');
+
+    function openmojiUrl(name){
+      return `https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/color/72x72/${OPENMOJI[name]}.png`;
+    }
 
     function blankPicHTML(){
       return `
@@ -523,16 +521,11 @@
       `;
     }
 
-    function iconHTML(name, transformValue=''){
+    function iconHTML(name, transform=''){
       if(name === 'blank') return blankPicHTML();
-
-      const style = transformValue
-        ? `transform:${transformValue} translateZ(0);-webkit-transform:${transformValue} translateZ(0);`
-        : `transform:translateZ(0);-webkit-transform:translateZ(0);`;
-
       return `
-        <div class="emoji-wrap">
-          <span class="emoji-char" style="${style}">${EMOJI_MAP[name]}</span>
+        <div class="emoji-wrap ${transform || ''}">
+          <img class="emoji-img" src="${openmojiUrl(name)}" alt="${name}" loading="eager">
         </div>
       `;
     }
@@ -564,45 +557,112 @@
       return `${item.type}|${item.t || ''}`;
     }
 
-    function getTransformsByIcon(icon){
-      return ASYMMETRIC_ICONS.has(icon) ? ASYMMETRIC_TRANSFORMS : SYMMETRIC_TRANSFORMS;
+    function optionsContainAllAnswers(options, answer){
+      const optionKeys = new Set(options.map(itemKey));
+      return POS.every(pos => optionKeys.has(itemKey(answer[pos])));
     }
 
-    function buildRow(iconPool){
-      const positions = shuffle([...POS]);
-      const commonPos = positions[0];
-      const rest = positions.slice(1);
+    function getAllowedTransforms(icon){
+      if(icon === 'blank') return [''];
+      if(SYMMETRIC_ICONS.has(icon)){
+        return ['', 'small', 'bigsize'];
+      }
+      return TRANSFORMS;
+    }
 
+    function buildPositionRules(){
+      let rules = {};
+      let sameCount = 0;
+      let singleCount = 0;
+
+      while(true){
+        rules = {};
+        sameCount = 0;
+        singleCount = 0;
+
+        POS.forEach(pos=>{
+          const differentTo = Math.random() < 0.5 ? 1 : 2;
+          rules[pos] = {
+            differentTo, // 1: 不同->情况1, 2: 不同->情况2
+            sameResult: { type: 'blank', t: '' },
+            singleTransform: null
+          };
+        });
+
+        // 先随机检查一下是否能最终形成至少一个情况1和一个情况2位置
+        const tempCases = POS.map(pos => rules[pos].differentTo);
+        if(tempCases.length === 4) break;
+      }
+
+      return rules;
+    }
+
+    function calcCase3(case1, case2, rule){
+      if(case1 === case2) return case1;
+      return rule.differentTo;
+    }
+
+    function buildCaseStates(positionRules){
+      const rowCase1 = {};
+      const rowCase2 = {};
+      const rowCase3 = {};
+
+      let hasCase1 = false;
+      let hasCase2 = false;
+
+      while(true){
+        hasCase1 = false;
+        hasCase2 = false;
+
+        POS.forEach(pos=>{
+          rowCase1[pos] = Math.random() < 0.5 ? 1 : 2;
+          rowCase2[pos] = Math.random() < 0.5 ? 1 : 2;
+          rowCase3[pos] = calcCase3(rowCase1[pos], rowCase2[pos], positionRules[pos]);
+
+          if(rowCase3[pos] === 1) hasCase1 = true;
+          if(rowCase3[pos] === 2) hasCase2 = true;
+        });
+
+        if(hasCase1 && hasCase2) break;
+      }
+
+      return { rowCase1, rowCase2, rowCase3 };
+    }
+
+    function buildRowByCase(iconPool, caseMap, positionRules){
       const A = {};
       const B = {};
       const C = {};
 
-      A[commonPos] = iconPool[0];
-      B[commonPos] = iconPool[0];
-      C[commonPos] = { type: 'blank' };
+      POS.forEach((pos, idx)=>{
+        const icon = iconPool[idx];
+        const rule = positionRules[pos];
+        const c = caseMap[pos];
 
-      rest.forEach((pos, idx)=>{
-        const icon = iconPool[idx + 1];
-        const putInA = Math.random() < 0.5;
-
-        if(putInA){
+        if(c === 1){
           A[pos] = icon;
-        }else{
           B[pos] = icon;
-        }
+          C[pos] = { ...rule.sameResult };
+        }else{
+          const side = Math.random() < 0.5 ? 'A' : 'B';
+          if(side === 'A'){
+            A[pos] = icon;
+          }else{
+            B[pos] = icon;
+          }
 
-        C[pos] = {
-          type: icon,
-          t: randomOf(getTransformsByIcon(icon))
-        };
+          if(rule.singleTransform === null){
+            rule.singleTransform = randomOf(getAllowedTransforms(icon));
+          }
+
+          C[pos] = {
+            type: icon,
+            t: rule.singleTransform || ''
+          };
+        }
       });
 
       return { A, B, C };
-    }
-
-    function optionsContainAllAnswers(options, answer){
-      const optionKeys = new Set(options.map(itemKey));
-      return POS.every(pos => optionKeys.has(itemKey(answer[pos])));
     }
 
     function buildQuestion(index){
@@ -610,9 +670,12 @@
       const icons2 = sample(ICONS.filter(x => !icons1.includes(x)), 4);
       const icons3 = sample(ICONS.filter(x => !icons1.includes(x) && !icons2.includes(x)), 4);
 
-      const row1 = buildRow(icons1);
-      const row2 = buildRow(icons2);
-      const row3 = buildRow(icons3);
+      const positionRules = buildPositionRules();
+      const caseStates = buildCaseStates(positionRules);
+
+      const row1 = buildRowByCase(icons1, caseStates.rowCase1, positionRules);
+      const row2 = buildRowByCase(icons2, caseStates.rowCase2, positionRules);
+      const row3 = buildRowByCase(icons3, caseStates.rowCase3, positionRules);
 
       const answer = row3.C;
 
@@ -629,14 +692,22 @@
       }
 
       const distractors = [];
-      const used = new Set([...correctKeys]);
+      const used = new Set(correctOptions.map(itemKey));
 
       while(distractors.length < 6){
-        const base = randomOf(ICONS);
-        const t = randomOf(getTransformsByIcon(base));
-        const cand = { type: base, t };
-        const key = itemKey(cand);
+        let cand;
 
+        if(Math.random() < 0.15){
+          cand = { type: 'blank', t: '' };
+        }else{
+          const base = randomOf(ICONS);
+          cand = {
+            type: base,
+            t: randomOf(getAllowedTransforms(base))
+          };
+        }
+
+        const key = itemKey(cand);
         if(!used.has(key)){
           used.add(key);
           distractors.push(cand);
@@ -656,6 +727,8 @@
 
       return {
         index,
+        positionRules,
+        caseStates,
         rows: [
           [row1.A, row1.B, row1.C],
           [row2.A, row2.B, row2.C],
@@ -705,7 +778,7 @@
 
     function renderOptions(q){
       return q.options.map((opt, i)=>`
-        <div class="opt" data-id="q${q.index}-opt${i}" data-type="${opt.type}" data-t="${opt.t || ''}">
+        <div class="opt" draggable="true" data-id="q${q.index}-opt${i}" data-type="${opt.type}" data-t="${opt.t || ''}">
           ${iconHTML(opt.type, opt.t || '')}
         </div>
       `).join('');
@@ -765,86 +838,91 @@
       document.querySelectorAll('.answer-box').forEach(b=>b.classList.remove('drag-over'));
     }
 
-    function updateGhostPosition(){
-      dragGhost.style.left = ghostX + 'px';
-      dragGhost.style.top = ghostY + 'px';
-      rafId = null;
+    function bindMouseDrag(){
+      const options = document.querySelectorAll('.opt');
+      const answerBoxes = document.querySelectorAll('.answer-box');
+
+      options.forEach(opt=>{
+        opt.addEventListener('dragstart', e=>{
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            type: opt.dataset.type,
+            t: opt.dataset.t
+          }));
+        });
+      });
+
+      answerBoxes.forEach(box=>{
+        box.ondragover = e=>{
+          e.preventDefault();
+          box.classList.add('drag-over');
+        };
+        box.ondragleave = ()=>{
+          box.classList.remove('drag-over');
+        };
+        box.ondrop = e=>{
+          e.preventDefault();
+          box.classList.remove('drag-over');
+          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+          placeToBox(box, data);
+        };
+      });
     }
 
-    function scheduleGhostUpdate(x, y){
-      ghostX = x;
-      ghostY = y;
-      if(!rafId){
-        rafId = requestAnimationFrame(updateGhostPosition);
-      }
-    }
-
-    function startDragFromOption(opt, clientX, clientY, pointerId){
-      dragging = {
-        type: opt.dataset.type,
-        t: opt.dataset.t || '',
-        pointerId
-      };
-      dragGhost.innerHTML = opt.innerHTML;
-      dragGhost.classList.remove('hidden');
-      scheduleGhostUpdate(clientX, clientY);
-      opt.setPointerCapture?.(pointerId);
-    }
-
-    function moveDragging(clientX, clientY){
-      if(!dragging) return;
-      scheduleGhostUpdate(clientX, clientY);
-
-      clearDragOver();
-      const target = document.elementFromPoint(clientX, clientY);
-      const box = target && target.closest('.answer-box');
-      if(box) box.classList.add('drag-over');
-    }
-
-    function endDragging(clientX, clientY){
-      if(!dragging) return;
-
-      clearDragOver();
-      const target = document.elementFromPoint(clientX, clientY);
-      const box = target && target.closest('.answer-box');
-      if(box){
-        placeToBox(box, dragging);
-      }
-
-      dragGhost.classList.add('hidden');
-      dragGhost.innerHTML = '';
-      dragging = null;
-    }
-
-    function bindPointerDrag(){
+    function bindTouchDrag(){
       const options = document.querySelectorAll('.opt');
 
       options.forEach(opt=>{
-        opt.addEventListener('pointerdown', e=>{
+        opt.addEventListener('touchstart', e=>{
+          const touch = e.touches[0];
+          touchDragData = {
+            type: opt.dataset.type,
+            t: opt.dataset.t || ''
+          };
+          dragGhost.innerHTML = opt.innerHTML;
+          dragGhost.classList.remove('hidden');
+          dragGhost.style.left = touch.clientX + 'px';
+          dragGhost.style.top = touch.clientY + 'px';
+        }, {passive:true});
+
+        opt.addEventListener('touchmove', e=>{
+          if(!touchDragData) return;
           e.preventDefault();
-          startDragFromOption(opt, e.clientX, e.clientY, e.pointerId);
+          const touch = e.touches[0];
+          dragGhost.style.left = touch.clientX + 'px';
+          dragGhost.style.top = touch.clientY + 'px';
+
+          clearDragOver();
+          const target = document.elementFromPoint(touch.clientX, touch.clientY);
+          const box = target && target.closest('.answer-box');
+          if(box) box.classList.add('drag-over');
         }, {passive:false});
+
+        opt.addEventListener('touchend', e=>{
+          if(!touchDragData) return;
+          const touch = e.changedTouches[0];
+          clearDragOver();
+          const target = document.elementFromPoint(touch.clientX, touch.clientY);
+          const box = target && target.closest('.answer-box');
+          if(box){
+            placeToBox(box, touchDragData);
+          }
+          dragGhost.classList.add('hidden');
+          dragGhost.innerHTML = '';
+          touchDragData = null;
+        });
+
+        opt.addEventListener('touchcancel', ()=>{
+          clearDragOver();
+          dragGhost.classList.add('hidden');
+          dragGhost.innerHTML = '';
+          touchDragData = null;
+        });
       });
+    }
 
-      window.addEventListener('pointermove', e=>{
-        if(!dragging) return;
-        e.preventDefault();
-        moveDragging(e.clientX, e.clientY);
-      }, {passive:false});
-
-      window.addEventListener('pointerup', e=>{
-        if(!dragging) return;
-        e.preventDefault();
-        endDragging(e.clientX, e.clientY);
-      }, {passive:false});
-
-      window.addEventListener('pointercancel', ()=>{
-        if(!dragging) return;
-        clearDragOver();
-        dragGhost.classList.add('hidden');
-        dragGhost.innerHTML = '';
-        dragging = null;
-      });
+    function bindDrag(){
+      bindMouseDrag();
+      bindTouchDrag();
     }
 
     function showQuestionPage(index){
@@ -855,7 +933,7 @@
       questionOnlyArea.innerHTML = renderQuestionBoard(q);
       optionsArea.innerHTML = renderOptions(q);
       restoreAnswerBoxes();
-      bindPointerDrag();
+      bindDrag();
       nextBtn.textContent = index === 4 ? '提交答案' : '下一题';
 
       questionOnlyPage.classList.add('active');
@@ -875,24 +953,36 @@
       return (a.type === b.type) && ((a.t || '') === (b.t || ''));
     }
 
-    function transformText(t){
-      if(!t) return '不变';
-      if(t.includes('scale(0.58)')) return '缩小';
-      if(t.includes('scale(1.30)')) return '放大';
-      if(t.includes('scaleX(-1)')) return '左右翻转';
-      if(t.includes('scaleY(-1)')) return '上下翻转';
-      if(t.includes('rotate(90deg)')) return '旋转90°';
-      if(t.includes('rotate(180deg)')) return '旋转180°';
-      if(t.includes('rotate(270deg)')) return '旋转270°';
-      return '变化';
-    }
-
     function analysisText(slot, correct){
       const nameMap = { tl:'?1', tr:'?2', bl:'?3', br:'?4' };
       if(correct.type === 'blank'){
-        return `${nameMap[slot]}位置：前两个田字格该位置图形相同，所以结果应为空白图片。`;
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“图片相同”的情况，所以结果为空白图片。`;
       }
-      return `${nameMap[slot]}位置：前两个田字格该位置只有一个非空图形，因此结果保留该图形。本题此处应为：${transformText(correct.t || '')}。`;
+      if((correct.t || '') === ''){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片。`;
+      }
+      if(correct.t === 'small'){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片并缩小。`;
+      }
+      if(correct.t === 'bigsize'){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片并变大。`;
+      }
+      if(correct.t === 'flipX'){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片并左右翻转。`;
+      }
+      if(correct.t === 'flipY'){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片并上下翻转。`;
+      }
+      if(correct.t === 'rot90'){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片并旋转90度。`;
+      }
+      if(correct.t === 'rot180'){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片并旋转180度。`;
+      }
+      if(correct.t === 'rot270'){
+        return `${nameMap[slot]}位置：根据前两行该位置的情况关系，可推出第3行为“一个空一个有图”的情况，所以结果保留该图片并旋转270度。`;
+      }
+      return `${nameMap[slot]}位置：根据前两行规律可推出正确图形。`;
     }
 
     function submitAll(){
@@ -944,10 +1034,34 @@
       window.scrollTo(0,0);
     }
 
+    function preloadImages(names){
+      names.forEach(name=>{
+        if(name === 'blank') return;
+        const img = new Image();
+        img.src = openmojiUrl(name);
+      });
+    }
+
     function generateQuiz(){
       quizData = Array.from({length:5}, (_, i)=>buildQuestion(i));
       userAnswers = Array.from({length:5}, ()=>({}));
       currentIndex = 0;
+
+      const need = new Set();
+      quizData.forEach(q=>{
+        q.options.forEach(opt=>need.add(opt.type));
+        q.rows.forEach(row=>{
+          row.forEach(cell=>{
+            if(cell && cell !== 'question'){
+              Object.values(cell).forEach(v=>{
+                if(typeof v === 'string') need.add(v);
+                else if(v && v.type) need.add(v.type);
+              });
+            }
+          });
+        });
+      });
+      preloadImages([...need]);
     }
 
     chooseBtn.addEventListener('click', ()=>{
