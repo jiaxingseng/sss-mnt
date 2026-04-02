@@ -8,7 +8,7 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     :root{
-      --board-gap: 20px;
+      --board-gap: 14px;
       --panel-border: 3px;
       --dash-border: 3px;
       --answer-size: 108px;
@@ -30,7 +30,7 @@
     }
 
     .wrap {
-      max-width: 980px;
+      max-width: 860px;
       margin: 0 auto;
       position: relative;
     }
@@ -102,8 +102,9 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      font-size: 64px;
+      font-size: 52px;
       user-select: none;
+      line-height: 1;
     }
 
     .slot.empty {
@@ -111,18 +112,17 @@
     }
 
     .slot.question {
-      font-size: 94px;
+      font-size: 78px;
       font-weight: 700;
-      line-height: 1;
       color: #111;
     }
 
     .slot.question em {
       position: absolute;
-      right: 12px;
-      bottom: 10px;
+      right: 10px;
+      bottom: 8px;
       font-style: normal;
-      font-size: 26px;
+      font-size: 22px;
       font-weight: 700;
     }
 
@@ -175,6 +175,7 @@
       font-size: 58px;
       transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
       overflow: hidden;
+      line-height: 1;
     }
 
     .answer-box.active-drop {
@@ -222,6 +223,7 @@
       touch-action: none;
       user-select: none;
       cursor: grab;
+      line-height: 1;
     }
 
     .opt-box:hover {
@@ -253,6 +255,7 @@
       box-shadow: 0 14px 34px rgba(0,0,0,.18);
       transform: translate(-50%, -50%) scale(1.03);
       transition: transform .05s linear;
+      line-height: 1;
     }
 
     .result-panel {
@@ -340,6 +343,7 @@
       justify-content: center;
       font-size: 34px;
       position: relative;
+      line-height: 1;
     }
 
     .mini-slot.question {
@@ -358,7 +362,7 @@
     }
 
     @media (max-width: 1024px) {
-      .wrap { max-width: 920px; }
+      .wrap { max-width: 820px; }
     }
 
     @media (max-width: 834px) {
@@ -377,7 +381,7 @@
       }
 
       .wrap {
-        max-width: 800px;
+        max-width: 760px;
       }
 
       .question-title, .question-index {
@@ -385,11 +389,11 @@
       }
 
       .slot {
-        font-size: 58px;
+        font-size: 50px;
       }
 
       .slot.question {
-        font-size: 88px;
+        font-size: 76px;
       }
 
       .options {
@@ -399,15 +403,15 @@
 
     @media (max-width: 768px) {
       .big-board {
-        gap: 14px;
+        gap: 12px;
       }
 
       .slot {
-        font-size: 46px;
+        font-size: 40px;
       }
 
       .slot.question {
-        font-size: 72px;
+        font-size: 64px;
       }
 
       .answer-grid,
@@ -449,15 +453,15 @@
       }
 
       .slot {
-        font-size: 36px;
+        font-size: 30px;
       }
 
       .slot.question {
-        font-size: 60px;
+        font-size: 50px;
       }
 
       .slot.question em {
-        font-size: 18px;
+        font-size: 16px;
       }
 
       .options {
@@ -490,10 +494,9 @@
 
   <script>
     const ICONS = [
-      "📱","🎒","🧳","🏠","🧊","🧴","📷","🔫","🥫","🍄",
-      "🍌","🍎","🚗","⏰","🛴","🦋","🌵","🎈","🛸","🧸",
-      "🦄","🍋","🎁","🪁","🦉","🐳","🚲","🪵","🧁","🪴",
-      "🪀","🚀","🎧","🦕","🍇","🪼","🛶","🎯","🧃","🧷"
+      "📱","🎒","🏠","🧊","🧴","📷","🔫","🥫",
+      "🍄","🍌","🍎","🚗","⏰","🛴","🦋","🌵",
+      "🎈","🧸","🍋","🎁","🦉","🐳","🚲","🧁"
     ];
 
     const TOTAL_QUESTIONS = 5;
@@ -518,12 +521,10 @@
       return a;
     }
 
-    // 逆转一格：2→1，4→2，1→3，3→4
     function rotateReverse(arr) {
       return [arr[1], arr[3], arr[0], arr[2]];
     }
 
-    // 顺转一格：3→1，1→2，4→3，2→4
     function rotateForward(arr) {
       return [arr[2], arr[0], arr[3], arr[1]];
     }
@@ -536,6 +537,28 @@
 
     function buildCol2NoBlank(fullArr) {
       return [...fullArr];
+    }
+
+    function countBlank(arr) {
+      return arr.filter(v => !v).length;
+    }
+
+    function validateQuestionData(rows, options) {
+      rows.forEach((row, idx) => {
+        if (countBlank(row.col1) !== 1) {
+          throw new Error(`第${idx + 1}行第1列空白数量不等于1`);
+        }
+        if (countBlank(row.col2) !== 0) {
+          throw new Error(`第${idx + 1}行第2列出现空白`);
+        }
+        if (countBlank(row.col3) !== 0) {
+          throw new Error(`第${idx + 1}行第3列出现空白`);
+        }
+      });
+
+      if (options.some(v => !v)) {
+        throw new Error("选项区出现空白");
+      }
     }
 
     function generateQuestionRulePool() {
@@ -608,7 +631,7 @@
       const distractors = pickBetterDistractors(correctOptionPool, demo, row2Source, row3Source, result2, result3);
       const options = shuffle([...correctOptionPool, ...distractors]);
 
-      return {
+      const questionData = {
         blankIndex,
         rule,
         rows: [
@@ -619,6 +642,9 @@
         options,
         user: Array(8).fill("")
       };
+
+      validateQuestionData(questionData.rows, questionData.options);
+      return questionData;
     }
 
     function initPaper() {
@@ -671,7 +697,6 @@
       q.rows.forEach(row => {
         boardEl.appendChild(renderPanel(row.col1, false, 0, true));
         boardEl.appendChild(renderPanel(row.col2, false, 0, false));
-
         if (row.demo) {
           boardEl.appendChild(renderPanel(row.col3, false, 0, false));
         } else {
