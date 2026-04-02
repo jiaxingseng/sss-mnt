@@ -18,6 +18,7 @@
       --option-gap-x: 18px;
       --option-gap-y: 18px;
       --drag-size: 108px;
+      --board-panel-size: 140px;
     }
 
     body {
@@ -59,14 +60,16 @@
 
     .big-board {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, var(--board-panel-size));
       gap: var(--board-gap);
+      justify-content: center;
       margin-bottom: 22px;
     }
 
     .panel {
       position: relative;
-      aspect-ratio: 1 / 1;
+      width: var(--board-panel-size);
+      height: var(--board-panel-size);
       border: var(--panel-border) solid #222;
       background: #fff;
       display: grid;
@@ -102,7 +105,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      font-size: 40px;
+      font-size: 34px;
       user-select: none;
       line-height: 1;
     }
@@ -112,17 +115,17 @@
     }
 
     .slot.question {
-      font-size: 62px;
+      font-size: 52px;
       font-weight: 700;
       color: #111;
     }
 
     .slot.question em {
       position: absolute;
-      right: 8px;
-      bottom: 6px;
+      right: 6px;
+      bottom: 4px;
       font-style: normal;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
     }
 
@@ -301,14 +304,16 @@
 
     .mini-board {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(3, 120px);
+      gap: 10px;
+      justify-content: start;
       margin-top: 4px;
     }
 
     .mini-panel {
       position: relative;
-      aspect-ratio: 1 / 1;
+      width: 120px;
+      height: 120px;
       border: 3px solid #222;
       background: #fff;
       display: grid;
@@ -341,23 +346,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 34px;
+      font-size: 28px;
       position: relative;
       line-height: 1;
     }
 
     .mini-slot.question {
-      font-size: 52px;
+      font-size: 44px;
       font-weight: 700;
       color: #111;
     }
 
     .mini-slot.question em {
       position: absolute;
-      right: 6px;
-      bottom: 4px;
+      right: 5px;
+      bottom: 3px;
       font-style: normal;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 700;
     }
 
@@ -374,6 +379,7 @@
         --option-gap-x: 16px;
         --option-gap-y: 16px;
         --drag-size: 104px;
+        --board-panel-size: 130px;
       }
 
       body {
@@ -389,11 +395,11 @@
       }
 
       .slot {
-        font-size: 38px;
+        font-size: 32px;
       }
 
       .slot.question {
-        font-size: 58px;
+        font-size: 50px;
       }
 
       .options {
@@ -402,17 +408,38 @@
     }
 
     @media (max-width: 768px) {
+      :root{
+        --board-panel-size: 118px;
+      }
+
       .slot {
-        font-size: 34px;
+        font-size: 28px;
       }
 
       .slot.question {
-        font-size: 52px;
+        font-size: 44px;
       }
 
       .answer-grid,
       .options {
         justify-content: center;
+      }
+
+      .mini-board {
+        grid-template-columns: repeat(3, 104px);
+      }
+
+      .mini-panel {
+        width: 104px;
+        height: 104px;
+      }
+
+      .mini-slot {
+        font-size: 22px;
+      }
+
+      .mini-slot.question {
+        font-size: 38px;
       }
     }
 
@@ -421,6 +448,7 @@
         --answer-size: 84px;
         --option-size: 84px;
         --drag-size: 84px;
+        --board-panel-size: 96px;
       }
 
       .question-title {
@@ -444,24 +472,41 @@
         font-size: 38px;
       }
 
-      .big-board {
-        gap: 10px;
-      }
-
       .slot {
-        font-size: 24px;
+        font-size: 22px;
       }
 
       .slot.question {
-        font-size: 40px;
+        font-size: 34px;
       }
 
       .slot.question em {
-        font-size: 14px;
+        font-size: 12px;
       }
 
       .options {
         grid-template-columns: repeat(4, var(--option-size));
+      }
+
+      .mini-board {
+        grid-template-columns: repeat(3, 88px);
+      }
+
+      .mini-panel {
+        width: 88px;
+        height: 88px;
+      }
+
+      .mini-slot {
+        font-size: 18px;
+      }
+
+      .mini-slot.question {
+        font-size: 30px;
+      }
+
+      .mini-slot.question em {
+        font-size: 12px;
       }
     }
   </style>
