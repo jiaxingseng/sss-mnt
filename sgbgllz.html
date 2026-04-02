@@ -8,17 +8,21 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     :root{
-      --board-gap: 10px;
+      --board-gap: 14px;
       --panel-border: 3px;
       --dash-border: 3px;
-      --answer-size: 108px;
-      --option-size: 108px;
-      --answer-gap-x: 18px;
-      --answer-gap-y: 18px;
-      --option-gap-x: 18px;
-      --option-gap-y: 18px;
-      --drag-size: 108px;
-      --board-panel-size: 140px;
+
+      /* 题目田字格放大2档 */
+      --board-panel-size: 180px;
+
+      /* 作答区、选项区缩小1档 */
+      --answer-size: 92px;
+      --option-size: 92px;
+      --answer-gap-x: 14px;
+      --answer-gap-y: 14px;
+      --option-gap-x: 14px;
+      --option-gap-y: 14px;
+      --drag-size: 92px;
     }
 
     body {
@@ -31,7 +35,7 @@
     }
 
     .wrap {
-      max-width: 720px;
+      max-width: 860px;
       margin: 0 auto;
       position: relative;
     }
@@ -105,7 +109,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      font-size: 34px;
+      font-size: 46px;
       user-select: none;
       line-height: 1;
     }
@@ -115,17 +119,17 @@
     }
 
     .slot.question {
-      font-size: 52px;
+      font-size: 72px;
       font-weight: 700;
       color: #111;
     }
 
     .slot.question em {
       position: absolute;
-      right: 6px;
-      bottom: 4px;
+      right: 8px;
+      bottom: 6px;
       font-style: normal;
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 700;
     }
 
@@ -150,11 +154,11 @@
       display: inline-block;
       background: #dff3df;
       color: #41994a;
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
-      padding: 10px 18px;
+      padding: 8px 16px;
       border-radius: 6px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .answer-grid {
@@ -162,7 +166,7 @@
       grid-template-columns: repeat(4, var(--answer-size));
       gap: var(--answer-gap-y) var(--answer-gap-x);
       justify-content: start;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     .answer-box {
@@ -175,7 +179,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      font-size: 58px;
+      font-size: 48px;
       transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
       overflow: hidden;
       line-height: 1;
@@ -183,22 +187,22 @@
 
     .answer-box.active-drop {
       border-color: #2f7cf6;
-      box-shadow: 0 0 0 5px rgba(47,124,246,0.15);
+      box-shadow: 0 0 0 4px rgba(47,124,246,0.15);
       background: #f4f8ff;
       transform: scale(1.04);
     }
 
     .answer-box .num {
       position: absolute;
-      right: 8px;
-      bottom: 4px;
-      font-size: 18px;
+      right: 6px;
+      bottom: 2px;
+      font-size: 16px;
       font-weight: 700;
       color: #666;
     }
 
     .answer-box .placeholder {
-      font-size: 52px;
+      font-size: 40px;
       color: #aaa;
       font-weight: 700;
     }
@@ -221,7 +225,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      font-size: 58px;
+      font-size: 48px;
       transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, opacity .18s ease;
       touch-action: none;
       user-select: none;
@@ -252,7 +256,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 58px;
+      font-size: 48px;
       z-index: 9999;
       pointer-events: none;
       box-shadow: 0 14px 34px rgba(0,0,0,.18);
@@ -296,7 +300,7 @@
     }
 
     .review-text {
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.9;
       color: #333;
       margin-bottom: 12px;
@@ -367,19 +371,19 @@
     }
 
     @media (max-width: 1024px) {
-      .wrap { max-width: 720px; }
+      .wrap { max-width: 860px; }
     }
 
     @media (max-width: 834px) {
       :root{
-        --answer-size: 104px;
-        --option-size: 104px;
-        --answer-gap-x: 16px;
-        --answer-gap-y: 16px;
-        --option-gap-x: 16px;
-        --option-gap-y: 16px;
-        --drag-size: 104px;
-        --board-panel-size: 130px;
+        --board-panel-size: 164px;
+        --answer-size: 88px;
+        --option-size: 88px;
+        --answer-gap-x: 12px;
+        --answer-gap-y: 12px;
+        --option-gap-x: 12px;
+        --option-gap-y: 12px;
+        --drag-size: 88px;
       }
 
       body {
@@ -387,7 +391,7 @@
       }
 
       .wrap {
-        max-width: 700px;
+        max-width: 820px;
       }
 
       .question-title, .question-index {
@@ -395,11 +399,15 @@
       }
 
       .slot {
-        font-size: 32px;
+        font-size: 40px;
       }
 
       .slot.question {
-        font-size: 50px;
+        font-size: 62px;
+      }
+
+      .answer-box, .opt-box, .drag-clone {
+        font-size: 44px;
       }
 
       .options {
@@ -409,15 +417,15 @@
 
     @media (max-width: 768px) {
       :root{
-        --board-panel-size: 118px;
+        --board-panel-size: 146px;
       }
 
       .slot {
-        font-size: 28px;
+        font-size: 34px;
       }
 
       .slot.question {
-        font-size: 44px;
+        font-size: 54px;
       }
 
       .answer-grid,
@@ -445,10 +453,10 @@
 
     @media (max-width: 520px) {
       :root{
-        --answer-size: 84px;
-        --option-size: 84px;
-        --drag-size: 84px;
-        --board-panel-size: 96px;
+        --board-panel-size: 110px;
+        --answer-size: 76px;
+        --option-size: 76px;
+        --drag-size: 76px;
       }
 
       .question-title {
@@ -464,24 +472,24 @@
         font-size: 18px;
       }
 
-      .answer-box, .opt-box {
-        font-size: 44px;
-      }
-
-      .answer-box .placeholder {
+      .answer-box, .opt-box, .drag-clone {
         font-size: 38px;
       }
 
+      .answer-box .placeholder {
+        font-size: 32px;
+      }
+
       .slot {
-        font-size: 22px;
+        font-size: 24px;
       }
 
       .slot.question {
-        font-size: 34px;
+        font-size: 40px;
       }
 
       .slot.question em {
-        font-size: 12px;
+        font-size: 14px;
       }
 
       .options {
@@ -1025,6 +1033,7 @@
 
       document.getElementById("resetBtn").onclick = () => {
         initPaper();
+        window.scrollTo({ top: 0, behavior: "smooth" });
       };
     }
 
@@ -1034,11 +1043,12 @@
       if (current < TOTAL_QUESTIONS - 1) {
         current++;
         renderCurrent();
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
         finished = true;
         nextBtn.style.display = "none";
         showResult();
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
 
