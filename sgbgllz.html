@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>规律题练习</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root{
+      --board-gap: 20px;
+      --panel-border: 3px;
+      --dash-border: 3px;
+      --answer-size: 108px;
+      --option-size: 108px;
+      --answer-gap-x: 18px;
+      --answer-gap-y: 18px;
+      --option-gap-x: 18px;
+      --option-gap-y: 18px;
+      --drag-size: 108px;
+    }
+
+    body {
+      margin: 0;
+      background: #fff;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: #222;
+      padding: 20px 18px 36px;
+      overflow-x: hidden;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .question-head {
+      position: relative;
+      min-height: 38px;
+      margin-bottom: 16px;
+    }
+
+    .question-title {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.6;
+      padding-right: 100px;
+    }
+
+    .question-index {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: #444;
+    }
+
+    .big-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--board-gap);
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border: var(--panel-border) solid #222;
+      background: #fff;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      border-left: var(--dash-border) dashed #9c9c9c;
+      transform: translateX(calc(var(--dash-border) / -2));
+      pointer-events: none;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: var(--dash-border) dashed #9c9c9c;
+      transform: translateY(calc(var(--dash-border) / -2));
+      pointer-events: none;
+    }
+
+    .slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-size: 64px;
+      user-select: none;
+    }
+
+    .slot.empty {
+      font-size: 0;
+    }
+
+    .slot.question {
+      font-size: 94px;
+      font-weight: 700;
+      line-height: 1;
+      color: #111;
+    }
+
+    .slot.question em {
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      font-style: normal;
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .next-wrap {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .btn-next,
+    .btn-reset {
+      border: none;
+      background: #4caf63;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .section-title {
+      display: inline-block;
+      background: #dff3df;
+      color: #41994a;
+      font-size: 22px;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, var(--answer-size));
+      gap: var(--answer-gap-y) var(--answer-gap-x);
+      justify-content: start;
+      margin-bottom: 28px;
+    }
+
+    .answer-box {
+      width: var(--answer-size);
+      height: var(--answer-size);
+      border: 3px solid #e7e7e7;
+      border-radius: 10px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-size: 58px;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+      overflow: hidden;
+    }
+
+    .answer-box.active-drop {
+      border-color: #2f7cf6;
+      box-shadow: 0 0 0 5px rgba(47,124,246,0.15);
+      background: #f4f8ff;
+      transform: scale(1.04);
+    }
+
+    .answer-box .num {
+      position: absolute;
+      right: 8px;
+      bottom: 4px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #666;
+    }
+
+    .answer-box .placeholder {
+      font-size: 52px;
+      color: #aaa;
+      font-weight: 700;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(5, var(--option-size));
+      gap: var(--option-gap-y) var(--option-gap-x);
+      justify-content: start;
+      margin-bottom: 14px;
+    }
+
+    .opt-box {
+      width: var(--option-size);
+      height: var(--option-size);
+      border: 3px solid #ededed;
+      border-radius: 10px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      font-size: 58px;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, opacity .18s ease;
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .opt-box:hover {
+      transform: translateY(-2px);
+      border-color: #b7d1ff;
+      background: #f8fbff;
+    }
+
+    .opt-box.drag-source {
+      opacity: .25;
+      transform: scale(.96);
+    }
+
+    .drag-clone {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--drag-size);
+      height: var(--drag-size);
+      border: 3px solid #2f7cf6;
+      border-radius: 10px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 58px;
+      z-index: 9999;
+      pointer-events: none;
+      box-shadow: 0 14px 34px rgba(0,0,0,.18);
+      transform: translate(-50%, -50%) scale(1.03);
+      transition: transform .05s linear;
+    }
+
+    .result-panel {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .result-panel.show {
+      display: block;
+    }
+
+    .score {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .reset-wrap {
+      margin: 16px 0 8px;
+      text-align: center;
+    }
+
+    .review-item {
+      border: 1px solid #e8e8e8;
+      border-radius: 12px;
+      background: #fff;
+      padding: 16px;
+      margin-top: 18px;
+    }
+
+    .review-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .review-text {
+      font-size: 16px;
+      line-height: 1.9;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .mini-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .mini-panel {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border: 3px solid #222;
+      background: #fff;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    .mini-panel::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      border-left: 3px dashed #9c9c9c;
+      transform: translateX(-1.5px);
+    }
+
+    .mini-panel::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 3px dashed #9c9c9c;
+      transform: translateY(-1.5px);
+    }
+
+    .mini-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      position: relative;
+    }
+
+    .mini-slot.question {
+      font-size: 52px;
+      font-weight: 700;
+      color: #111;
+    }
+
+    .mini-slot.question em {
+      position: absolute;
+      right: 6px;
+      bottom: 4px;
+      font-style: normal;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1024px) {
+      .wrap { max-width: 920px; }
+    }
+
+    @media (max-width: 834px) {
+      :root{
+        --answer-size: 104px;
+        --option-size: 104px;
+        --answer-gap-x: 16px;
+        --answer-gap-y: 16px;
+        --option-gap-x: 16px;
+        --option-gap-y: 16px;
+        --drag-size: 104px;
+      }
+
+      body {
+        padding: 18px 16px 28px;
+      }
+
+      .wrap {
+        max-width: 800px;
+      }
+
+      .question-title, .question-index {
+        font-size: 20px;
+      }
+
+      .slot {
+        font-size: 58px;
+      }
+
+      .slot.question {
+        font-size: 88px;
+      }
+
+      .options {
+        grid-template-columns: repeat(4, var(--option-size));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .big-board {
+        gap: 14px;
+      }
+
+      .slot {
+        font-size: 46px;
+      }
+
+      .slot.question {
+        font-size: 72px;
+      }
+
+      .answer-grid,
+      .options {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 520px) {
+      :root{
+        --answer-size: 84px;
+        --option-size: 84px;
+        --drag-size: 84px;
+      }
+
+      .question-title {
+        font-size: 17px;
+        padding-right: 70px;
+      }
+
+      .question-index {
+        font-size: 17px;
+      }
+
+      .section-title {
+        font-size: 18px;
+      }
+
+      .answer-box, .opt-box {
+        font-size: 44px;
+      }
+
+      .answer-box .placeholder {
+        font-size: 38px;
+      }
+
+      .big-board {
+        gap: 10px;
+      }
+
+      .slot {
+        font-size: 36px;
+      }
+
+      .slot.question {
+        font-size: 60px;
+      }
+
+      .slot.question em {
+        font-size: 18px;
+      }
+
+      .options {
+        grid-template-columns: repeat(4, var(--option-size));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="question-head">
+      <div class="question-title">根据每行田字格内图形的变化规律，问号格子内的图形是什么?</div>
+      <div class="question-index" id="questionIndex">1/5题</div>
+    </div>
+
+    <div class="big-board" id="board"></div>
+
+    <div class="next-wrap">
+      <button class="btn-next" id="nextBtn">下一题</button>
+    </div>
+
+    <div class="section-title">作答区</div>
+    <div class="answer-grid" id="answerGrid"></div>
+
+    <div class="section-title">选项区</div>
+    <div class="options" id="options"></div>
+
+    <div class="result-panel" id="resultPanel"></div>
+  </div>
+
+  <script>
+    const ICONS = [
+      "📱","🎒","🧳","🏠","🧊","🧴","📷","🔫","🥫","🍄",
+      "🍌","🍎","🚗","⏰","🛴","🦋","🌵","🎈","🛸","🧸",
+      "🦄","🍋","🎁","🪁","🦉","🐳","🚲","🪵","🧁","🪴",
+      "🪀","🚀","🎧","🦕","🍇","🪼","🛶","🎯","🧃","🧷"
+    ];
+
+    const TOTAL_QUESTIONS = 5;
+    let questions = [];
+    let current = 0;
+    let finished = false;
+    let dragState = null;
+
+    const boardEl = document.getElementById("board");
+    const answerGridEl = document.getElementById("answerGrid");
+    const optionsEl = document.getElementById("options");
+    const resultPanel = document.getElementById("resultPanel");
+    const nextBtn = document.getElementById("nextBtn");
+    const questionIndexEl = document.getElementById("questionIndex");
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // 逆转一格：2→1，4→2，1→3，3→4
+    function rotateReverse(arr) {
+      return [arr[1], arr[3], arr[0], arr[2]];
+    }
+
+    // 顺转一格：3→1，1→2，4→3，2→4
+    function rotateForward(arr) {
+      return [arr[2], arr[0], arr[3], arr[1]];
+    }
+
+    function buildCol1WithOneBlank(fullArr, blankIndex) {
+      const arr = [...fullArr];
+      arr[blankIndex] = "";
+      return arr;
+    }
+
+    function buildCol2NoBlank(fullArr) {
+      return [...fullArr];
+    }
+
+    function generateQuestionRulePool() {
+      const pool = ["reverse", "forward"];
+      while (pool.length < TOTAL_QUESTIONS) {
+        pool.push(Math.random() < 0.5 ? "reverse" : "forward");
+      }
+      return shuffle(pool);
+    }
+
+    function generateDemoRow(blankIndex, usedSet, rule) {
+      const available = ICONS.filter(i => !usedSet.has(i));
+      const demoIcons = shuffle(available).slice(0, 4);
+
+      const demoCol1 = buildCol1WithOneBlank(demoIcons, blankIndex);
+      const demoCol2 = buildCol2NoBlank(demoIcons);
+      const demoCol3 = rule === "reverse"
+        ? rotateReverse(demoCol2)
+        : rotateForward(demoCol2);
+
+      return [demoCol1, demoCol2, demoCol3];
+    }
+
+    function pickBetterDistractors(correctOptionPool, demo, row2, row3, result2, result3) {
+      const correctSet = new Set(correctOptionPool);
+
+      let pool1 = [
+        ...demo[1], ...demo[2],
+        ...row2, ...row3
+      ].filter(v => v && !correctSet.has(v));
+      pool1 = [...new Set(pool1)];
+
+      let pool2 = demo[0]
+        .filter(v => v && !correctSet.has(v) && !pool1.includes(v));
+      pool2 = [...new Set(pool2)];
+
+      let pool3 = [...new Set([...result2, ...result3])]
+        .filter(v => v && !correctSet.has(v) && !pool1.includes(v) && !pool2.includes(v));
+
+      const merged = [...pool1, ...pool2, ...pool3];
+      return shuffle(merged).slice(0, 3);
+    }
+
+    function generateQuestion(rule) {
+      const blankIndex = Math.floor(Math.random() * 4);
+
+      const picked = shuffle(ICONS).slice(0, 8);
+      const usedSet = new Set(picked);
+
+      const demo = generateDemoRow(blankIndex, usedSet, rule);
+
+      const row2Source = picked.slice(0, 4);
+      const row3Source = picked.slice(4, 8);
+
+      const result2 = rule === "reverse"
+        ? rotateReverse(row2Source)
+        : rotateForward(row2Source);
+
+      const result3 = rule === "reverse"
+        ? rotateReverse(row3Source)
+        : rotateForward(row3Source);
+
+      const row2Col1 = buildCol1WithOneBlank(row2Source, blankIndex);
+      const row3Col1 = buildCol1WithOneBlank(row3Source, blankIndex);
+
+      const row2Col2 = buildCol2NoBlank(row2Source);
+      const row3Col2 = buildCol2NoBlank(row3Source);
+
+      const correctOptionPool = [...new Set([...result2, ...result3])];
+      const distractors = pickBetterDistractors(correctOptionPool, demo, row2Source, row3Source, result2, result3);
+      const options = shuffle([...correctOptionPool, ...distractors]);
+
+      return {
+        blankIndex,
+        rule,
+        rows: [
+          { col1: demo[0], col2: demo[1], col3: demo[2], base: null, demo: true, rule },
+          { col1: row2Col1, col2: row2Col2, col3: result2, base: 0, rule, demo: false },
+          { col1: row3Col1, col2: row3Col2, col3: result3, base: 4, rule, demo: false }
+        ],
+        options,
+        user: Array(8).fill("")
+      };
+    }
+
+    function initPaper() {
+      const rulePool = generateQuestionRulePool();
+      questions = rulePool.map(rule => generateQuestion(rule));
+
+      current = 0;
+      finished = false;
+      dragState = null;
+      resultPanel.classList.remove("show");
+      resultPanel.innerHTML = "";
+      nextBtn.textContent = "下一题";
+      nextBtn.style.display = "inline-block";
+      renderCurrent();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function setCellContent(el, value, blankAsEmpty = false) {
+      if (!value && blankAsEmpty) {
+        el.classList.add("empty");
+        el.textContent = "";
+      } else {
+        el.textContent = value || "";
+      }
+    }
+
+    function renderPanel(items, isQuestion = false, offset = 0, blankAsEmpty = false) {
+      const panel = document.createElement("div");
+      panel.className = "panel";
+
+      for (let i = 0; i < 4; i++) {
+        const slot = document.createElement("div");
+        if (isQuestion) {
+          slot.className = "slot question";
+          slot.innerHTML = `?<em>${offset + i + 1}</em>`;
+        } else {
+          slot.className = "slot";
+          setCellContent(slot, items[i], blankAsEmpty);
+        }
+        panel.appendChild(slot);
+      }
+      return panel;
+    }
+
+    function renderCurrent() {
+      const q = questions[current];
+      boardEl.innerHTML = "";
+      questionIndexEl.textContent = `${current + 1}/${TOTAL_QUESTIONS}题`;
+
+      q.rows.forEach(row => {
+        boardEl.appendChild(renderPanel(row.col1, false, 0, true));
+        boardEl.appendChild(renderPanel(row.col2, false, 0, false));
+
+        if (row.demo) {
+          boardEl.appendChild(renderPanel(row.col3, false, 0, false));
+        } else {
+          boardEl.appendChild(renderPanel(["","","",""], true, row.base, false));
+        }
+      });
+
+      renderAnswerGrid();
+      renderOptions();
+    }
+
+    function renderAnswerGrid() {
+      const q = questions[current];
+      answerGridEl.innerHTML = "";
+
+      q.user.forEach((icon, idx) => {
+        const box = document.createElement("div");
+        box.className = "answer-box";
+        box.dataset.index = idx;
+
+        const content = document.createElement("div");
+        if (!icon) {
+          content.className = "placeholder";
+          content.textContent = "?";
+        } else {
+          content.textContent = icon;
+        }
+
+        const num = document.createElement("div");
+        num.className = "num";
+        num.textContent = idx + 1;
+
+        box.appendChild(content);
+        box.appendChild(num);
+        answerGridEl.appendChild(box);
+      });
+    }
+
+    function renderOptions() {
+      const q = questions[current];
+      optionsEl.innerHTML = "";
+
+      q.options.forEach(icon => {
+        const box = document.createElement("div");
+        box.className = "opt-box";
+        box.dataset.icon = icon;
+        box.textContent = icon;
+        box.addEventListener("pointerdown", startDrag);
+        optionsEl.appendChild(box);
+      });
+    }
+
+    function startDrag(e) {
+      if (finished) return;
+      const source = e.currentTarget;
+      const icon = source.dataset.icon;
+
+      const clone = document.createElement("div");
+      clone.className = "drag-clone";
+      clone.textContent = icon;
+      document.body.appendChild(clone);
+
+      source.classList.add("drag-source");
+
+      dragState = {
+        icon,
+        source,
+        clone,
+        currentDrop: null
+      };
+
+      moveClone(e.clientX, e.clientY);
+      window.addEventListener("pointermove", onDragMove, { passive: false });
+      window.addEventListener("pointerup", endDrag, { passive: false });
+      e.preventDefault();
+    }
+
+    function moveClone(x, y) {
+      if (!dragState) return;
+      dragState.clone.style.left = x + "px";
+      dragState.clone.style.top = y + "px";
+    }
+
+    function clearDropHighlight() {
+      document.querySelectorAll(".answer-box.active-drop").forEach(el => {
+        el.classList.remove("active-drop");
+      });
+    }
+
+    function onDragMove(e) {
+      if (!dragState) return;
+      moveClone(e.clientX, e.clientY);
+
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const box = el ? el.closest(".answer-box") : null;
+
+      clearDropHighlight();
+      dragState.currentDrop = null;
+
+      if (box) {
+        box.classList.add("active-drop");
+        dragState.currentDrop = box;
+      }
+      e.preventDefault();
+    }
+
+    function endDrag(e) {
+      if (!dragState) return;
+
+      const { icon, source, clone, currentDrop } = dragState;
+      const q = questions[current];
+
+      if (currentDrop) {
+        const idx = Number(currentDrop.dataset.index);
+        const targetRect = currentDrop.getBoundingClientRect();
+
+        clone.style.transition = "all .16s ease";
+        clone.style.left = (targetRect.left + targetRect.width / 2) + "px";
+        clone.style.top = (targetRect.top + targetRect.height / 2) + "px";
+        clone.style.transform = "translate(-50%, -50%) scale(.92)";
+
+        setTimeout(() => {
+          q.user[idx] = icon;
+          renderAnswerGrid();
+          cleanupDrag();
+        }, 150);
+      } else {
+        const sourceRect = source.getBoundingClientRect();
+        clone.style.transition = "all .18s ease";
+        clone.style.left = (sourceRect.left + sourceRect.width / 2) + "px";
+        clone.style.top = (sourceRect.top + sourceRect.height / 2) + "px";
+        clone.style.transform = "translate(-50%, -50%) scale(.9)";
+        clone.style.opacity = ".2";
+
+        setTimeout(() => {
+          cleanupDrag();
+        }, 180);
+      }
+
+      e.preventDefault();
+    }
+
+    function cleanupDrag() {
+      if (!dragState) return;
+      clearDropHighlight();
+      dragState.source.classList.remove("drag-source");
+      dragState.clone.remove();
+      dragState = null;
+      window.removeEventListener("pointermove", onDragMove);
+      window.removeEventListener("pointerup", endDrag);
+    }
+
+    function analyzeQuestion(q) {
+      const right = [...q.rows[1].col3, ...q.rows[2].col3];
+      let correct = 0;
+      const detail = right.map((r, i) => {
+        const u = q.user[i] || "";
+        const ok = u === r;
+        if (ok) correct++;
+        return { index: i + 1, user: u, right: r, ok };
+      });
+      return { right, correct, total: 8, detail };
+    }
+
+    function renderMiniPanel(items, isQuestion = false, offset = 0, blankAsEmpty = false) {
+      const panel = document.createElement("div");
+      panel.className = "mini-panel";
+
+      for (let i = 0; i < 4; i++) {
+        const slot = document.createElement("div");
+        if (isQuestion) {
+          slot.className = "mini-slot question";
+          slot.innerHTML = `?<em>${offset + i + 1}</em>`;
+        } else {
+          slot.className = "mini-slot";
+          if (!items[i] && blankAsEmpty) {
+            slot.textContent = "";
+          } else {
+            slot.textContent = items[i] || "";
+          }
+        }
+        panel.appendChild(slot);
+      }
+      return panel;
+    }
+
+    function showValue(v) {
+      if (!v) return "未作答";
+      return v;
+    }
+
+    function getAnalysisTextByRule(col2, base, rule) {
+      if (rule === "reverse") {
+        return [
+          `本题规律：保留第2列，第3列逆转一格`,
+          `位置变化：2→1，4→2，1→3，3→4`,
+          `?${base + 1} = ${col2[1]}`,
+          `?${base + 2} = ${col2[3]}`,
+          `?${base + 3} = ${col2[0]}`,
+          `?${base + 4} = ${col2[2]}`
+        ].join("，");
+      } else {
+        return [
+          `本题规律：保留第2列，第3列顺转一格`,
+          `位置变化：3→1，1→2，4→3，2→4`,
+          `?${base + 1} = ${col2[2]}`,
+          `?${base + 2} = ${col2[0]}`,
+          `?${base + 3} = ${col2[3]}`,
+          `?${base + 4} = ${col2[1]}`
+        ].join("，");
+      }
+    }
+
+    function showResult() {
+      let totalCorrect = 0;
+      const total = TOTAL_QUESTIONS * 8;
+      const wrongs = [];
+
+      questions.forEach((q, idx) => {
+        const res = analyzeQuestion(q);
+        totalCorrect += res.correct;
+        if (res.correct < 8) {
+          wrongs.push({ idx: idx + 1, q, res });
+        }
+      });
+
+      resultPanel.classList.add("show");
+      resultPanel.innerHTML = `
+        <div class="score">总分：${totalCorrect} / ${total}</div>
+        <div class="reset-wrap">
+          <button class="btn-reset" id="resetBtn">重新答题</button>
+        </div>
+      `;
+
+      if (wrongs.length === 0) {
+        const allRight = document.createElement("div");
+        allRight.className = "review-item";
+        allRight.innerHTML = `<div class="review-title">全部正确</div>`;
+        resultPanel.appendChild(allRight);
+      } else {
+        wrongs.forEach(item => {
+          const box = document.createElement("div");
+          box.className = "review-item";
+
+          const title = document.createElement("div");
+          title.className = "review-title";
+          title.textContent = `错题 ${item.idx}`;
+          box.appendChild(title);
+
+          const text = document.createElement("div");
+          text.className = "review-text";
+          text.innerHTML = item.res.detail
+            .filter(d => !d.ok)
+            .map(d => `?${d.index}：你填 ${showValue(d.user)}，正确是 ${showValue(d.right)}`)
+            .join("<br>");
+          box.appendChild(text);
+
+          const mini = document.createElement("div");
+          mini.className = "mini-board";
+
+          mini.appendChild(renderMiniPanel(item.q.rows[0].col1, false, 0, true));
+          mini.appendChild(renderMiniPanel(item.q.rows[0].col2, false, 0, false));
+          mini.appendChild(renderMiniPanel(item.q.rows[0].col3, false, 0, false));
+
+          [item.q.rows[1], item.q.rows[2]].forEach(r => {
+            mini.appendChild(renderMiniPanel(r.col1, false, 0, true));
+            mini.appendChild(renderMiniPanel(r.col2, false, 0, false));
+            mini.appendChild(renderMiniPanel(["","","",""], true, r.base, false));
+          });
+
+          box.appendChild(mini);
+
+          const ana = document.createElement("div");
+          ana.className = "review-text";
+          const detailText = [
+            getAnalysisTextByRule(item.q.rows[1].col2, item.q.rows[1].base, item.q.rows[1].rule),
+            getAnalysisTextByRule(item.q.rows[2].col2, item.q.rows[2].base, item.q.rows[2].rule)
+          ].join("<br><br>");
+          ana.innerHTML = detailText;
+          box.appendChild(ana);
+
+          resultPanel.appendChild(box);
+        });
+      }
+
+      document.getElementById("resetBtn").onclick = () => {
+        initPaper();
+      };
+    }
+
+    nextBtn.onclick = () => {
+      if (finished) return;
+
+      if (current < TOTAL_QUESTIONS - 1) {
+        current++;
+        renderCurrent();
+      } else {
+        finished = true;
+        nextBtn.style.display = "none";
+        showResult();
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }
+    };
+
+    initPaper();
+  </script>
+</body>
+</html>
