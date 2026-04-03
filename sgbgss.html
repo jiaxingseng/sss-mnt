@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>图形规律练习</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: #ffffff;
+      color: #333;
+    }
+
+    .page {
+      width: 390px;
+      margin: 10px auto 24px;
+      background: #fff;
+    }
+
+    .top-tag {
+      display: inline-block;
+      background: #2f8cff;
+      color: #fff;
+      font-size: 14px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin: 4px 0 10px 2px;
+      font-weight: 600;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 6px 0 10px;
+      color: #444;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .section-title::before,
+    .section-title::after {
+      content: "";
+      flex: 1;
+      border-top: 2px dashed #4ac25d;
+      margin: 0 10px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: repeat(3, 86px);
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .big-cell {
+      width: 86px;
+      height: 86px;
+      border: 1px solid #999;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      background: #fff;
+    }
+
+    .small-cell {
+      border: 1px solid #bdbdbd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: #fff;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .blank {
+      background: #58df63;
+      cursor: pointer;
+    }
+
+    .symbol {
+      width: 24px;
+      height: 24px;
+      font-size: 22px;
+      line-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+      user-select: none;
+      flex-shrink: 0;
+      overflow: hidden;
+      text-align: center;
+      font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Emoji",sans-serif;
+    }
+
+    .small {
+      width: 18px;
+      height: 18px;
+      font-size: 16px;
+      line-height: 18px;
+      opacity: 0.98;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(6, 50px);
+      gap: 8px 10px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .option-box {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #999;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .option-box.selected {
+      border-color: #ff9f2d;
+      box-shadow: 0 0 0 2px rgba(255,159,45,.22) inset;
+    }
+
+    .option-box.used::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.04);
+      pointer-events: none;
+    }
+
+    .controls {
+      width: 320px;
+      margin: 12px auto 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .green-btn {
+      background: #58df63;
+      color: #0d4f15;
+      font-weight: 700;
+    }
+
+    .blue-btn {
+      background: #2f8cff;
+      color: #fff;
+    }
+
+    .msg {
+      width: 100%;
+      min-height: 22px;
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .msg.ok {
+      color: #12b76a;
+    }
+
+    .msg.wrong {
+      color: #f04438;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .result-panel {
+      width: 360px;
+      margin: 14px auto 0;
+      border: 1px solid #d8d8d8;
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .result-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .result-score {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .wrong-item {
+      border-top: 1px dashed #d4d4d4;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+
+    .wrong-item:first-of-type {
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .wrong-head {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f04438;
+      margin-bottom: 6px;
+    }
+
+    .wrong-text {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .wrong-subtitle {
+      font-size: 12px;
+      color: #666;
+      margin: 8px 0 4px;
+      font-weight: 700;
+    }
+
+    .wrong-img {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      display: block;
+      background: #fff;
+      margin-bottom: 8px;
+    }
+
+    .progress {
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .img-tip {
+      font-size: 12px;
+      color: #999;
+      line-height: 1.6;
+      margin-top: 6px;
+    }
+
+    .shot-wrap {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+      margin-bottom: 8px;
+    }
+
+    .shot-scroll {
+      max-height: 340px;
+      overflow: auto;
+      background: #fff;
+      padding: 8px 0;
+    }
+
+    .mini-page {
+      width: 250px;
+      margin: 0 auto;
+      background: #fff;
+    }
+
+    .mini-top-tag {
+      display: inline-block;
+      background: #2f8cff;
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin: 2px 0 6px 2px;
+      font-weight: 600;
+    }
+
+    .mini-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0 6px;
+      color: #444;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .mini-title::before,
+    .mini-title::after {
+      content: "";
+      flex: 1;
+      border-top: 1px dashed #4ac25d;
+      margin: 0 6px;
+    }
+
+    .mini-workspace {
+      display: grid;
+      grid-template-columns: repeat(3, 54px);
+      gap: 5px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .mini-big {
+      width: 54px;
+      height: 54px;
+      border: 1px solid #999;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      background: #fff;
+    }
+
+    .mini-small {
+      border: 1px solid #c8c8c8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .mini-small.blank {
+      background: #58df63;
+    }
+
+    .mini-shape {
+      width: 16px;
+      height: 16px;
+      font-size: 14px;
+      line-height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+      font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Emoji",sans-serif;
+    }
+
+    .mini-shape.small {
+      width: 12px;
+      height: 12px;
+      font-size: 10px;
+      line-height: 12px;
+    }
+
+    .mini-options {
+      display: grid;
+      grid-template-columns: repeat(6, 32px);
+      gap: 5px 6px;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .mini-opt {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      position: relative;
+    }
+
+    .mini-opt.used::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.05);
+    }
+
+    .answer-status {
+      font-size: 12px;
+      color: #444;
+      line-height: 1.7;
+      background: #fff;
+      border: 1px solid #e2e2e2;
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    .answer-status div {
+      margin-bottom: 4px;
+    }
+
+    .answer-status div:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div id="topTag" class="top-tag">第1题 探索题 共5题</div>
+
+    <div class="progress" id="progressText">第 1 / 5 题</div>
+
+    <div class="section-title">作答区</div>
+    <div id="workspace" class="workspace"></div>
+
+    <div class="section-title">选项区</div>
+    <div id="options" class="options"></div>
+
+    <div class="controls">
+      <button id="checkBtn" class="blue-btn">提交本题</button>
+      <button id="nextBtn" class="green-btn">下一题</button>
+      <button id="restartBtn" class="green-btn hidden">重新答题</button>
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <div id="resultPanel" class="result-panel hidden"></div>
+  </div>
+
+  <script>
+    const ORIGINAL_IMAGE = "./original.png";
+    const TOTAL_QUESTIONS = 5;
+
+    const SYMBOL_POOL = [
+      "☝️","✊","👈","👍","👊","✌️","👌","🤞","✋","🖐️","🤙","🤚","👆","👇","👉"
+    ];
+
+    let questionSet = [];
+    let currentIndex = 0;
+    let selectedOptionKey = null;
+    let selectedOptionEl = null;
+    let currentAnswers = {};
+    let currentData = null;
+    let paperResults = [];
+
+    const workspace = document.getElementById("workspace");
+    const options = document.getElementById("options");
+    const msg = document.getElementById("msg");
+    const topTag = document.getElementById("topTag");
+    const progressText = document.getElementById("progressText");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const resultPanel = document.getElementById("resultPanel");
+
+    function pieceHTML(symbol, rotateDeg, isSmall = false, cls = "symbol") {
+      return `<span class="${cls} ${isSmall ? 'small' : ''}" style="transform: rotate(${rotateDeg}deg);">${symbol}</span>`;
+    }
+
+    function uniqueByKey(arr) {
+      const map = new Map();
+      arr.forEach(item => {
+        if (!map.has(item.key)) map.set(item.key, item);
+      });
+      return [...map.values()];
+    }
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function sampleDistinctSymbols(count, exclude = []) {
+      const excluded = new Set(exclude);
+      const pool = shuffle(SYMBOL_POOL.filter(s => !excluded.has(s)));
+      return pool.slice(0, count);
+    }
+
+    function buildQuestion() {
+      const direction = Math.random() > 0.5 ? 1 : -1;
+      const shrinkPos = Math.floor(Math.random() * 4);
+
+      const row1 = sampleDistinctSymbols(4);
+      const row2 = sampleDistinctSymbols(4, row1);
+      const row3 = sampleDistinctSymbols(4, [...row1, ...row2]);
+      const rowCells = [row1, row2, row3];
+
+      const bigConfigs = [
+        { row: 0, col: 0, blanks: [] },
+        { row: 0, col: 1, blanks: [] },
+        { row: 0, col: 2, blanks: [] },
+
+        { row: 1, col: 0, blanks: [0, 3] },
+        { row: 1, col: 1, blanks: [1] },
+        { row: 1, col: 2, blanks: [2] },
+
+        { row: 2, col: 0, blanks: [0, 3] },
+        { row: 2, col: 1, blanks: [1] },
+        { row: 2, col: 2, blanks: [2] }
+      ];
+
+      function getRotate(col) {
+        if (direction === 1) return [0, 90, 180][col];
+        return [0, 270, 180][col];
+      }
+
+      function getPiece(bigIndex, smallIndex) {
+        const cfg = bigConfigs[bigIndex];
+        const symbol = rowCells[cfg.row][smallIndex];
+        const rotate = getRotate(cfg.col);
+        const isSmall = (smallIndex === shrinkPos) && cfg.col >= 1;
+
+        return {
+          key: `${symbol}|${rotate}|${isSmall ? 1 : 0}`,
+          html: pieceHTML(symbol, rotate, isSmall),
+          symbol,
+          rotate,
+          isSmall
+        };
+      }
+
+      const blankList = [];
+      bigConfigs.forEach((cfg, bigIndex) => {
+        cfg.blanks.forEach((smallIndex) => {
+          blankList.push({
+            bigIndex,
+            smallIndex,
+            answer: getPiece(bigIndex, smallIndex)
+          });
+        });
+      });
+
+      const answerKeys = blankList.map(item => item.answer.key);
+      if (new Set(answerKeys).size !== answerKeys.length) return buildQuestion();
+
+      const correctOptions = uniqueByKey(blankList.map(item => item.answer));
+
+      const distractorCandidates = [];
+      SYMBOL_POOL.forEach(symbol => {
+        [0, 90, 180, 270].forEach(rotate => {
+          [0, 1].forEach(small => {
+            distractorCandidates.push({
+              key: `${symbol}|${rotate}|${small}`,
+              html: pieceHTML(symbol, rotate, !!small)
+            });
+          });
+        });
+      });
+
+      const correctKeySet = new Set(correctOptions.map(i => i.key));
+      const distractors = shuffle(
+        distractorCandidates.filter(i => !correctKeySet.has(i.key))
+      );
+
+      let optionsData = [...correctOptions];
+      for (const d of distractors) {
+        if (optionsData.length >= 16) break;
+        if (!optionsData.some(item => item.key === d.key)) {
+          optionsData.push(d);
+        }
+      }
+
+      optionsData = uniqueByKey(optionsData);
+      if (optionsData.length < 16) return buildQuestion();
+
+      return {
+        rowCells,
+        bigConfigs,
+        blankList,
+        optionsData: shuffle(optionsData.slice(0, 16)),
+        rule: { direction, shrinkPos }
+      };
+    }
+
+    function generatePaper() {
+      questionSet = [];
+      for (let i = 0; i < TOTAL_QUESTIONS; i++) questionSet.push(buildQuestion());
+      currentIndex = 0;
+      paperResults = [];
+      resultPanel.classList.add("hidden");
+      restartBtn.classList.add("hidden");
+      nextBtn.classList.remove("hidden");
+      checkBtn.classList.remove("hidden");
+      loadQuestion(0);
+    }
+
+    function loadQuestion(index) {
+      currentIndex = index;
+      currentData = questionSet[index];
+      currentAnswers = {};
+      selectedOptionKey = null;
+      selectedOptionEl = null;
+      clearMsg();
+      topTag.textContent = `第${index + 1}题 探索题 共${TOTAL_QUESTIONS}题`;
+      progressText.textContent = `第 ${index + 1} / ${TOTAL_QUESTIONS} 题`;
+      renderBoard();
+      renderOptions();
+    }
+
+    function getRotateByRule(col, direction) {
+      if (direction === 1) return [0, 90, 180][col];
+      return [0, 270, 180][col];
+    }
+
+    function getPiece(data, bigIndex, smallIndex) {
+      const cfg = data.bigConfigs[bigIndex];
+      const symbol = data.rowCells[cfg.row][smallIndex];
+      const rotate = getRotateByRule(cfg.col, data.rule.direction);
+      const isSmall = (smallIndex === data.rule.shrinkPos) && cfg.col >= 1;
+
+      return {
+        key: `${symbol}|${rotate}|${isSmall ? 1 : 0}`,
+        html: pieceHTML(symbol, rotate, isSmall),
+        symbol,
+        rotate,
+        isSmall
+      };
+    }
+
+    function renderBoard() {
+      workspace.innerHTML = "";
+
+      currentData.bigConfigs.forEach((cfg, bigIndex) => {
+        const big = document.createElement("div");
+        big.className = "big-cell";
+
+        for (let smallIndex = 0; smallIndex < 4; smallIndex++) {
+          const cell = document.createElement("div");
+          const isBlank = cfg.blanks.includes(smallIndex);
+          cell.className = "small-cell" + (isBlank ? " blank" : "");
+
+          if (isBlank) {
+            const blankId = `${bigIndex}-${smallIndex}`;
+            cell.dataset.blankId = blankId;
+            cell.addEventListener("click", () => onBlankClick(cell, bigIndex, smallIndex));
+          } else {
+            cell.innerHTML = getPiece(currentData, bigIndex, smallIndex).html;
+          }
+
+          big.appendChild(cell);
+        }
+
+        workspace.appendChild(big);
+      });
+    }
+
+    function renderOptions() {
+      options.innerHTML = "";
+      currentData.optionsData.forEach(opt => {
+        const box = document.createElement("div");
+        box.className = "option-box";
+        box.dataset.key = opt.key;
+        box.innerHTML = opt.html;
+        box.addEventListener("click", () => onOptionClick(box, opt.key));
+        options.appendChild(box);
+      });
+      updateUsedOptions();
+    }
+
+    function onOptionClick(el, key) {
+      if (selectedOptionEl) selectedOptionEl.classList.remove("selected");
+      selectedOptionEl = el;
+      selectedOptionKey = key;
+      el.classList.add("selected");
+      clearMsg();
+    }
+
+    function onBlankClick(cell, bigIndex, smallIndex) {
+      const blankId = `${bigIndex}-${smallIndex}`;
+
+      if (currentAnswers[blankId]) {
+        delete currentAnswers[blankId];
+        cell.innerHTML = "";
+        cell.className = "small-cell blank";
+        cell.dataset.blankId = blankId;
+        updateUsedOptions();
+        clearMsg();
+        return;
+      }
+
+      if (!selectedOptionKey) {
+        setMsg("请先选择下方选项");
+        return;
+      }
+
+      const opt = currentData.optionsData.find(item => item.key === selectedOptionKey);
+      cell.innerHTML = opt.html;
+      cell.className = "small-cell";
+      cell.dataset.blankId = blankId;
+      currentAnswers[blankId] = selectedOptionKey;
+      updateUsedOptions();
+      clearMsg();
+    }
+
+    function updateUsedOptions() {
+      const used = Object.values(currentAnswers);
+      document.querySelectorAll(".option-box").forEach(el => {
+        const key = el.dataset.key;
+        if (used.includes(key)) el.classList.add("used");
+        else el.classList.remove("used");
+      });
+    }
+
+    function clearMsg() {
+      msg.className = "msg";
+      msg.textContent = "";
+    }
+
+    function setMsg(text, type = "wrong") {
+      msg.className = "msg " + type;
+      msg.textContent = text;
+    }
+
+    function clearOutlines() {
+      document.querySelectorAll("[data-blank-id]").forEach(cell => {
+        cell.style.outline = "";
+        cell.style.outlineOffset = "";
+      });
+    }
+
+    function getRuleText(rule) {
+      const dirText = rule.direction === 1 ? "顺时针推进" : "逆时针推进";
+      const posMap = ["左上", "右上", "左下", "右下"];
+      return `本题规律：大方格按列${dirText}；从第2个大格开始，${posMap[rule.shrinkPos]}位置的图形缩小。`;
+    }
+
+    function captureQuestionSnapshot(data, answers) {
+      let html = `
+        <div class="shot-wrap">
+          <div class="shot-scroll">
+            <div class="mini-page">
+              <div class="mini-top-tag">第${currentIndex + 1}题 探索题</div>
+              <div class="mini-title">作答区</div>
+              <div class="mini-workspace">
+      `;
+
+      data.bigConfigs.forEach((cfg, bigIndex) => {
+        html += `<div class="mini-big">`;
+        for (let smallIndex = 0; smallIndex < 4; smallIndex++) {
+          const blankId = `${bigIndex}-${smallIndex}`;
+          const isBlank = cfg.blanks.includes(smallIndex);
+          if (isBlank) {
+            if (answers[blankId]) {
+              const userKey = answers[blankId];
+              const userOpt = data.optionsData.find(o => o.key === userKey);
+              html += `<div class="mini-small">${userOpt ? userOpt.html.replace(/symbol/g, 'mini-shape') : ''}</div>`;
+            } else {
+              html += `<div class="mini-small blank"></div>`;
+            }
+          } else {
+            const p = getPiece(data, bigIndex, smallIndex);
+            html += `<div class="mini-small">${p.html.replace(/symbol/g, 'mini-shape')}</div>`;
+          }
+        }
+        html += `</div>`;
+      });
+
+      html += `
+              </div>
+              <div class="mini-title">选项区</div>
+              <div class="mini-options">
+      `;
+
+      data.optionsData.forEach(opt => {
+        const used = Object.values(answers).includes(opt.key) ? " used" : "";
+        html += `<div class="mini-opt${used}">${opt.html.replace(/symbol/g, 'mini-shape')}</div>`;
+      });
+
+      html += `
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      return html;
+    }
+
+    function buildAnswerStatusHtml(result) {
+      let html = `<div class="answer-status">`;
+      if (result.wrongs.length === 0) {
+        html += `<div>本题全部答对。</div>`;
+      } else {
+        result.wrongs.forEach((w, idx) => {
+          html += `<div>${idx + 1}. 空格 ${w.blankId}：你的答案 = ${w.user}；正确答案 = ${w.correct}</div>`;
+        });
+      }
+      html += `</div>`;
+      return html;
+    }
+
+    function checkCurrentQuestion(saveOnly = false) {
+      clearOutlines();
+
+      let count = 0;
+      const wrongs = [];
+
+      currentData.blankList.forEach(item => {
+        const blankId = `${item.bigIndex}-${item.smallIndex}`;
+        const user = currentAnswers[blankId];
+        const ok = user === item.answer.key;
+
+        if (!saveOnly && user) {
+          const cell = document.querySelector(`[data-blank-id="${blankId}"]`);
+          cell.style.outline = ok
+            ? "3px solid rgba(18,183,106,.95)"
+            : "3px solid rgba(240,68,56,.95)";
+          cell.style.outlineOffset = "-3px";
+        }
+
+        if (ok) count++;
+        else wrongs.push({
+          blankId,
+          correct: item.answer.key,
+          user: user || "未作答"
+        });
+      });
+
+      const result = {
+        questionIndex: currentIndex + 1,
+        correctCount: count,
+        total: currentData.blankList.length,
+        wrongs,
+        analysis: getRuleText(currentData.rule),
+        snapshotHtml: captureQuestionSnapshot(currentData, currentAnswers),
+        answerStatusHtml: buildAnswerStatusHtml({
+          wrongs
+        })
+      };
+
+      paperResults[currentIndex] = result;
+
+      if (!saveOnly) {
+        if (count === currentData.blankList.length) setMsg("本题全部正确", "ok");
+        else setMsg(`本题答对 ${count} / ${currentData.blankList.length}`, "wrong");
+      }
+
+      return true;
+    }
+
+    function originalImageHtml() {
+      return `<img class="wrong-img" src="${ORIGINAL_IMAGE}" alt="原题图" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div class=&quot;img-tip&quot;>未找到本地原题图，请将 original.png 放到当前 HTML 同目录。</div>');" />`;
+    }
+
+    function showFinalResult() {
+      let totalCorrect = 0;
+      let totalBlank = 0;
+      paperResults.forEach(r => {
+        totalCorrect += r.correctCount;
+        totalBlank += r.total;
+      });
+
+      let html = `
+        <div class="result-title">答题结果</div>
+        <div class="result-score">总得分：${totalCorrect} / ${totalBlank}</div>
+      `;
+
+      const wrongQuestions = paperResults.filter(r => r.wrongs.length > 0);
+
+      if (wrongQuestions.length === 0) {
+        html += `<div class="wrong-text">全部题目答对。</div>`;
+      } else {
+        wrongQuestions.forEach(item => {
+          html += `
+            <div class="wrong-item">
+              <div class="wrong-head">第 ${item.questionIndex} 题有错题</div>
+              <div class="wrong-text">${item.analysis}</div>
+
+              <div class="wrong-subtitle">题目截图</div>
+              ${item.snapshotHtml}
+
+              <div class="wrong-subtitle">答题情况</div>
+              ${item.answerStatusHtml}
+
+              <div class="wrong-subtitle">原题图</div>
+              ${originalImageHtml()}
+            </div>
+          `;
+        });
+      }
+
+      resultPanel.innerHTML = html;
+      resultPanel.classList.remove("hidden");
+      restartBtn.classList.remove("hidden");
+      checkBtn.classList.add("hidden");
+      nextBtn.classList.add("hidden");
+    }
+
+    checkBtn.addEventListener("click", () => {
+      checkCurrentQuestion(false);
+    });
+
+    nextBtn.addEventListener("click", () => {
+      checkCurrentQuestion(true);
+
+      if (currentIndex < TOTAL_QUESTIONS - 1) {
+        loadQuestion(currentIndex + 1);
+      } else {
+        showFinalResult();
+      }
+    });
+
+    restartBtn.addEventListener("click", () => {
+      generatePaper();
+    });
+
+    generatePaper();
+  </script>
+</body>
+</html>
