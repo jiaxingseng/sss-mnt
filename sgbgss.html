@@ -28,28 +28,48 @@
       --mini-option-size: 44px;
     }
 
-    /* iPad / 平板：放大2档 */
-    @media (min-width: 769px) and (max-width: 1180px) {
+    /* 平板常规放大 */
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       :root {
-        --page-width: 980px;
-        --big-size: 170px;
-        --workspace-gap: 18px;
-        --symbol-size: 42px;
-        --symbol-box: 48px;
-        --small-symbol-size: 30px;
-        --small-symbol-box: 34px;
-        --option-size: 88px;
-        --option-gap-x: 16px;
-        --option-gap-y: 16px;
-        --result-width: 900px;
-        --controls-width: 720px;
-        --mini-page-width: 440px;
-        --mini-big-size: 96px;
-        --mini-option-size: 56px;
+        --page-width: 1180px;
+        --big-size: 200px;
+        --workspace-gap: 20px;
+        --symbol-size: 50px;
+        --symbol-box: 58px;
+        --small-symbol-size: 36px;
+        --small-symbol-box: 40px;
+        --option-size: 104px;
+        --option-gap-x: 18px;
+        --option-gap-y: 18px;
+        --result-width: 1100px;
+        --controls-width: 860px;
+        --mini-page-width: 520px;
+        --mini-big-size: 116px;
+        --mini-option-size: 66px;
       }
     }
 
-    @media (max-width: 768px) {
+    /* iPad 强制放大 */
+    .is-ipad {
+      --page-width: 1180px;
+      --big-size: 200px;
+      --workspace-gap: 20px;
+      --symbol-size: 50px;
+      --symbol-box: 58px;
+      --small-symbol-size: 36px;
+      --small-symbol-box: 40px;
+      --option-size: 104px;
+      --option-gap-x: 18px;
+      --option-gap-y: 18px;
+      --result-width: 1100px;
+      --controls-width: 860px;
+      --mini-page-width: 520px;
+      --mini-big-size: 116px;
+      --mini-option-size: 66px;
+    }
+
+    /* 手机 */
+    @media screen and (max-width: 767px) {
       :root {
         --page-width: 390px;
         --big-size: 86px;
@@ -77,7 +97,7 @@
     }
 
     .page {
-      width: min(var(--page-width), 100vw - 16px);
+      width: min(var(--page-width), calc(100vw - 24px));
       margin: 10px auto 24px;
       background: #fff;
     }
@@ -93,7 +113,7 @@
       font-weight: 600;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       .top-tag {
         font-size: 20px;
         padding: 8px 16px;
@@ -101,7 +121,13 @@
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad .top-tag {
+      font-size: 20px;
+      padding: 8px 16px;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 767px) {
       .top-tag {
         font-size: 14px;
         padding: 4px 10px;
@@ -126,7 +152,7 @@
       margin: 0 12px;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       .section-title {
         font-size: 26px;
         margin: 12px 0 16px;
@@ -138,7 +164,17 @@
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad .section-title {
+      font-size: 26px;
+      margin: 12px 0 16px;
+    }
+
+    .is-ipad .section-title::before,
+    .is-ipad .section-title::after {
+      margin: 0 16px;
+    }
+
+    @media (max-width: 767px) {
       .section-title {
         font-size: 16px;
         margin: 6px 0 10px;
@@ -270,7 +306,7 @@
       color: #fff;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       button {
         padding: 14px 22px;
         font-size: 20px;
@@ -278,7 +314,13 @@
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad button {
+      padding: 14px 22px;
+      font-size: 20px;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 767px) {
       button {
         padding: 9px 14px;
         font-size: 14px;
@@ -301,14 +343,19 @@
       color: #f04438;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       .msg {
         font-size: 18px;
         min-height: 30px;
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad .msg {
+      font-size: 18px;
+      min-height: 30px;
+    }
+
+    @media (max-width: 767px) {
       .msg {
         font-size: 13px;
       }
@@ -338,7 +385,7 @@
       margin-bottom: 12px;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       .result-panel {
         border-radius: 10px;
         padding: 16px;
@@ -353,7 +400,20 @@
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad .result-panel {
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .is-ipad .result-title {
+      font-size: 28px;
+    }
+
+    .is-ipad .result-score {
+      font-size: 20px;
+    }
+
+    @media (max-width: 767px) {
       .result-title {
         font-size: 16px;
       }
@@ -405,7 +465,7 @@
       margin-bottom: 10px;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       .wrong-head {
         font-size: 20px;
       }
@@ -416,7 +476,16 @@
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad .wrong-head {
+      font-size: 20px;
+    }
+
+    .is-ipad .wrong-text,
+    .is-ipad .wrong-subtitle {
+      font-size: 16px;
+    }
+
+    @media (max-width: 767px) {
       .wrong-head {
         font-size: 14px;
       }
@@ -434,14 +503,19 @@
       margin-bottom: 8px;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       .progress {
         font-size: 18px;
         margin-bottom: 10px;
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad .progress {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 767px) {
       .progress {
         font-size: 13px;
         margin-bottom: 6px;
@@ -600,7 +674,7 @@
       margin-bottom: 0;
     }
 
-    @media (min-width: 769px) and (max-width: 1180px) {
+    @media screen and (min-width: 768px) and (max-width: 1366px) {
       .answer-status {
         font-size: 16px;
         padding: 12px;
@@ -630,7 +704,35 @@
       }
     }
 
-    @media (max-width: 768px) {
+    .is-ipad .answer-status {
+      font-size: 16px;
+      padding: 12px;
+    }
+
+    .is-ipad .mini-top-tag {
+      font-size: 14px;
+      padding: 4px 8px;
+    }
+
+    .is-ipad .mini-title {
+      font-size: 14px;
+    }
+
+    .is-ipad .mini-shape {
+      width: 28px;
+      height: 28px;
+      font-size: 22px;
+      line-height: 28px;
+    }
+
+    .is-ipad .mini-shape.small {
+      width: 20px;
+      height: 20px;
+      font-size: 16px;
+      line-height: 20px;
+    }
+
+    @media (max-width: 767px) {
       .mini-page {
         width: 250px;
       }
@@ -698,6 +800,14 @@
   </div>
 
   <script>
+    (function () {
+      const ua = navigator.userAgent || "";
+      const isIPad = /iPad/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      if (isIPad) {
+        document.documentElement.classList.add("is-ipad");
+      }
+    })();
+
     const ORIGINAL_IMAGE = "./original.png";
     const TOTAL_QUESTIONS = 5;
 
@@ -1070,10 +1180,12 @@
 
         if (!saveOnly && user) {
           const cell = document.querySelector(`[data-blank-id="${blankId}"]`);
-          cell.style.outline = ok
-            ? "3px solid rgba(18,183,106,.95)"
-            : "3px solid rgba(240,68,56,.95)";
-          cell.style.outlineOffset = "-3px";
+          if (cell) {
+            cell.style.outline = ok
+              ? "3px solid rgba(18,183,106,.95)"
+              : "3px solid rgba(240,68,56,.95)";
+            cell.style.outlineOffset = "-3px";
+          }
         }
 
         if (ok) count++;
