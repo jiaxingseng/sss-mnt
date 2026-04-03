@@ -28,6 +28,27 @@
       --mini-option-size: 44px;
     }
 
+    /* iPad / 平板：放大2档 */
+    @media (min-width: 769px) and (max-width: 1180px) {
+      :root {
+        --page-width: 980px;
+        --big-size: 170px;
+        --workspace-gap: 18px;
+        --symbol-size: 42px;
+        --symbol-box: 48px;
+        --small-symbol-size: 30px;
+        --small-symbol-box: 34px;
+        --option-size: 88px;
+        --option-gap-x: 16px;
+        --option-gap-y: 16px;
+        --result-width: 900px;
+        --controls-width: 720px;
+        --mini-page-width: 440px;
+        --mini-big-size: 96px;
+        --mini-option-size: 56px;
+      }
+    }
+
     @media (max-width: 768px) {
       :root {
         --page-width: 390px;
@@ -72,6 +93,14 @@
       font-weight: 600;
     }
 
+    @media (min-width: 769px) and (max-width: 1180px) {
+      .top-tag {
+        font-size: 20px;
+        padding: 8px 16px;
+        border-radius: 10px;
+      }
+    }
+
     @media (max-width: 768px) {
       .top-tag {
         font-size: 14px;
@@ -95,6 +124,18 @@
       flex: 1;
       border-top: 2px dashed #4ac25d;
       margin: 0 12px;
+    }
+
+    @media (min-width: 769px) and (max-width: 1180px) {
+      .section-title {
+        font-size: 26px;
+        margin: 12px 0 16px;
+      }
+
+      .section-title::before,
+      .section-title::after {
+        margin: 0 16px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -229,6 +270,14 @@
       color: #fff;
     }
 
+    @media (min-width: 769px) and (max-width: 1180px) {
+      button {
+        padding: 14px 22px;
+        font-size: 20px;
+        border-radius: 10px;
+      }
+    }
+
     @media (max-width: 768px) {
       button {
         padding: 9px 14px;
@@ -250,6 +299,13 @@
 
     .msg.wrong {
       color: #f04438;
+    }
+
+    @media (min-width: 769px) and (max-width: 1180px) {
+      .msg {
+        font-size: 18px;
+        min-height: 30px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -280,6 +336,21 @@
     .result-score {
       font-size: 16px;
       margin-bottom: 12px;
+    }
+
+    @media (min-width: 769px) and (max-width: 1180px) {
+      .result-panel {
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .result-title {
+        font-size: 28px;
+      }
+
+      .result-score {
+        font-size: 20px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -334,6 +405,17 @@
       margin-bottom: 10px;
     }
 
+    @media (min-width: 769px) and (max-width: 1180px) {
+      .wrong-head {
+        font-size: 20px;
+      }
+
+      .wrong-text,
+      .wrong-subtitle {
+        font-size: 16px;
+      }
+    }
+
     @media (max-width: 768px) {
       .wrong-head {
         font-size: 14px;
@@ -350,6 +432,13 @@
       font-size: 15px;
       color: #666;
       margin-bottom: 8px;
+    }
+
+    @media (min-width: 769px) and (max-width: 1180px) {
+      .progress {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -509,6 +598,36 @@
 
     .answer-status div:last-child {
       margin-bottom: 0;
+    }
+
+    @media (min-width: 769px) and (max-width: 1180px) {
+      .answer-status {
+        font-size: 16px;
+        padding: 12px;
+      }
+
+      .mini-top-tag {
+        font-size: 14px;
+        padding: 4px 8px;
+      }
+
+      .mini-title {
+        font-size: 14px;
+      }
+
+      .mini-shape {
+        width: 28px;
+        height: 28px;
+        font-size: 22px;
+        line-height: 28px;
+      }
+
+      .mini-shape.small {
+        width: 20px;
+        height: 20px;
+        font-size: 16px;
+        line-height: 20px;
+      }
     }
 
     @media (max-width: 768px) {
