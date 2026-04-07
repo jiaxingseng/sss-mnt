@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>面试题库 - 语文</title>
+  <title>幼升小题库首页</title>
   <style>
     * {
       box-sizing: border-box;
@@ -34,7 +34,7 @@
     }
 
     .title {
-      font-size: 1.8rem;
+      font-size: 2rem;
       font-weight: 800;
       color: #2f4f2f;
       margin-bottom: 10px;
@@ -59,11 +59,22 @@
       text-decoration: none;
     }
 
+    .section {
+      margin-bottom: 26px;
+    }
+
     .section-title {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       font-weight: 800;
       color: #2f4f2f;
-      margin: 8px 0 14px;
+      margin: 10px 0 14px;
+    }
+
+    .sub-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #4d6b4d;
+      margin: 8px 0 12px;
     }
 
     .menu-grid {
@@ -127,11 +138,95 @@
       word-break: break-all;
     }
 
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .category-box {
+      background: #f8fff8;
+      border: 1px solid #d7ead7;
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(120, 170, 120, 0.08);
+      transition: all 0.2s ease;
+    }
+
+    .category-box:hover {
+      background: #f1faec;
+      border-color: #b7d7a8;
+      transform: translateY(-2px);
+    }
+
+    .category-card {
+      text-decoration: none;
+      color: #2f4f2f;
+      display: block;
+    }
+
+    .category-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .category-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #355735;
+      margin-bottom: 4px;
+    }
+
+    .category-desc {
+      font-size: 0.85rem;
+      color: #7a927a;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .sub-link {
+      display: inline-block;
+      margin-top: 6px;
+      background: linear-gradient(#e8f5d8, #dcedc8);
+      border: 1px solid #b7d7a8;
+      color: #355735;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .sub-link:hover {
+      background: #dff0cf;
+      border-color: #9ccc65;
+    }
+
     .footer {
       margin-top: 24px;
       text-align: center;
       font-size: 0.9rem;
       color: #6a826a;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .page {
+        max-width: 900px;
+      }
+
+      .title {
+        font-size: 1.8rem;
+      }
+
+      .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .category-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
 
     @media (max-width: 767px) {
@@ -152,6 +247,11 @@
       }
 
       .menu-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .category-grid {
         grid-template-columns: 1fr;
         gap: 10px;
       }
@@ -180,27 +280,127 @@
 <body>
   <div class="page">
     <div class="header">
-      <div class="title">面试题库 · 语文</div>
+      <div class="title">幼升小题库首页</div>
       <div class="desc">
-        通过表达、阅读、理解和观察等练习，
-        提升孩子的语言表达能力与思维能力。
+        首页题库分为机考和面试。<br />
+        面试再分为语文、数学、英语，帮助孩子进行系统练习。
       </div>
-      <a href="index.html" class="top-btn">返回首页</a>
+      <a href="#jikao" class="top-btn">开始练习</a>
     </div>
 
-    <div class="section-title">语文练习入口</div>
-    <div class="menu-grid">
-      <a href="khbhdwt.html" class="menu-btn">
-        <div class="menu-icon">📚</div>
-        <div class="menu-text">
-          <div class="menu-title">看绘本回答问题</div>
-          <div class="menu-link">khbhdwt.html</div>
+    <!-- 机考 -->
+    <div class="section" id="jikao">
+      <div class="section-title">机考题库</div>
+      <div class="menu-grid">
+        <a href="jywx.html" class="menu-btn">
+          <div class="menu-icon">🧠</div>
+          <div class="menu-text">
+            <div class="menu-title">记忆无序1</div>
+            <div class="menu-link">jywx.html</div>
+          </div>
+        </a>
+
+        <a href="jywx3.html" class="menu-btn">
+          <div class="menu-icon">🎯</div>
+          <div class="menu-text">
+            <div class="menu-title">记忆无序2</div>
+            <div class="menu-link">jywx3.html</div>
+          </div>
+        </a>
+
+        <a href="jyyx.html" class="menu-btn">
+          <div class="menu-icon">➡️</div>
+          <div class="menu-text">
+            <div class="menu-title">有序记忆</div>
+            <div class="menu-link">jyyx.html</div>
+          </div>
+        </a>
+
+        <a href="sgbgjy.html" class="menu-btn">
+          <div class="menu-icon">🧩</div>
+          <div class="menu-text">
+            <div class="menu-title">四宫八宫记忆</div>
+            <div class="menu-link">sgbgjy.html</div>
+          </div>
+        </a>
+
+        <a href="sgbgxz.html" class="menu-btn">
+          <div class="menu-icon">🔄</div>
+          <div class="menu-text">
+            <div class="menu-title">四宫八宫旋转</div>
+            <div class="menu-link">sgbgxz.html</div>
+          </div>
+        </a>
+
+        <a href="sgbglbt.html" class="menu-btn">
+          <div class="menu-icon">🔍</div>
+          <div class="menu-text">
+            <div class="menu-title">四宫八宫留不同</div>
+            <div class="menu-link">sgbglbt.html</div>
+          </div>
+        </a>
+
+        <a href="sgbgllz.html" class="menu-btn">
+          <div class="menu-icon">📐</div>
+          <div class="menu-text">
+            <div class="menu-title">四宫八宫留第2列</div>
+            <div class="menu-link">sgbgllz.html</div>
+          </div>
+        </a>
+
+        <a href="sgbgss.html" class="menu-btn">
+          <div class="menu-icon">✋</div>
+          <div class="menu-text">
+            <div class="menu-title">四宫八宫手势</div>
+            <div class="menu-link">sgbgss.html</div>
+          </div>
+        </a>
+
+        <a href="txtl.html" class="menu-btn">
+          <div class="menu-icon">🔷</div>
+          <div class="menu-text">
+            <div class="menu-title">图形推理</div>
+            <div class="menu-link">txtl.html</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- 面试 -->
+    <div class="section" id="mianshi">
+      <div class="section-title">面试题库</div>
+      <div class="sub-title">请选择学科</div>
+
+      <div class="category-grid">
+        <div class="category-box">
+          <a href="ms_yuwen.html" class="category-card">
+            <div class="category-icon">📖</div>
+            <div class="category-title">语文</div>
+            <div class="category-desc">表达、识字、阅读理解等练习</div>
+          </a>
+          <a href="khbhdwt.html" class="sub-link">看绘本回答问题</a>
         </div>
-      </a>
+
+        <div class="category-box">
+          <a href="ms_shuxue.html" class="category-card">
+            <div class="category-icon">➕</div>
+            <div class="category-title">数学</div>
+            <div class="category-desc">数感、计算、规律与思维训练</div>
+          </a>
+        </div>
+
+        <div class="category-box">
+          <a href="ms_yingyu.html" class="category-card">
+            <div class="category-icon">🔤</div>
+            <div class="category-title">英语</div>
+            <div class="category-desc">字母、单词、口语与听说练习</div>
+          </a>
+        </div>
+      </div>
     </div>
 
     <div class="footer">
-      面试题库 · 语文
+      幼升小题库 · 机考 / 面试分类练习
     </div>
   </div>
 </body>
