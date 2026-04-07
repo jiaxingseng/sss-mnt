@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>幼升小英语看图说话模拟题 - 升级版</title>
+  <style>
+    :root{
+      --bg:#f7fbff;
+      --card:#ffffff;
+      --primary:#2b6cb0;
+      --primary-light:#e9f4ff;
+      --green:#2f9e44;
+      --green-dark:#237a34;
+      --orange:#fff4e6;
+      --orange-text:#9a4d00;
+      --border:#dce9f6;
+      --text:#243447;
+      --sub:#607080;
+      --shadow:0 8px 24px rgba(38,78,118,.10);
+      --radius:20px;
+    }
+
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      background:linear-gradient(180deg,#f8fbff 0%,#eef6ff 100%);
+      font-family:"PingFang SC","Microsoft YaHei",Arial,sans-serif;
+      color:var(--text);
+    }
+
+    body{padding:18px 12px 30px;}
+    .app{max-width:1000px;margin:0 auto;}
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .title-wrap h1{
+      margin:0;
+      font-size:32px;
+      color:var(--primary);
+      line-height:1.2;
+    }
+
+    .title-wrap p{
+      margin:6px 0 0;
+      color:var(--sub);
+      font-size:16px;
+    }
+
+    .progress{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      padding:10px 14px;
+      color:var(--primary);
+      font-weight:800;
+      min-width:180px;
+      text-align:center;
+    }
+
+    .screen{
+      background:var(--card);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      border:1px solid #e8f0fa;
+      overflow:hidden;
+    }
+
+    .screen-head{
+      padding:18px 22px;
+      background:linear-gradient(180deg,#f8fbff,#eef6ff);
+      border-bottom:1px solid var(--border);
+    }
+
+    .screen-head h2{
+      margin:0;
+      color:#1d4f83;
+      font-size:24px;
+    }
+
+    .screen-body{
+      padding:22px 18px 20px;
+    }
+
+    .desc{
+      background:var(--primary-light);
+      color:#295a84;
+      border-radius:14px;
+      padding:14px 16px;
+      line-height:1.8;
+      font-size:18px;
+      margin-bottom:16px;
+    }
+
+    .question-area{
+      border:2px dashed #cfe3f8;
+      border-radius:18px;
+      background:#fcfeff;
+      padding:18px;
+      min-height:220px;
+    }
+
+    .task-tag{
+      display:inline-block;
+      padding:8px 14px;
+      background:#eef7ff;
+      border:1px solid #d7e7f7;
+      border-radius:999px;
+      color:#35628c;
+      font-weight:700;
+      margin-bottom:12px;
+      font-size:16px;
+    }
+
+    .scene-title{
+      font-size:28px;
+      font-weight:800;
+      color:#214f79;
+      margin-bottom:10px;
+    }
+
+    .english-task{
+      font-size:24px;
+      line-height:1.7;
+      color:#1f4e79;
+      font-weight:700;
+      margin-bottom:16px;
+    }
+
+    .image-wrap{
+      background:#f8fbff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+      margin-bottom:16px;
+    }
+
+    .image-title{
+      font-size:20px;
+      font-weight:800;
+      color:#315977;
+      margin-bottom:10px;
+    }
+
+    .image-box{
+      width:100%;
+      min-height:320px;
+      background:#fff;
+      border:1px solid #e4eef8;
+      border-radius:16px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      overflow:hidden;
+    }
+
+    .image-box img{
+      width:100%;
+      max-height:70vh;
+      object-fit:contain;
+      display:block;
+      background:#fff;
+    }
+
+    .image-fallback{
+      display:none;
+      width:100%;
+      padding:28px 18px;
+      text-align:center;
+      line-height:1.9;
+      font-size:18px;
+      color:#8a5a00;
+      background:#fff8e6;
+    }
+
+    .scene-box{
+      background:#f9fcff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .scene-subtitle{
+      font-size:20px;
+      font-weight:800;
+      color:#315977;
+      margin-bottom:10px;
+    }
+
+    .item-list{
+      margin:0;
+      padding-left:24px;
+      font-size:20px;
+      line-height:1.9;
+      color:#314b63;
+    }
+
+    .answer-block{
+      margin-top:18px;
+    }
+
+    textarea{
+      width:100%;
+      min-height:120px;
+      resize:vertical;
+      font-size:20px;
+      padding:14px 16px;
+      border-radius:14px;
+      border:2px solid #d7e5f2;
+      outline:none;
+      background:#fff;
+      font-family:inherit;
+      line-height:1.7;
+    }
+
+    textarea:focus{
+      border-color:#7bb2e8;
+      box-shadow:0 0 0 4px rgba(123,178,232,.15);
+    }
+
+    .actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:20px;
+      flex-wrap:wrap;
+    }
+
+    .hint{
+      color:#6d7c8b;
+      font-size:16px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:16px;
+      padding:16px 22px;
+      font-size:22px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.18s ease;
+      min-height:58px;
+    }
+
+    .btn:active{transform:scale(.98);}
+    .btn-next{
+      background:var(--primary);
+      color:#fff;
+      box-shadow:0 8px 20px rgba(43,108,176,.25);
+    }
+    .btn-green{
+      background:var(--green);
+      color:#fff;
+      box-shadow:0 8px 20px rgba(47,158,68,.25);
+    }
+    .btn-green:hover{background:var(--green-dark);}
+
+    .start-panel{
+      text-align:center;
+      padding:30px 18px 36px;
+    }
+
+    .start-panel .hero{
+      font-size:58px;
+      margin-bottom:8px;
+    }
+
+    .start-panel h2{
+      margin:0 0 8px;
+      color:var(--primary);
+      font-size:30px;
+    }
+
+    .start-panel p{
+      color:var(--sub);
+      font-size:18px;
+      line-height:1.9;
+      margin:8px auto 18px;
+      max-width:760px;
+    }
+
+    .tag-row{
+      display:flex;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:20px;
+    }
+
+    .tag{
+      background:#eef6ff;
+      color:#35628c;
+      border-radius:999px;
+      padding:10px 16px;
+      font-size:16px;
+      border:1px solid #d8e8f8;
+    }
+
+    .result-summary{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-top:12px;
+    }
+
+    .stat{
+      background:#f8fbff;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:18px 14px;
+      text-align:center;
+    }
+
+    .stat .num{
+      font-size:34px;
+      font-weight:800;
+      color:var(--primary);
+    }
+
+    .stat .label{
+      margin-top:6px;
+      color:var(--sub);
+      font-size:16px;
+    }
+
+    .analysis-card{
+      margin-top:20px;
+      background:#fffdfb;
+      border:1px solid #f3dcc4;
+      border-radius:18px;
+      padding:16px;
+    }
+
+    .analysis-card h3{
+      margin:0 0 12px;
+      color:#a35400;
+      font-size:21px;
+    }
+
+    .analysis{
+      margin-top:10px;
+      padding:12px 14px;
+      background:var(--orange);
+      color:var(--orange-text);
+      border-radius:14px;
+      line-height:1.8;
+      font-size:17px;
+    }
+
+    .sample-list{
+      margin:0;
+      padding-left:24px;
+      font-size:19px;
+      line-height:1.9;
+      color:#314b63;
+    }
+
+    .wrong-row{
+      margin:6px 0;
+      font-size:18px;
+      line-height:1.8;
+    }
+
+    @media (max-width: 768px){
+      body{padding:12px 10px 24px;}
+      .screen-head{padding:14px 16px;}
+      .screen-body{padding:18px 14px 16px;}
+      .title-wrap h1{font-size:28px;}
+      .result-summary{grid-template-columns:1fr;}
+      .btn{width:100%;}
+      .actions{flex-direction:column;align-items:stretch;}
+      textarea{font-size:18px;}
+      .scene-title{font-size:24px;}
+      .english-task{font-size:20px;}
+      .item-list,.desc,.sample-list{font-size:18px;}
+      .image-box{min-height:240px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>幼升小英语看图说话模拟题</h1>
+        <p>升级版：更多场景 + 使用真实图片路径</p>
+      </div>
+      <div class="progress" id="progressText">准备开始</div>
+    </div>
+
+    <div class="screen" id="mainScreen"></div>
+  </div>
+
+  <script>
+    const screen = document.getElementById("mainScreen");
+    const progressText = document.getElementById("progressText");
+
+    const state = {
+      questions: [],
+      currentIndex: 0,
+      answers: {},
+      total: 0
+    };
+
+    function updateProgress(text){
+      progressText.textContent = text;
+    }
+
+    function shuffle(arr){
+      return [...arr].sort(()=>Math.random()-0.5);
+    }
+
+    function countEnglishSentences(text){
+      if(!text) return 0;
+      return text
+        .split(/[.!?。！？\n]/)
+        .map(s => s.trim())
+        .filter(Boolean).length;
+    }
+
+    const sceneBank = [
+      {
+        scene: "At School",
+        image: "images/english/school.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "There is a school.",
+          "Some children are playing.",
+          "A girl is reading.",
+          "A boy is running.",
+          "It is a sunny day."
+        ],
+        samples: [
+          "This is a school.",
+          "I can see some children.",
+          "They are playing outside.",
+          "A girl is reading.",
+          "It is a sunny day."
+        ],
+        vocab: ["school","children","girl","boy","sunny","play"]
+      },
+      {
+        scene: "In the Park",
+        image: "images/english/park.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "There is a park.",
+          "Two children are flying a kite.",
+          "A dog is running.",
+          "A woman is sitting on a bench.",
+          "There are many flowers."
+        ],
+        samples: [
+          "This is a park.",
+          "Two children are flying a kite.",
+          "I can see a dog.",
+          "The woman is sitting on a bench.",
+          "There are many flowers."
+        ],
+        vocab: ["park","kite","dog","bench","flowers","children"]
+      },
+      {
+        scene: "At the Zoo",
+        image: "images/english/zoo.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "There is a zoo.",
+          "A girl is looking at the monkeys.",
+          "A boy is eating an ice cream.",
+          "Two elephants are near the trees.",
+          "The sun is shining."
+        ],
+        samples: [
+          "This is a zoo.",
+          "The girl is looking at the monkeys.",
+          "The boy is eating an ice cream.",
+          "I can see two elephants.",
+          "It is sunny."
+        ],
+        vocab: ["zoo","girl","boy","monkeys","elephants","ice cream"]
+      },
+      {
+        scene: "At Home",
+        image: "images/english/home.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "A family is in the living room.",
+          "The father is reading a book.",
+          "The mother is drinking tea.",
+          "A girl is drawing.",
+          "A cat is sleeping on the sofa."
+        ],
+        samples: [
+          "This is a family.",
+          "They are in the living room.",
+          "The father is reading a book.",
+          "The girl is drawing.",
+          "The cat is sleeping on the sofa."
+        ],
+        vocab: ["family","living room","father","mother","girl","cat"]
+      },
+      {
+        scene: "At the Farm",
+        image: "images/english/farm.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "There is a farm.",
+          "A farmer is feeding chickens.",
+          "A cow is standing near the fence.",
+          "A boy is holding a basket.",
+          "There are some trees."
+        ],
+        samples: [
+          "This is a farm.",
+          "The farmer is feeding chickens.",
+          "There is a cow.",
+          "The boy is holding a basket.",
+          "I can see some trees."
+        ],
+        vocab: ["farm","farmer","chickens","cow","basket","trees"]
+      },
+      {
+        scene: "In the Classroom",
+        image: "images/english/classroom.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a classroom.",
+          "A teacher is standing near the blackboard.",
+          "Two students are writing.",
+          "One boy is raising his hand.",
+          "There are books on the desk."
+        ],
+        samples: [
+          "This is a classroom.",
+          "The teacher is standing near the blackboard.",
+          "The students are writing.",
+          "The boy is raising his hand.",
+          "There are some books on the desk."
+        ],
+        vocab: ["classroom","teacher","students","blackboard","desk","books"]
+      },
+      {
+        scene: "At the Supermarket",
+        image: "images/english/supermarket.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a supermarket.",
+          "A woman is pushing a shopping cart.",
+          "A boy is holding some apples.",
+          "There are many fruits and vegetables.",
+          "People are shopping."
+        ],
+        samples: [
+          "This is a supermarket.",
+          "A woman is pushing a shopping cart.",
+          "The boy is holding some apples.",
+          "There are many fruits.",
+          "People are shopping."
+        ],
+        vocab: ["supermarket","shopping cart","apples","fruits","vegetables","shopping"]
+      },
+      {
+        scene: "In the Restaurant",
+        image: "images/english/restaurant.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a restaurant.",
+          "A family is eating dinner.",
+          "A waiter is carrying food.",
+          "There is juice on the table.",
+          "They look happy."
+        ],
+        samples: [
+          "This is a restaurant.",
+          "A family is eating dinner.",
+          "A waiter is carrying food.",
+          "There is some juice on the table.",
+          "They are happy."
+        ],
+        vocab: ["restaurant","family","dinner","waiter","food","juice"]
+      },
+      {
+        scene: "At a Birthday Party",
+        image: "images/english/birthday.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a birthday party.",
+          "A girl is wearing a birthday hat.",
+          "There is a big cake.",
+          "Some children are singing.",
+          "There are balloons."
+        ],
+        samples: [
+          "This is a birthday party.",
+          "There is a big cake.",
+          "The girl is wearing a birthday hat.",
+          "Some children are singing.",
+          "I can see balloons."
+        ],
+        vocab: ["birthday party","cake","hat","children","singing","balloons"]
+      },
+      {
+        scene: "On the Playground",
+        image: "images/english/playground.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a playground.",
+          "Some children are playing football.",
+          "A girl is on the slide.",
+          "A boy is climbing.",
+          "They are having fun."
+        ],
+        samples: [
+          "This is a playground.",
+          "Some children are playing football.",
+          "The girl is on the slide.",
+          "The boy is climbing.",
+          "They are having fun."
+        ],
+        vocab: ["playground","football","slide","boy","girl","fun"]
+      },
+      {
+        scene: "On a Rainy Day",
+        image: "images/english/rainy.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "It is raining.",
+          "A boy is holding an umbrella.",
+          "A girl is wearing boots.",
+          "There is water on the road.",
+          "They are walking home."
+        ],
+        samples: [
+          "It is raining.",
+          "The boy is holding an umbrella.",
+          "The girl is wearing boots.",
+          "There is water on the road.",
+          "They are walking home."
+        ],
+        vocab: ["rainy","umbrella","boots","road","walking","home"]
+      },
+      {
+        scene: "At the Beach",
+        image: "images/english/beach.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a beach.",
+          "Some children are playing with sand.",
+          "A girl is swimming.",
+          "There is a boat on the sea.",
+          "It is sunny."
+        ],
+        samples: [
+          "This is a beach.",
+          "Some children are playing with sand.",
+          "A girl is swimming.",
+          "There is a boat on the sea.",
+          "It is sunny."
+        ],
+        vocab: ["beach","sand","swimming","boat","sea","sunny"]
+      },
+      {
+        scene: "In the Library",
+        image: "images/english/library.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a library.",
+          "A girl is reading a book.",
+          "A boy is looking for books.",
+          "There are many bookshelves.",
+          "It is quiet."
+        ],
+        samples: [
+          "This is a library.",
+          "The girl is reading a book.",
+          "The boy is looking for books.",
+          "There are many bookshelves.",
+          "It is quiet."
+        ],
+        vocab: ["library","reading","book","bookshelves","boy","girl"]
+      },
+      {
+        scene: "At the Hospital",
+        image: "images/english/hospital.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a hospital.",
+          "A doctor is helping a child.",
+          "A nurse is standing nearby.",
+          "The child is sitting on the bed.",
+          "They are talking."
+        ],
+        samples: [
+          "This is a hospital.",
+          "A doctor is helping a child.",
+          "A nurse is standing nearby.",
+          "The child is sitting on the bed.",
+          "They are talking."
+        ],
+        vocab: ["hospital","doctor","nurse","child","bed","talking"]
+      },
+      {
+        scene: "At the Bus Stop",
+        image: "images/english/busstop.jpg",
+        hint: "Please describe the picture. (at least two sentences)",
+        points: [
+          "This is a bus stop.",
+          "Some people are waiting for the bus.",
+          "A boy is holding a schoolbag.",
+          "A woman is standing near the sign.",
+          "The bus is coming."
+        ],
+        samples: [
+          "This is a bus stop.",
+          "Some people are waiting for the bus.",
+          "The boy is holding a schoolbag.",
+          "A woman is standing near the sign.",
+          "The bus is coming."
+        ],
+        vocab: ["bus stop","people","waiting","schoolbag","woman","bus"]
+      }
+    ];
+
+    function startQuiz(){
+      state.questions = shuffle(sceneBank).slice(0,5);
+      state.currentIndex = 0;
+      state.answers = {};
+      state.total = state.questions.length;
+      renderCurrent();
+    }
+
+    function renderStart(){
+      updateProgress("准备开始");
+      screen.innerHTML = `
+        <div class="screen-head">
+          <h2>开始英语看图说话</h2>
+        </div>
+        <div class="screen-body start-panel">
+          <div class="hero">🖼️</div>
+          <h2>更多场景英语口语模拟题</h2>
+          <p>本版本加入了更多英语场景，并改为直接读取真实图片路径。你可以把高质量场景图片放入 <b>images/english/</b> 文件夹中，让练习效果更接近真实考试。</p>
+          <div class="tag-row">
+            <div class="tag">15个场景</div>
+            <div class="tag">真实图片路径</div>
+            <div class="tag">Describe the picture</div>
+            <div class="tag">At least two sentences</div>
+          </div>
+          <button class="btn btn-green" onclick="startQuiz()">开始答题</button>
+        </div>
+      `;
+    }
+
+    function renderCurrent(){
+      const q = state.questions[state.currentIndex];
+      updateProgress(`第 ${state.currentIndex + 1} / ${state.total} 题`);
+
+      screen.innerHTML = `
+        <div class="screen-head">
+          <h2>English Speaking Test</h2>
+        </div>
+        <div class="screen-body">
+          <div class="desc">请看图并用英语描述。建议孩子至少说两句话，最好说三到四句。家长可以把孩子说的话记录下来。</div>
+
+          <div class="question-area">
+            <div class="task-tag">Scene: ${q.scene}</div>
+            <div class="scene-title">${q.scene}</div>
+            <div class="english-task">${q.hint}</div>
+
+            <div class="image-wrap">
+              <div class="image-title">Picture</div>
+              <div class="image-box">
+                <img src="${q.image}" alt="${q.scene}"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                <div class="image-fallback">
+                  当前图片没有加载成功。<br>
+                  请把对应图片放到下面这个路径：<br>
+                  <b>${q.image}</b><br><br>
+                  例如你可以准备真实的卡通场景图或教材图片来替换。
+                </div>
+              </div>
+            </div>
+
+            <div class="scene-box">
+              <div class="scene-subtitle">观察提示 / What can you see?</div>
+              <ul class="item-list">
+                ${q.points.map(item => `<li>${item}</li>`).join("")}
+              </ul>
+            </div>
+
+            <div class="answer-block">
+              <label>孩子的英语口述作答区</label>
+              <textarea id="answerText" placeholder="例如：This is a park. I can see two children. They are flying a kite."></textarea>
+            </div>
+          </div>
+
+          <div class="actions">
+            <div class="hint">真实考试更看重孩子是否敢说、是否句子完整。</div>
+            <button class="btn btn-next" onclick="submitAnswer()">下一题</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function submitAnswer(){
+      state.answers[state.currentIndex] = document.getElementById("answerText").value.trim();
+      if(state.currentIndex < state.total - 1){
+        state.currentIndex++;
+        renderCurrent();
+      }else{
+        renderResult();
+      }
+    }
+
+    function renderResult(){
+      let goodCount = 0;
+      let resultCards = [];
+
+      state.questions.forEach((q, idx) => {
+        const answer = state.answers[idx] || "";
+        const sentenceCount = countEnglishSentences(answer);
+        const hasEnough = sentenceCount >= 2;
+
+        if(hasEnough) goodCount++;
+
+        resultCards.push(`
+          <div class="analysis-card">
+            <h3>第${idx + 1}题：${q.scene}</h3>
+            <div class="wrong-row"><b>你的作答：</b>${answer || "未作答"}</div>
+            <div class="wrong-row"><b>句子数量：</b>${sentenceCount} 句</div>
+            <div class="wrong-row"><b>是否达到“至少两句”：</b>${hasEnough ? "是" : "否"}</div>
+            <div class="analysis"><b>参考句型：</b>
+              <ul class="sample-list">
+                ${q.samples.map(s => `<li>${s}</li>`).join("")}
+              </ul>
+            </div>
+            <div class="analysis"><b>可用词汇：</b>${q.vocab.join(" / ")}</div>
+          </div>
+        `);
+      });
+
+      const percent = Math.round(goodCount / state.total * 100);
+      updateProgress("答题完成");
+
+      screen.innerHTML = `
+        <div class="screen-head">
+          <h2>英语看图说话结果</h2>
+        </div>
+        <div class="screen-body">
+          <div class="desc">这类题主要看孩子是否敢开口、能否说出至少两句完整的英语句子。系统根据句子数量做基础判断，并给出参考句型。</div>
+
+          <div class="result-summary">
+            <div class="stat">
+              <div class="num">${state.total}</div>
+              <div class="label">总题数</div>
+            </div>
+            <div class="stat">
+              <div class="num">${goodCount}</div>
+              <div class="label">达到两句及以上</div>
+            </div>
+            <div class="stat">
+              <div class="num">${percent}%</div>
+              <div class="label">完成度</div>
+            </div>
+          </div>
+
+          ${resultCards.join("")}
+
+          <div class="actions" style="margin-top:26px;">
+            <button class="btn btn-green" onclick="startQuiz()">重新随机一套</button>
+          </div>
+        </div>
+      `;
+    }
+
+    renderStart();
+  </script>
+</body>
+</html>
