@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>图形叠加规律（5题随机 / 原题样式 / iPad适配 / 仅几何图形 / 剔除斜圆角长条）</title>
+  <style>
+    :root{
+      --grid:#cfcfcf;
+      --blank:#d9efc6;
+      --dash:#7cc36a;
+
+      --blue:#0A2DFF;
+      --yellow:#FFE96A;
+      --red:#E12B2B;
+      --black:#111;
+
+      /* iPad适配：格子尺寸随屏幕变化 */
+      --cell: clamp(78px, 9.2vw, 96px);
+      --icon: clamp(62px, 7.6vw, 76px);
+      --optH: clamp(92px, 10.5vw, 112px);
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    body{
+      margin:0;
+      background:#fff;
+      color:#222;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+    .page{
+      width:min(1024px, 96vw);
+      margin:0 auto;
+      padding:18px 10px 22px;
+    }
+    .title{
+      font-size:16px;
+      font-weight:700;
+      margin:2px 0 10px;
+      line-height:1.35;
+    }
+
+    .topRow{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .qno{
+      font-size:13px;
+      color:#555;
+      font-weight:700;
+      white-space:nowrap;
+      padding-top:2px;
+    }
+
+    /* 6个矩阵：3列 × 2行（对齐原图） */
+    .sixBoards{
+      display:grid;
+      grid-template-columns: repeat(3, max-content);
+      gap:24px 30px;
+      align-items:start;
+      justify-content:start;
+      margin:6px 0 12px;
+    }
+    .matrix{
+      border:1px solid var(--grid);
+      background:#fff;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, var(--cell));
+      grid-template-rows: repeat(2, var(--cell));
+    }
+    .cell{
+      width:var(--cell); height:var(--cell);
+      border-right:1px solid var(--grid);
+      border-bottom:1px solid var(--grid);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fff;
+      overflow:hidden;
+      position:relative;
+    }
+    .cell:nth-child(3n){ border-right:0; }
+    .cell:nth-last-child(-n+3){ border-bottom:0; }
+
+    .cell.blank{
+      background:var(--blank);
+      cursor:pointer;
+    }
+
+    svg.icon{
+      width:var(--icon);
+      height:var(--icon);
+      display:block;
+    }
+    /* 绿色格子未放置时：用透明SVG占位（视觉仍为空白，但DOM不空） */
+    svg.placeholder{ opacity:0; }
+
+    /* 选项区（原图样式） */
+    .optHeader{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin:10px 0 10px;
+      color:#666;
+      font-size:14px;
+      font-weight:700;
+      justify-content:center;
+    }
+    .dash{
+      flex:1;
+      border-bottom:2px dashed var(--dash);
+      height:0;
+      max-width:420px;
+    }
+
+    .options{
+      display:grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap:12px;
+      margin-top:4px;
+    }
+    .opt{
+      border:1px solid #d7d7d7;
+      border-radius:6px;
+      background:#fff;
+      height:var(--optH);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+    }
+    .opt.selected{
+      outline:2px solid #2f7df6;
+      outline-offset:-2px;
+    }
+
+    /* ====== 浅绿按钮 ====== */
+    button{
+      border:1px solid #7BCB85;
+      background:#CFF2D3;
+      color:#0E4B1F;
+      border-radius:8px;
+      padding:10px 12px;
+      font-weight:900;
+      cursor:pointer;
+      font-size:14px;
+    }
+    button.primary{
+      border-color:#6AC77A;
+      background:#BDECC5;
+      color:#0E4B1F;
+    }
+    button:hover{ background:#BDECC5; }
+    button.primary:hover{ background:#AEE6B9; }
+    button:active{ filter:brightness(0.96); }
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      filter:none;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-start;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .msg{
+      font-size:13px;
+      color:#444;
+      font-weight:700;
+    }
+
+    /* 结果页 */
+    .results{ display:none; }
+    .results h2{
+      margin:10px 0 8px;
+      font-size:18px;
+    }
+    .summary{
+      border:1px solid #e5e5e5;
+      border-radius:12px;
+      padding:12px 12px;
+      background:#fafafa;
+      margin-bottom:12px;
+      font-size:14px;
+      line-height:1.45;
+    }
+    .resultItem{
+      border:1px solid #e6e6e6;
+      border-radius:12px;
+      padding:12px;
+      margin:10px 0;
+      background:#fff;
+    }
+    .resultItem .head{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .badge{
+      font-weight:900;
+      font-size:13px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid #ddd;
+      background:#f7f7f7;
+      white-space:nowrap;
+    }
+    .badge.ok{ border-color:#bfe7c8; background:#eaf7ee; color:#156b2a; }
+    .badge.bad{ border-color:#f0c0bd; background:#fdeceb; color:#8a1f17; }
+
+    .analysis{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px dashed #ddd;
+      font-size:13px;
+      color:#333;
+      line-height:1.5;
+    }
+    .eqRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:8px 0 2px;
+    }
+    .miniIcon svg.icon{ width:56px; height:56px; }
+    .op{
+      font-size:22px;
+      font-weight:900;
+      color:#666;
+      line-height:1;
+    }
+
+    .ref{
+      margin-top:14px;
+      border:1px solid #e6e6e6;
+      border-radius:12px;
+      padding:12px;
+      background:#fff;
+    }
+    .refTitle{
+      font-weight:900;
+      margin-bottom:8px;
+      font-size:14px;
+    }
+    .ref img{
+      width:100%;
+      height:auto;
+      display:block;
+      border:1px solid #eee;
+      border-radius:10px;
+      background:#fff;
+    }
+    .ref small{ color:#666; display:block; margin-top:8px; line-height:1.45; }
+
+    @media (max-width: 720px){
+      .options{ grid-template-columns: repeat(3, 1fr); }
+      .sixBoards{ gap:16px 16px; }
+      :root{ --cell: clamp(74px, 20vw, 90px); --icon: clamp(60px, 16vw, 72px); }
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+  <div id="quiz">
+    <div class="topRow">
+      <div class="title">点击 → 放置。肯定和支持孩子，必然成就幸福！【家长指导语： 选择出绿色格子内对应的图形】</div>
+      <div class="qno" id="qno"></div>
+    </div>
+
+    <div class="sixBoards">
+      <div class="matrix"><div class="grid" id="exA"></div></div>
+      <div class="matrix"><div class="grid" id="exB"></div></div>
+      <div class="matrix"><div class="grid" id="exC"></div></div>
+
+      <div class="matrix"><div class="grid" id="qA"></div></div>
+      <div class="matrix"><div class="grid" id="qB"></div></div>
+      <div class="matrix"><div class="grid" id="qC"></div></div>
+    </div>
+
+    <div class="optHeader">
+      <div class="dash"></div><span>选项区</span><div class="dash"></div>
+    </div>
+    <div class="options" id="options"></div>
+
+    <div class="actions">
+      <button id="btnClear">清除本题放置</button>
+      <button class="primary" id="btnSubmit">提交本题</button>
+      <button id="btnNext" disabled>下一题</button>
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <h2>答题结果</h2>
+    <div class="summary" id="summary"></div>
+    <div id="resultList"></div>
+
+    <div class="ref">
+      <div class="refTitle">原题截图（附上）</div>
+      <img id="refImg" src="original.png" alt="原题截图（如未显示，请上传或检查文件路径）">
+      <small>
+        如未显示：请将原题截图保存为 <b>original.png</b> 放到本HTML同目录；或使用下面上传替换预览。上传仅本机预览，不联网。
+      </small>
+      <input type="file" id="refUpload" accept="image/*" style="margin-top:10px;">
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================================================
+   规则（不变）：对应格 C = A 与 B 叠加（同一格内叠放）
+   约束（已满足）：
+   - 每个2×3矩阵内6格不重复
+   - 选项区：包含正确答案、12个不重复、无空选项（每个都有可见SVG）
+   - 仅几何图形
+   - 剔除你图里“斜着的圆角长条（红/黄）”：这里用 bannedIds 禁用
+     （同时从候选集合中移除，题面/选项都不会出现）
+   =========================================================== */
+
+const COLOR = { blue:"#0A2DFF", yellow:"#FFE96A", red:"#E12B2B", black:"#111" };
+
+/** 禁用图形ID（彻底剔除） */
+const BANNED_IDS = new Set([
+  // 早前已禁用：胶囊框（如你不需要禁用可删掉这一项）
+  "capsuleFrame",
+  // 本次禁用：斜圆角长条（红/黄）——在本代码中对应 diagStripeR / diagStripeY（已从库与集合中移除）
+  "diagStripeR",
+  "diagStripeY"
+]);
+
+function wrap(inner, cls="icon"){
+  return `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${inner}</svg>`;
+}
+function inner(svg){
+  return svg.replace(/^.*?<svg[^>]*>/s,"").replace(/<\/svg>\s*$/s,"");
+}
+
+/* ===== 几何图形库（不包含 diagStripeR/diagStripeY） ===== */
+const LAYERS = {
+  /* A类：外轮廓/框架 */
+  circleOutline: () => wrap(`<circle cx="50" cy="50" r="34" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>`),
+  ring: () => wrap(`
+    <circle cx="50" cy="50" r="34" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+    <circle cx="50" cy="50" r="18" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+  `),
+  doubleCircleOutline: () => wrap(`
+    <circle cx="36" cy="50" r="20" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+    <circle cx="64" cy="50" r="20" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+  `),
+  rectFrame: () => wrap(`<rect x="14" y="28" width="72" height="44" rx="10" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>`),
+  squareFrame: () => wrap(`<rect x="18" y="18" width="64" height="64" rx="10" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>`),
+
+  /* capsuleFrame 保留定义但已被禁用（不会出题/不会进选项） */
+  capsuleFrame: () => wrap(`<rect x="16" y="30" width="68" height="40" rx="20" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>`),
+
+  diamondOutline: () => wrap(`<polygon points="50,12 86,50 50,88 14,50" fill="white" stroke="${COLOR.blue}" stroke-width="8" stroke-linejoin="round"/>`),
+  hexagonOutline: () => wrap(`<polygon points="50,10 82,28 82,72 50,90 18,72 18,28" fill="white" stroke="${COLOR.blue}" stroke-width="8" stroke-linejoin="round"/>`),
+  octagonOutline: () => wrap(`<polygon points="34,10 66,10 90,34 90,66 66,90 34,90 10,66 10,34" fill="white" stroke="${COLOR.blue}" stroke-width="8" stroke-linejoin="round"/>`),
+  triangleOutline: () => wrap(`<polygon points="50,14 88,84 12,84" fill="white" stroke="${COLOR.blue}" stroke-width="8" stroke-linejoin="round"/>`),
+  trapezoidOutline: () => wrap(`<polygon points="26,22 74,22 90,80 10,80" fill="white" stroke="${COLOR.blue}" stroke-width="8" stroke-linejoin="round"/>`),
+  notchRect: () => wrap(`
+    <path d="M18 30 H82 V70 H18 Z" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+    <rect x="42" y="26" width="16" height="12" fill="white"/>
+    <rect x="42" y="62" width="16" height="12" fill="white"/>
+  `),
+  frameTabs: () => wrap(`
+    <rect x="18" y="26" width="64" height="48" rx="10" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+    <rect x="12" y="44" width="12" height="12" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+    <rect x="76" y="44" width="12" height="12" fill="white" stroke="${COLOR.blue}" stroke-width="8"/>
+  `),
+  arcTop: () => wrap(`<path d="M18 56 A32 32 0 0 1 82 56" fill="none" stroke="${COLOR.blue}" stroke-width="8" stroke-linecap="round"/>`),
+  arcBottom: () => wrap(`<path d="M18 44 A32 32 0 0 0 82 44" fill="none" stroke="${COLOR.blue}" stroke-width="8" stroke-linecap="round"/>`),
+  arcLeft: () => wrap(`<path d="M56 18 A32 32 0 0 0 56 82" fill="none" stroke="${COLOR.blue}" stroke-width="8" stroke-linecap="round"/>`),
+  arcRight: () => wrap(`<path d="M44 18 A32 32 0 0 1 44 82" fill="none" stroke="${COLOR.blue}" stroke-width="8" stroke-linecap="round"/>`),
+
+  /* B类：填充/符号（几何） */
+  yellowBandMid: () => wrap(`<rect x="20" y="40" width="60" height="20" rx="10" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  yellowBandTop: () => wrap(`<rect x="20" y="28" width="60" height="18" rx="9" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  yellowBandBottom: () => wrap(`<rect x="20" y="54" width="60" height="18" rx="9" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  redBandMid: () => wrap(`<rect x="22" y="42" width="56" height="16" rx="8" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  redBandTop: () => wrap(`<rect x="22" y="30" width="56" height="16" rx="8" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  redBandBottom: () => wrap(`<rect x="22" y="54" width="56" height="16" rx="8" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+
+  yellowVBand: () => wrap(`<rect x="40" y="20" width="20" height="60" rx="10" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  redVBand: () => wrap(`<rect x="42" y="22" width="16" height="56" rx="8" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+
+  plus: () => wrap(`
+    <rect x="44" y="18" width="12" height="64" rx="6" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>
+    <rect x="18" y="44" width="64" height="12" rx="6" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>
+  `),
+  minus: () => wrap(`<rect x="18" y="44" width="64" height="12" rx="6" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+
+  smallSquareY: () => wrap(`<rect x="34" y="34" width="32" height="32" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  smallSquareR: () => wrap(`<rect x="34" y="34" width="32" height="32" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  smallCircleY: () => wrap(`<circle cx="50" cy="50" r="16" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  smallCircleR: () => wrap(`<circle cx="50" cy="50" r="16" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>`),
+  twoDots: () => wrap(`
+    <circle cx="38" cy="50" r="12" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>
+    <circle cx="62" cy="50" r="12" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>
+  `),
+
+  diamondFillR: () => wrap(`<polygon points="50,18 82,50 50,82 18,50" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6" stroke-linejoin="round"/>`),
+  diamondFillY: () => wrap(`<polygon points="50,18 82,50 50,82 18,50" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6" stroke-linejoin="round"/>`),
+  triangleFillR: () => wrap(`<polygon points="50,18 84,82 16,82" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6" stroke-linejoin="round"/>`),
+  triangleFillY: () => wrap(`<polygon points="50,18 84,82 16,82" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6" stroke-linejoin="round"/>`),
+
+  vStripes: () => wrap(`
+    <rect x="24" y="20" width="12" height="60" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>
+    <rect x="44" y="20" width="12" height="60" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>
+    <rect x="64" y="20" width="12" height="60" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>
+  `),
+  hStripes: () => wrap(`
+    <rect x="20" y="26" width="60" height="12" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>
+    <rect x="20" y="44" width="60" height="12" fill="${COLOR.red}" stroke="${COLOR.blue}" stroke-width="6"/>
+    <rect x="20" y="62" width="60" height="12" fill="${COLOR.yellow}" stroke="${COLOR.blue}" stroke-width="6"/>
+  `),
+
+  /* 透明占位：仅用于绿色格未作答时 */
+  placeholder: () => wrap(`<rect x="1" y="1" width="98" height="98" fill="transparent"/>`, "icon placeholder")
+};
+
+/* 候选集合（从 RAW 里过滤禁用项） */
+const A_SET_RAW = [
+  "circleOutline","ring","doubleCircleOutline",
+  "rectFrame","squareFrame","capsuleFrame",
+  "diamondOutline","hexagonOutline","octagonOutline",
+  "triangleOutline","trapezoidOutline",
+  "notchRect","frameTabs",
+  "arcTop","arcBottom","arcLeft","arcRight"
+];
+const B_SET_RAW = [
+  "yellowBandMid","yellowBandTop","yellowBandBottom",
+  "redBandMid","redBandTop","redBandBottom",
+  "yellowVBand","redVBand",
+  "plus","minus",
+  "smallSquareY","smallSquareR",
+  "smallCircleY","smallCircleR","twoDots",
+  "diamondFillR","diamondFillY",
+  "triangleFillR","triangleFillY",
+  "vStripes","hStripes"
+];
+
+const A_SET = A_SET_RAW.filter(id => !BANNED_IDS.has(id));
+const B_SET = B_SET_RAW.filter(id => !BANNED_IDS.has(id));
+
+function mergeSvg(a, b){
+  return wrap(inner(LAYERS[a]()) + inner(LAYERS[b]()));
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+function sampleUnique(set, n){
+  const a = shuffle([...set]);
+  if(a.length < n) throw new Error("图形库数量不足，无法生成6个不重复格子。");
+  return a.slice(0, n);
+}
+function buildC(A,B){
+  return Array.from({length:6}, (_,i)=>({
+    a:A[i], b:B[i],
+    id:`merge(${A[i]}+${B[i]})`,
+    svg: mergeSvg(A[i], B[i])
+  }));
+}
+
+/* 绿色格固定位置（保持原图）：下排左=上中；下排中=上左；下排右=上右 */
+const BLANK = { A:1, B:0, C:2 };
+
+/* 选项池：保证任何正确答案一定能出现在选项区，且每个选项都有可见SVG */
+function renderVisibleSvgById(id){
+  if(!id) return null;
+  if(BANNED_IDS.has(id)) return null;
+
+  if(LAYERS[id] && id !== "placeholder") return LAYERS[id]();
+
+  const m = /^merge\(([^+]+)\+([^)]+)\)$/.exec(id);
+  if(m){
+    const a = m[1], b = m[2];
+    if(BANNED_IDS.has(a) || BANNED_IDS.has(b)) return null;
+    if(LAYERS[a] && LAYERS[b]) return mergeSvg(a, b);
+  }
+  return null;
+}
+function buildOptionPool(){
+  const pool = new Map();
+
+  // 单层
+  for(const id of [...A_SET, ...B_SET]){
+    const svg = renderVisibleSvgById(id);
+    if(svg) pool.set(id, svg);
+  }
+  // 叠加（A×B）
+  for(const a of A_SET){
+    for(const b of B_SET){
+      const id = `merge(${a}+${b})`;
+      const svg = renderVisibleSvgById(id); // 保险：通过可见渲染函数
+      if(svg) pool.set(id, svg);
+    }
+  }
+  return pool;
+}
+const OPTION_POOL = buildOptionPool();
+
+/* 每题主题子集：让五题差异更大 */
+function pickThemeSubset(fullSet, minSize, extraMax){
+  const extra = Math.floor(Math.random() * (extraMax + 1));
+  const size = Math.min(fullSet.length, minSize + extra);
+  return shuffle([...fullSet]).slice(0, size);
+}
+
+/* ====== 5题 ====== */
+const TOTAL = 5;
+let quiz = [];
+let idx = 0;
+let locked = false;
+let selectedId = null;
+
+function buildOneQuestion(){
+  const A_THEME = pickThemeSubset(A_SET, 10, 6); // 10~16
+  const B_THEME = pickThemeSubset(B_SET, 12, 8); // 12~20
+
+  const exA = sampleUnique(A_THEME, 6);
+  const exB = sampleUnique(B_THEME, 6);
+  const exC = buildC(exA, exB);
+
+  const qA = sampleUnique(A_THEME, 6);
+  const qB = sampleUnique(B_THEME, 6);
+  const qC = buildC(qA, qB);
+
+  const ans = {
+    A: { id: qA[BLANK.A], label:"左下矩阵(左)绿色格" },
+    B: { id: qB[BLANK.B], label:"左下矩阵(中)绿色格" },
+    C: { id: qC[BLANK.C].id, label:"左下矩阵(右)绿色格" }
+  };
+
+  // 选项：12个（3正确+9干扰），不重复、无空
+  const correctIds = [ans.A.id, ans.B.id, ans.C.id];
+  const correct = correctIds.map(id=>{
+    const svg = OPTION_POOL.get(id) || renderVisibleSvgById(id);
+    if(!svg) throw new Error("正确答案无法渲染（可能被禁用或图形库缺失）: " + id);
+    return { id, svg };
+  });
+
+  const distractAll = [...OPTION_POOL.entries()]
+    .filter(([id, svg]) => !correctIds.includes(id) && !!svg)
+    .map(([id, svg]) => ({ id, svg }));
+  shuffle(distractAll);
+
+  const options = [];
+  const seen = new Set();
+  for(const c of correct){
+    if(!seen.has(c.id)){ options.push(c); seen.add(c.id); }
+  }
+  for(const d of distractAll){
+    if(options.length >= 12) break;
+    if(seen.has(d.id)) continue;
+    options.push(d);
+    seen.add(d.id);
+  }
+  if(options.length !== 12) throw new Error("选项不足12（请扩充图形库或减少禁用项）");
+  shuffle(options);
+
+  return {
+    exA, exB, exC,
+    qA, qB, qC,
+    ans,
+    options,
+    user: { A:null, B:null, C:null },
+    score: null,
+    submitted: false
+  };
+}
+
+function initQuiz(){
+  quiz = Array.from({length:TOTAL}, ()=> buildOneQuestion());
+  idx = 0;
+  locked = false;
+  selectedId = null;
+  render();
+}
+
+/* ====== 渲染 ====== */
+function setMsg(t){ document.getElementById("msg").textContent = t || ""; }
+
+function render(){
+  document.getElementById("qno").textContent = `第 ${idx+1} / ${TOTAL} 题`;
+  const q = quiz[idx];
+
+  locked = q.submitted;
+  document.getElementById("btnNext").disabled = !q.submitted;
+  document.getElementById("btnSubmit").disabled = q.submitted;
+
+  setMsg(q.submitted ? `本题已提交：得分 ${q.score.total}/3` : "先点选一个选项，再点击绿色格放置。");
+
+  renderMatrix(document.getElementById("exA"), q.exA, null, null, false);
+  renderMatrix(document.getElementById("exB"), q.exB, null, null, false);
+  renderMatrix(document.getElementById("exC"), q.exC, null, null, false);
+
+  renderMatrix(document.getElementById("qA"), q.qA, "A", BLANK.A, true);
+  renderMatrix(document.getElementById("qB"), q.qB, "B", BLANK.B, true);
+  renderMatrix(document.getElementById("qC"), q.qC, "C", BLANK.C, true);
+
+  renderOptions();
+}
+
+function renderMatrix(container, data, blankKey, blankIndex, isQuestionRow){
+  container.innerHTML = "";
+  const q = quiz[idx];
+
+  for(let i=0;i<6;i++){
+    const cell = document.createElement("div");
+    cell.className = "cell";
+
+    const isBlank = (isQuestionRow && blankKey && i === blankIndex);
+    let svg = "";
+
+    if(isBlank){
+      cell.classList.add("blank");
+      cell.addEventListener("click", ()=>{
+        if(locked) return;
+        if(!selectedId) return;
+        q.user[blankKey] = selectedId;
+        render();
+      });
+
+      const placedId = q.user[blankKey];
+      if(placedId){
+        const opt = q.options.find(o => o.id === placedId);
+        svg = opt ? opt.svg : LAYERS.placeholder();
+      }else{
+        svg = LAYERS.placeholder();
+      }
+    }else{
+      const v = data[i];
+      svg = (typeof v === "string") ? LAYERS[v]() : v.svg;
+    }
+
+    cell.innerHTML = svg;
+    container.appendChild(cell);
+  }
+}
+
+function renderOptions(){
+  const q = quiz[idx];
+  const el = document.getElementById("options");
+  el.innerHTML = "";
+
+  q.options.forEach(opt=>{
+    const d = document.createElement("div");
+    d.className = "opt" + (selectedId === opt.id ? " selected" : "");
+    d.innerHTML = opt.svg; // 构造时已保证无空选项
+    d.addEventListener("click", ()=>{
+      if(locked) return;
+      selectedId = opt.id;
+      renderOptions();
+    });
+    el.appendChild(d);
+  });
+}
+
+/* ====== 按钮 ====== */
+document.getElementById("btnClear").addEventListener("click", ()=>{
+  const q = quiz[idx];
+  if(q.submitted) return;
+  q.user = {A:null,B:null,C:null};
+  selectedId = null;
+  render();
+});
+
+document.getElementById("btnSubmit").addEventListener("click", ()=>{
+  const q = quiz[idx];
+  if(q.submitted) return;
+
+  if(!q.user.A || !q.user.B || !q.user.C){
+    setMsg("请先把三个绿色格都放置图形后再提交。");
+    return;
+  }
+
+  const okA = (q.user.A === q.ans.A.id);
+  const okB = (q.user.B === q.ans.B.id);
+  const okC = (q.user.C === q.ans.C.id);
+  const total = (okA?1:0) + (okB?1:0) + (okC?1:0);
+
+  q.score = { A:okA, B:okB, C:okC, total };
+  q.submitted = true;
+  render();
+});
+
+document.getElementById("btnNext").addEventListener("click", ()=>{
+  if(!quiz[idx].submitted) return;
+  if(idx < TOTAL-1){
+    idx += 1;
+    selectedId = null;
+    render();
+  }else{
+    showResults();
+  }
+});
+
+/* ====== 结果页（含错题解析 + 原题截图） ====== */
+function svgFromOptionId(id, q){
+  const opt = q.options.find(o => o.id === id);
+  return opt ? opt.svg : (renderVisibleSvgById(id) || LAYERS.placeholder());
+}
+function svgFromLayerOrMerge(id){
+  return renderVisibleSvgById(id) || LAYERS.placeholder();
+}
+
+function analysisBlockFor(q, key){
+  const posIndex = (key === "A") ? BLANK.A : (key === "B") ? BLANK.B : BLANK.C;
+
+  const aId = q.qA[posIndex];
+  const bId = q.qB[posIndex];
+  const cId = q.qC[posIndex].id;
+
+  const userId = q.user[key];
+  const correctId = q.ans[key].id;
+
+  const label = (key === "A") ? "左下矩阵(左)绿色格" :
+                (key === "B") ? "左下矩阵(中)绿色格" :
+                               "左下矩阵(右)绿色格";
+
+  const userSvg = svgFromOptionId(userId, q);
+  const correctSvg = svgFromOptionId(correctId, q);
+
+  const eqA = (key === "A") ? correctSvg : svgFromLayerOrMerge(aId);
+  const eqB = (key === "B") ? correctSvg : svgFromLayerOrMerge(bId);
+  const eqC = (key === "C") ? correctSvg : svgFromLayerOrMerge(cId);
+
+  const explainText =
+    (key === "A")
+      ? `该格在“左矩阵”。因为右 = 左与中叠加，所以此处应当放入能与中矩阵对应格叠加后得到右矩阵对应格的图形。`
+      : (key === "B")
+        ? `该格在“中矩阵”。因为右 = 左与中叠加，所以此处应当放入能与左矩阵对应格叠加后得到右矩阵对应格的图形。`
+        : `该格在“右矩阵”。因为右 = 左与中叠加，所以此处应当是左矩阵与中矩阵对应格叠加后的结果。`;
+
+  return `
+    <div style="margin:8px 0 10px;">
+      <div style="font-weight:900;">${label}：你选错了</div>
+      <div style="margin-top:6px;">
+        你的答案：<span class="miniIcon">${userSvg}</span>
+        &nbsp;&nbsp;正确答案：<span class="miniIcon">${correctSvg}</span>
+      </div>
+      <div class="eqRow">
+        <span class="miniIcon">${eqA}</span>
+        <span class="op">+</span>
+        <span class="miniIcon">${eqB}</span>
+        <span class="op">=</span>
+        <span class="miniIcon">${eqC}</span>
+      </div>
+      <div style="color:#444;">解析：${explainText}</div>
+    </div>
+  `;
+}
+
+function showResults(){
+  document.getElementById("quiz").style.display = "none";
+  const res = document.getElementById("results");
+  res.style.display = "block";
+
+  const totalBlanks = TOTAL * 3;
+  const got = quiz.reduce((s,q)=> s + (q.score?.total ?? 0), 0);
+  const allPerfect = quiz.every(q => q.score && q.score.total === 3);
+
+  document.getElementById("summary").innerHTML =
+    `共 <b>${TOTAL}</b> 题，每题 3 个绿色格，总分 <b>${totalBlanks}</b>。<br>` +
+    `你的得分：<b>${got}</b> / <b>${totalBlanks}</b>。` +
+    (allPerfect ? `<br><b>全部正确。</b>` : "");
+
+  const list = document.getElementById("resultList");
+  list.innerHTML = "";
+
+  quiz.forEach((q, i)=>{
+    const item = document.createElement("div");
+    item.className = "resultItem";
+
+    const badgeCls = (q.score.total === 3) ? "ok" : "bad";
+    const badgeTxt = (q.score.total === 3) ? "全对" : "有错";
+
+    item.innerHTML = `
+      <div class="head">
+        <div style="font-weight:900;">第 ${i+1} 题（得分 ${q.score.total}/3）</div>
+        <div class="badge ${badgeCls}">${badgeTxt}</div>
+      </div>
+    `;
+
+    if(q.score.total !== 3){
+      const wrongKeys = ["A","B","C"].filter(k => !q.score[k]);
+      const analysis = document.createElement("div");
+      analysis.className = "analysis";
+
+      const blocks = wrongKeys.map(k => analysisBlockFor(q, k)).join("");
+      analysis.innerHTML =
+        `<div style="font-weight:900;margin-bottom:6px;">错题解析（规律：右 = 左 与 中 的叠加）</div>` +
+        blocks +
+        `<div style="margin-top:8px;color:#666;">
+          说明：每个对应格子里，右侧图形 = 左侧图形 与 中间图形放在同一格叠加后的结果。
+        </div>`;
+      item.appendChild(analysis);
+    }
+
+    list.appendChild(item);
+  });
+
+  // 原题截图上传替换
+  document.getElementById("refUpload").addEventListener("change", (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const url = URL.createObjectURL(file);
+    document.getElementById("refImg").src = url;
+  });
+}
+
+/* 启动 */
+initQuiz();
+</script>
+</body>
+</html>
