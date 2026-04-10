@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>图片题库-随机5题（OpenMoji｜2分钟倒计时｜无歧义选项｜题干≠选项）</title>
+  <title>图片题库-随机5题（OpenMoji｜每题2分钟倒计时｜无歧义选项｜题干≠选项）</title>
   <style>
     :root{
       --bg:#ffffff;
@@ -13,7 +13,6 @@
       --orange:#f3a34b;
       --blueBorder:#5d7cff;
 
-      /* 参考图：小火箭/进度/倒计时同一套绿色 */
       --green:#6cc04a;
       --greenDeep:#46a127;
 
@@ -77,7 +76,7 @@
     .desc .hint{color:#000;font-weight:900}
     .ruleNote{color:#666;font-weight:800}
 
-    /* === 参考图：小火箭 + 长进度条 + 倒计时 === */
+    /* === 小火箭 + 长进度条 + 倒计时 === */
     .timeRow{
       display:flex;
       align-items:center;
@@ -359,7 +358,7 @@
       </div>
     </div>
 
-    <!-- 倒计时2分钟：小火箭+进度条+倒计时（参考图样式） -->
+    <!-- 每题倒计时2分钟：小火箭+进度条+倒计时 -->
     <div class="timeRow" aria-label="倒计时与进度">
       <div class="progressWrap" aria-label="时间进度条">
         <div id="timeFill" class="progressFill"></div>
@@ -460,7 +459,6 @@
 
     /*****************************************************************
      * 2) 题库：更多主题 + 域(domain)划分
-     *    “无歧义选项”：干扰项从不同 domain 选取（远域），不从相近类别挑
      *****************************************************************/
     const LETTERS = ["A","B","C","D","E","F"];
     const QUIZ_COUNT = 5;
@@ -623,7 +621,7 @@
     }
 
     /*****************************************************************
-     * 3) 倒计时2分钟（不会因“下一题”重置）
+     * 3) 每题倒计时2分钟（切换新题自动重置；不会全卷共用）
      *****************************************************************/
     const TOTAL_SECONDS = 120;
     let remaining = TOTAL_SECONDS;
@@ -641,21 +639,42 @@
       document.getElementById("timeFill").style.width = `${pct}%`;
       document.getElementById("rocket").style.left = `${pct}%`;
     }
+    function stopTimer(){
+      if(timer){ clearInterval(timer); timer = null; }
+    }
+
+    // 每进入一题就调用：重置到 02:00
     function startTimer(){
       stopTimer();
       remaining = TOTAL_SECONDS;
       updateTimeUI();
-      timer = setInterval(()=>{
+
+      const thisQi = qi; // 防止旧计时器回调影响新题
+      timer = setInterval(async ()=>{
         remaining = Math.max(0, remaining - 1);
         updateTimeUI();
         if(remaining === 0){
           stopTimer();
-          finalizeQuiz(true);
+          if(locked) return;
+          if(thisQi !== qi) return;
+          await handleTimeout(); // 本题超时处理
         }
       }, 1000);
     }
-    function stopTimer(){
-      if(timer){ clearInterval(timer); timer = null; }
+
+    async function handleTimeout(){
+      const q = quiz[qi];
+      if(!q) return;
+
+      q.explanation = buildExplanation(q);
+      try{ q.snapshotPng = await captureQuestionPng(q); }catch(e){ q.snapshotPng = ""; }
+
+      if(qi < quiz.length - 1){
+        qi++;
+        await renderQuestion(); // renderQuestion 内会重置计时
+      }else{
+        await finalizeQuiz(true);
+      }
     }
 
     /*****************************************************************
@@ -769,7 +788,6 @@
      *****************************************************************/
     function buildExplanation(q){
       const chosen = q.options.find(o=>o.letter===q.userLetter);
-      const correct = q.options.find(o=>o.letter===q.correctLetter);
       return [
         `【类别判断】上方示例都属于「${q.catName}」。`,
         `【正确答案】${q.correctLetter}`,
@@ -933,6 +951,9 @@ ${q.explanation || buildExplanation(q)}
         const opt = q.options.find(o=>o.letter===letter);
         optEl.querySelector("img").src = opt.icon.src;
       });
+
+      // ★ 每次进入新题：重置并开始计时
+      if(!locked) startTimer();
     }
 
     async function finalizeQuiz(byTimeout){
@@ -955,12 +976,15 @@ ${q.explanation || buildExplanation(q)}
       const q = quiz[qi];
       if(!q || q.userLetter === null) return;
 
+      // 点击下一题时停止当前题计时，避免切题/截图期间继续扣时间
+      stopTimer();
+
       q.explanation = buildExplanation(q);
       try{ q.snapshotPng = await captureQuestionPng(q); }catch(e){ q.snapshotPng = ""; }
 
       if(qi < quiz.length-1){
         qi++;
-        await renderQuestion(); // 不重置倒计时
+        await renderQuestion(); // renderQuestion 内会重置计时
       }else{
         await finalizeQuiz(false);
       }
@@ -976,8 +1000,7 @@ ${q.explanation || buildExplanation(q)}
       document.getElementById("wrongList").innerHTML = "";
       document.getElementById("resultPanel").classList.add("hidden");
 
-      await renderQuestion();
-      startTimer(); // 只在重新开始时启动
+      await renderQuestion(); // renderQuestion 内会启动/重置计时
     }
 
     nextBtn.addEventListener("click", ()=>handleNext());
