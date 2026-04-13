@@ -1,0 +1,1284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>序列题模拟练习（随机5题·拖拽作答·只对调类象限变化·剔除1=3）</title>
+  <style>
+    :root{
+      --pageMax: 1024px;
+
+      /* iPad 友好尺寸 */
+      --tile: 186px;                 /* 大田字格 */
+      --cell: calc(var(--tile) / 2); /* 小方格(象限)/作答格/选项格 */
+      --gap: 16px;
+
+      /* 灰色线条 + 绿色按钮 */
+      --stroke: #7a7a7a;
+      --dash:   #b1b1b1;
+      --miss:   #d8f2b2;
+
+      --btn:    #18a957;
+      --btn2:   #128a46;
+
+      --time:   #18a957;
+      --warn:   #ff8a12;
+
+      --bg: #fff;
+      --hover: #1a73e8;
+    }
+
+    html,body{ background:var(--bg); margin:0; }
+    body{
+      font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",Arial,sans-serif;
+      color:#111;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .page{
+      max-width: var(--pageMax);
+      margin: 16px auto 26px;
+      padding: 0 14px;
+    }
+
+    .topline{ display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .leftHead{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .badge{
+      background:#f2b51f;
+      color:#fff;
+      font-weight:700;
+      border-radius:14px;
+      padding:6px 12px;
+      font-size:16px;
+      line-height:1;
+    }
+    .qmeta{ font-size:16px; color:#222; }
+
+    .instr{
+      font-size:18px;
+      margin: 10px 0 12px;
+      line-height:1.5;
+    }
+
+    /* 倒计时条：火箭 + 进度条 + 时间块 */
+    .timerWrap{ margin: 10px 0 12px; }
+    .timerBar{
+      position: relative;
+      height: 34px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .track{
+      position: relative;
+      flex: 1;
+      height: 6px;
+      background:#e9e9e9;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .fill{
+      position:absolute;
+      left:0; top:0; bottom:0;
+      width:0%;
+      background: var(--btn);
+      border-radius: 999px;
+      transition: width 200ms linear;
+    }
+    .rocket{
+      position:absolute;
+      left:0;
+      top: 50%;
+      transform: translate(-10px,-50%);
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      user-select:none;
+    }
+    .timeBox{
+      min-width: 78px;
+      text-align:center;
+      padding: 6px 10px;
+      border-radius: 4px;
+      background: var(--time);
+      color:#fff;
+      font-weight:700;
+      font-size:15px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .timeBox.paused{ background:#4b4b4b; }
+    .warn .timeBox{ background: var(--warn); }
+    .warn .rocket{ animation: shake 0.3s infinite linear; }
+    @keyframes shake{
+      0%{ transform: translate(-10px,-50%) rotate(-2deg); }
+      50%{ transform: translate(-10px,-50%) rotate(2deg); }
+      100%{ transform: translate(-10px,-50%) rotate(-2deg); }
+    }
+
+    /* 题面九宫格 */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3, var(--tile));
+      grid-auto-rows:var(--tile);
+      gap: var(--gap);
+      align-items:start;
+      justify-content:start;
+      overflow-x:auto;
+      padding-bottom: 6px;
+    }
+    .tile{ width:var(--tile); height:var(--tile); overflow:hidden; }
+
+    /* 作答区 */
+    .answerWrap{ margin: 12px 0 6px; }
+    .answerTitle{ font-size: 16px; font-weight: 700; margin: 0 0 10px; }
+    .answerRow{
+      display:flex;
+      gap: 14px;
+      align-items:flex-start;
+      justify-content:flex-start;
+      flex-wrap: nowrap;
+      overflow-x:auto;
+      padding-bottom: 6px;
+    }
+    .slot{
+      width: var(--cell);
+      text-align:center;
+      user-select:none;
+      cursor:pointer;
+      flex: 0 0 auto;
+      -webkit-user-select:none;
+    }
+    .slot svg{ width: var(--cell); height: var(--cell); display:block; overflow:hidden; margin:0 auto; }
+    .slotLabel{ margin-top: 6px; font-size: 13px; color:#111; line-height:1; }
+    .slot.drop-hover{
+      outline: 3px solid var(--hover);
+      outline-offset: 4px;
+      border-radius: 10px;
+    }
+
+    .sep{ margin:16px 0 10px; border-top:3px solid #2b2b2b; height:0; }
+
+    /* 选项区 */
+    .optTitle{ font-size:16px; font-weight:700; margin:0 0 10px; }
+    .options{
+      display:grid;
+      grid-template-columns:repeat(6, var(--cell));
+      gap: 14px 18px;
+      align-items:start;
+      justify-content:start;
+      overflow-x:auto;
+      padding-bottom: 6px;
+    }
+    .opt{
+      width: var(--cell);
+      text-align:center;
+      user-select:none;
+      cursor: grab;
+      -webkit-user-select:none;
+      touch-action: none; /* iPad 上保证拖拽不触发滚动手势 */
+    }
+    .opt:active{ cursor: grabbing; }
+    .opt svg{ width: var(--cell); height: var(--cell); display:block; overflow:hidden; margin:0 auto; }
+    .optNum{ margin-top: 6px; font-size: 15px; color:#111; line-height:1; }
+
+    /* 按钮（绿色背景） */
+    .controls{
+      margin-top: 12px;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      background: var(--btn);
+      color:#fff;
+      border:none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 15px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{ background: var(--btn2); }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .tip{ margin-top: 10px; font-size: 15px; min-height: 22px; color:#111; }
+
+    /* 拖拽“幽灵” */
+    .dragGhost{
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--cell);
+      height: var(--cell);
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.92;
+      transform: translate3d(-9999px,-9999px,0);
+      will-change: transform, opacity;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.18));
+      transition: opacity 120ms ease;
+    }
+    .dragGhost.hide{ opacity: 0; }
+
+    /* 结果区 */
+    .resultBox{ margin-top: 12px; }
+    .summary{
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 10px 12px;
+      border: 1px solid #e6e6e6;
+      background:#fafafa;
+    }
+    .review{
+      margin-top: 12px;
+      border:1px solid #e6e6e6;
+      padding: 12px;
+    }
+    .review h3{ margin: 0 0 8px; font-size: 16px; }
+    .reviewGrid{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+    .shotCol{
+      width: 420px;
+      max-width: 100%;
+    }
+    .shot{
+      width: 100%;
+      height: auto;
+      display:block;
+      border:1px solid #eee;
+      background:#fff;
+    }
+    .shotCap{
+      font-size: 13px;
+      color:#555;
+      margin-top: 6px;
+      line-height:1.4;
+    }
+    .analysis{
+      flex: 1 1 320px;
+      min-width: 280px;
+      font-size: 14px;
+      line-height: 1.7;
+      color:#222;
+    }
+    .kv{ margin: 6px 0; }
+    .tagOk{ color:#0a7a35; font-weight:700; }
+    .tagBad{ color:#b00020; font-weight:700; }
+    .smallNote{ color:#555; font-size:13px; }
+
+    @media (max-width: 740px){
+      :root{ --tile: 165px; }
+      .options{ grid-template-columns:repeat(3, var(--cell)); }
+      .shotCol{ width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+  <div class="topline">
+    <div class="leftHead">
+      <div class="badge">序列题</div>
+      <div id="qmeta" class="qmeta">第 1 题 / 5</div>
+    </div>
+  </div>
+
+  <div class="instr">
+    根据上面田字格的变化规律，选出绿色格子内对应的图片（可“拖拽选项”到作答区的四个小格）。
+  </div>
+
+  <!-- 倒计时条 -->
+  <div id="timerWrap" class="timerWrap">
+    <div id="timerBar" class="timerBar">
+      <div class="track" aria-label="倒计时进度条">
+        <div id="fill" class="fill"></div>
+        <div id="rocket" class="rocket" title="点击火箭暂停/继续">
+          <svg viewBox="0 0 64 64" width="34" height="34" aria-label="火箭">
+            <defs>
+              <linearGradient id="g" x1="0" x2="1">
+                <stop offset="0" stop-color="#19b95f"/>
+                <stop offset="1" stop-color="#0d8f47"/>
+              </linearGradient>
+            </defs>
+            <path d="M10 32 L28 22 L50 32 L28 42 Z" fill="url(#g)" stroke="#0b7a3c" stroke-width="2"/>
+            <circle cx="26" cy="32" r="5" fill="#fff" stroke="#0b7a3c" stroke-width="2"/>
+            <path d="M50 32 L58 28 L58 36 Z" fill="#f2b51f" stroke="#d79b0f" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div id="timeBox" class="timeBox" title="点击时间暂停/继续">02:00</div>
+    </div>
+  </div>
+
+  <!-- 题面 -->
+  <div id="grid" class="grid" aria-label="题面田字格"></div>
+
+  <!-- 作答区 -->
+  <div class="answerWrap" aria-label="作答区">
+    <div class="answerTitle">作答区（4个空格，1行排列）</div>
+    <div id="answerRow" class="answerRow"></div>
+  </div>
+
+  <div class="sep" aria-hidden="true"></div>
+
+  <!-- 选项区 -->
+  <div class="optTitle">选项区（拖拽到作答区）</div>
+  <div id="options" class="options" aria-label="选项区"></div>
+
+  <div class="controls">
+    <button id="btnClear" class="btn" type="button">清空本题</button>
+    <button id="btnNext" class="btn" type="button">下一题</button>
+  </div>
+
+  <div id="tip" class="tip" role="status" aria-live="polite"></div>
+
+  <!-- 结果区：结束后显示“重新答题”按钮（位于题目下方） -->
+  <div id="resultBox" class="resultBox" style="display:none;"></div>
+</div>
+
+<script>
+/* ===============================
+   A. 绘图（小方格 50x50 + 田字格 100x100）
+   =============================== */
+const COLOR = {
+  red:"#ff1f1f",
+  blue:"#11a9ff",
+  yellow:"#ffe100",
+  purple:"#b64cff",
+  pink:"#ff98bf",
+  green:"#14b35f",
+  orange:"#ff8a12",
+  brown:"#7c6a5f",
+
+  stroke: getComputedStyle(document.documentElement).getPropertyValue("--stroke").trim() || "#7a7a7a",
+  dash:   getComputedStyle(document.documentElement).getPropertyValue("--dash").trim()   || "#b1b1b1",
+  white:"#ffffff",
+  miss:   getComputedStyle(document.documentElement).getPropertyValue("--miss").trim()   || "#d8f2b2",
+};
+
+const STYLE = {
+  tileStroke: 2.0,
+  dashStroke: 2.0,
+  dashArray: "9 7",
+  shapeStroke: 2.0
+};
+
+const CELL = { W:50, H:50, Cx:25, Cy:25 };
+const S = {
+  circleR: 12,
+  squareH: 12,
+  triH: 16,
+  triW: 16,
+  rectW: 34,
+  rectH: 20,
+  diamondR: 16,
+  starOuter: 16,
+  starInner: 7,
+  semiR: 16
+};
+
+function starPoints(cx, cy, rOuter, rInner, n=5){
+  const pts = [];
+  for(let i=0;i<n*2;i++){
+    const a = (-Math.PI/2) + (i*Math.PI/n);
+    const r = (i%2===0) ? rOuter : rInner;
+    pts.push([cx + Math.cos(a)*r, cy + Math.sin(a)*r]);
+  }
+  return pts.map(p=>p.join(",")).join(" ");
+}
+
+function shapeInCell({type,color,outline=false}, cx=CELL.Cx, cy=CELL.Cy){
+  const fill = outline ? "none" : color;
+  const stroke = COLOR.stroke;
+  const sw = STYLE.shapeStroke;
+
+  switch(type){
+    case "circle":
+      return `<circle cx="${cx}" cy="${cy}" r="${S.circleR}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "square":
+      return `<rect x="${cx-S.squareH}" y="${cy-S.squareH}" width="${S.squareH*2}" height="${S.squareH*2}"
+                   fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "tri":
+      return `<polygon points="${cx},${cy-S.triH} ${cx+S.triW},${cy+S.triW-1} ${cx-S.triW},${cy+S.triW-1}"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "triR":
+      return `<polygon points="${cx-S.triW+1},${cy+S.triW-1} ${cx+S.triW-1},${cy+S.triW-1} ${cx+S.triW-1},${cy-S.triH}"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "diamond":
+      return `<polygon points="${cx},${cy-S.diamondR} ${cx+S.diamondR},${cy} ${cx},${cy+S.diamondR} ${cx-S.diamondR},${cy}"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "rect":
+      return `<rect x="${cx-S.rectW/2}" y="${cy-S.rectH/2}" width="${S.rectW}" height="${S.rectH}"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "star":
+      return `<polygon points="${starPoints(cx,cy,S.starOuter,S.starInner,5)}"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "semiL":
+      return `<path d="M ${cx},${cy-S.semiR} A ${S.semiR} ${S.semiR} 0 0 0 ${cx},${cy+S.semiR} L ${cx},${cy-S.semiR} Z"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+    case "semiR":
+      return `<path d="M ${cx},${cy-S.semiR} A ${S.semiR} ${S.semiR} 0 0 1 ${cx},${cy+S.semiR} L ${cx},${cy-S.semiR} Z"
+              fill="${fill}" stroke="${stroke}" stroke-width="${sw}" />`;
+  }
+  return "";
+}
+
+let _id = 0;
+function cellSVG(shapeOrNull, {active=false} = {}){
+  const id = `cellClip_${++_id}`;
+  const inset = 3;
+  const border = active ? "#1a73e8" : COLOR.stroke;
+  const shapeMarkup = shapeOrNull ? shapeInCell(shapeOrNull, CELL.Cx, CELL.Cy) : "";
+
+  return `
+    <svg viewBox="0 0 50 50" aria-label="小方格">
+      <defs>
+        <clipPath id="${id}" clipPathUnits="userSpaceOnUse">
+          <rect x="${inset}" y="${inset}" width="${50-inset*2}" height="${50-inset*2}"></rect>
+        </clipPath>
+      </defs>
+      <rect x="1" y="1" width="48" height="48" fill="${COLOR.white}" stroke="none"></rect>
+      <g clip-path="url(#${id})">${shapeMarkup}</g>
+      <rect x="1" y="1" width="48" height="48" fill="none" stroke="${border}" stroke-width="2"></rect>
+    </svg>
+  `;
+}
+
+let _clipId = 0;
+function tileSVG(quads, {missing=false}={}){
+  const bg = missing ? COLOR.miss : COLOR.white;
+  const clip = `tileClip_${++_clipId}`;
+  const INSET = 6;
+
+  const offsets = { tl:[0,0], tr:[50,0], bl:[0,50], br:[50,50] };
+
+  let content = "";
+  const src = (quads || {});
+  for(const k of ["tl","tr","bl","br"]){
+    const off = offsets[k];
+    const s = src[k];
+    if(!s) continue;
+    content += `<g transform="translate(${off[0]},${off[1]})">${shapeInCell(s, 25, 25)}</g>`;
+  }
+
+  return `
+    <svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block; overflow:hidden" aria-label="田字格">
+      <defs>
+        <clipPath id="${clip}" clipPathUnits="userSpaceOnUse">
+          <rect x="${INSET}" y="${INSET}" width="${100-INSET*2}" height="${100-INSET*2}"></rect>
+        </clipPath>
+      </defs>
+
+      <rect x="2" y="2" width="96" height="96" fill="${bg}" stroke="none"></rect>
+
+      <line x1="50" y1="6" x2="50" y2="94" stroke="${COLOR.dash}"
+            stroke-width="${STYLE.dashStroke}" stroke-dasharray="${STYLE.dashArray}"></line>
+      <line x1="6" y1="50" x2="94" y2="50" stroke="${COLOR.dash}"
+            stroke-width="${STYLE.dashStroke}" stroke-dasharray="${STYLE.dashArray}"></line>
+
+      <g clip-path="url(#${clip})">${content}</g>
+
+      <rect x="2" y="2" width="96" height="96" fill="none" stroke="${COLOR.stroke}" stroke-width="${STYLE.tileStroke}"></rect>
+    </svg>
+  `;
+}
+
+/* ===============================
+   B. 系统生成“原题截图”（SVG dataURI）
+   =============================== */
+function toSvgDataUri(svg){
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function drawTileAt(tile, x, y, missing){
+  const bg = missing ? COLOR.miss : COLOR.white;
+  const offsets = { tl:[0,0], tr:[50,0], bl:[0,50], br:[50,50] };
+  let content = "";
+
+  if(tile){
+    for(const k of ["tl","tr","bl","br"]){
+      const off = offsets[k];
+      const s = tile[k];
+      if(!s) continue;
+      content += `<g transform="translate(${x+off[0]},${y+off[1]})">${shapeInCell(s, 25, 25)}</g>`;
+    }
+  }
+
+  return `
+    <g>
+      <rect x="${x+2}" y="${y+2}" width="96" height="96" fill="${bg}" stroke="none"></rect>
+      <line x1="${x+50}" y1="${y+6}"  x2="${x+50}" y2="${y+94}" stroke="${COLOR.dash}"
+            stroke-width="${STYLE.dashStroke}" stroke-dasharray="${STYLE.dashArray}"></line>
+      <line x1="${x+6}"  y1="${y+50}" x2="${x+94}" y2="${y+50}" stroke="${COLOR.dash}"
+            stroke-width="${STYLE.dashStroke}" stroke-dasharray="${STYLE.dashArray}"></line>
+      ${content}
+      <rect x="${x+2}" y="${y+2}" width="96" height="96" fill="none" stroke="${COLOR.stroke}" stroke-width="${STYLE.tileStroke}"></rect>
+    </g>
+  `;
+}
+
+function boardScreenshotSvg(tiles9){
+  const tile = 100, gap = 10;
+  const W = tile*3 + gap*2;
+  const H = tile*3 + gap*2;
+
+  let body = "";
+  for(let r=0;r<3;r++){
+    for(let c=0;c<3;c++){
+      const i = r*3 + c;
+      const x = c*(tile+gap);
+      const y = r*(tile+gap);
+      const t = tiles9[i];
+      body += drawTileAt(t, x, y, !t);
+    }
+  }
+
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff"/>
+      ${body}
+    </svg>
+  `.trim();
+}
+
+/* ===============================
+   C. 出题（无循环换色/条件换色；象限只“对调”）
+   + 额外约束：剔除任意一行 第1格 与 第3格 完全相同 的题目
+   =============================== */
+const COLORSET = ["red","blue","yellow","purple"];
+const SHAPE_POOL = ["square","circle","tri","star","diamond","rect","semiR","triR"];
+
+function randInt(n){ return Math.floor(Math.random()*n); }
+function pickN(arr, n){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = randInt(i+1);
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a.slice(0,n);
+}
+function shuffle(arr){ return pickN(arr, arr.length); }
+const QUADS = ["tl","tr","bl","br"];
+
+function stateToTile(state, shapes3){
+  const t = {};
+  for(const q of QUADS){
+    const {si, ci} = state[q];
+    t[q] = { type: shapes3[si], color: COLOR[COLORSET[ci]] };
+  }
+  return t;
+}
+
+/* 只保留“对调类”：左右对调、上下对调 */
+const SWAPS = [
+  {name:"左右对调", perm:[1,0,3,2]},
+  {name:"上下对调", perm:[2,3,0,1]},
+];
+
+function applySwap(state, perm){
+  // 仅位置对调：形状/颜色本身不变，只随位置移动
+  const order = ["tl","tr","bl","br"];
+  const oldArr = order.map(q => state[q]);
+
+  const nextArr = order.map((_, i)=>{
+    const src = oldArr[perm[i]];
+    return { si: src.si, ci: src.ci };
+  });
+
+  const out = {};
+  for(let i=0;i<4;i++) out[order[i]] = nextArr[i];
+  return out;
+}
+
+function genUniqueInitState(){
+  const init = {};
+  const used = new Set();
+  for(const q of QUADS){
+    let si, ci, key;
+    do{
+      si = randInt(3);
+      ci = randInt(4);
+      key = `${si}-${ci}`;
+    }while(used.has(key));
+    used.add(key);
+    init[q] = { si, ci };
+  }
+  return init;
+}
+
+/* 规则族1：列式轮换（颜色上下交换） */
+function buildColumnStyleRow(shapes3){
+  const [A,B,C] = shuffle([0,1,2]);
+  const [c1,c2,c3,c4] = shuffle([0,1,2,3]);
+
+  const makeTile = (Lshape, Rshape, Ltop, Lbot, Rtop, Rbot) => ({
+    tl:{type: shapes3[Lshape], color: COLOR[COLORSET[Ltop]]},
+    bl:{type: shapes3[Lshape], color: COLOR[COLORSET[Lbot]]},
+    tr:{type: shapes3[Rshape], color: COLOR[COLORSET[Rtop]]},
+    br:{type: shapes3[Rshape], color: COLOR[COLORSET[Rbot]]}
+  });
+
+  const t1 = makeTile(A,B,c1,c2,c3,c4);
+  const t2 = makeTile(C,A,c2,c1,c4,c3);
+  const t3 = makeTile(B,C,c1,c2,c3,c4);
+
+  const answer = {
+    tl:{type: shapes3[B], colorName: COLORSET[c1]},
+    bl:{type: shapes3[B], colorName: COLORSET[c2]},
+    tr:{type: shapes3[C], colorName: COLORSET[c3]},
+    br:{type: shapes3[C], colorName: COLORSET[c4]},
+  };
+
+  return { tiles:[t1,t2,t3], meta:{ kind:"列式轮换" }, answerDraw: t3, answer };
+}
+
+/* 规则族2：象限对调（两步对调用不同方向，避免第1格=第3格） */
+function buildQuadrantSwapRow(shapes3, step1, step2){
+  const s1 = genUniqueInitState();
+  const s2 = applySwap(s1, step1.perm);
+  const s3 = applySwap(s2, step2.perm);
+
+  const t1 = stateToTile(s1, shapes3);
+  const t2 = stateToTile(s2, shapes3);
+  const t3 = stateToTile(s3, shapes3);
+
+  const answer = {};
+  for(const q of QUADS){
+    const {si,ci} = s3[q];
+    answer[q] = { type: shapes3[si], colorName: COLORSET[ci] };
+  }
+
+  return {
+    tiles:[t1,t2,t3],
+    meta:{ kind:"象限对调", step1: step1.name, step2: step2.name },
+    answerDraw: t3,
+    answer
+  };
+}
+
+function tilesEqual(t1, t2){
+  if(!t1 || !t2) return false;
+  for(const q of QUADS){
+    if(t1[q].type !== t2[q].type) return false;
+    if(t1[q].color !== t2[q].color) return false;
+  }
+  return true;
+}
+
+function violatesRow1Eq3(tiles9){
+  for(let r=0;r<3;r++){
+    const a = tiles9[r*3 + 0];
+    const b = tiles9[r*3 + 2];
+    if(a && b && tilesEqual(a,b)) return true;
+  }
+  return false;
+}
+
+function makePuzzle(){
+  const shapes3 = pickN(SHAPE_POOL, 3);
+  const family = (Math.random() < 0.5) ? "column" : "quadrant";
+
+  let step1=null, step2=null;
+  const rows = [];
+  if(family === "column"){
+    for(let r=0;r<3;r++) rows.push(buildColumnStyleRow(shapes3));
+  }else{
+    step1 = SWAPS[randInt(SWAPS.length)];
+    step2 = (step1 === SWAPS[0]) ? SWAPS[1] : SWAPS[0];
+    for(let r=0;r<3;r++) rows.push(buildQuadrantSwapRow(shapes3, step1, step2));
+  }
+
+  const tiles = [
+    rows[0].tiles[0], rows[0].tiles[1], rows[0].tiles[2],
+    rows[1].tiles[0], rows[1].tiles[1], rows[1].tiles[2],
+    rows[2].tiles[0], rows[2].tiles[1], null
+  ];
+
+  // 额外剔除：任何一行第1格=第3格
+  if(violatesRow1Eq3(tiles)) return makePuzzle();
+
+  const answer = rows[2].answer;
+  const answerDraw = rows[2].answerDraw;
+
+  const problemShotUrl = toSvgDataUri(boardScreenshotSvg(tiles));
+  const fullTiles = tiles.slice();
+  fullTiles[8] = answerDraw;
+  const answerShotUrl = toSvgDataUri(boardScreenshotSvg(fullTiles));
+
+  const meta = { shapes3, family, step1, step2 };
+  return { tiles, answer, answerDraw, meta, problemShotUrl, answerShotUrl };
+}
+
+/* ===============================
+   D. 选项区：每题 12 项（3形状×4颜色）
+   =============================== */
+const LABELS = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"];
+function buildOptionsForPuzzle(shapes3){
+  const opts = [];
+  let k = 0;
+  for(const shape of shapes3){
+    for(const c of ["red","blue","yellow","purple"]){
+      opts.push({ id: k+1, label: LABELS[k], type: shape, colorName: c });
+      k++;
+    }
+  }
+  return opts;
+}
+function optionLabelOf(options, type, colorName){
+  const found = options.find(o => o.type===type && o.colorName===colorName);
+  return found ? found.label : `${type}/${colorName}`;
+}
+
+/* ===============================
+   E. 流程：5题、倒计时、下一题、结束结果与错题分析
+   =============================== */
+const TOTAL = 5;
+let puzzles = [];
+let optionsByQ = [];
+let idx = 0;
+let activeSlot = "tl";
+let answers = [];
+let timeSpent = [];
+let timeLeft = 120;
+let ticking = null;
+let paused = false;
+let usedThisQuestion = 0;
+
+const SLOT_KEYS = ["tl","tr","bl","br"];
+const SLOT_LABEL = { tl:"左上", tr:"右上", bl:"左下", br:"右下" };
+const $ = (id)=>document.getElementById(id);
+
+function setTip(t){ $("tip").textContent = t || ""; }
+function setQMeta(){ $("qmeta").textContent = `第 ${idx+1} 题 / ${TOTAL}`; }
+
+function applyOptionToSlot(slotKey, opt){
+  const u = answers[idx];
+  u[slotKey] = { type: opt.type, colorName: opt.colorName };
+  activeSlot = slotKey; // 拖拽/点击后，把该格设为当前
+  setTip(`已填入：${SLOT_LABEL[slotKey]} = ${opt.label}`);
+  renderAnswerArea();
+}
+
+function newSession(){
+  puzzles = Array.from({length:TOTAL}, ()=>makePuzzle());
+  optionsByQ = puzzles.map(pz=>buildOptionsForPuzzle(pz.meta.shapes3));
+
+  idx = 0;
+  activeSlot = "tl";
+  answers = Array.from({length:TOTAL}, ()=>({ tl:null,tr:null,bl:null,br:null, timeout:false }));
+  timeSpent = Array.from({length:TOTAL}, ()=>0);
+
+  $("resultBox").style.display = "none";
+  $("timerWrap").style.display = "";
+  $("grid").style.display = "";
+  document.querySelector(".answerWrap").style.display = "";
+  document.querySelector(".sep").style.display = "";
+  document.querySelector(".optTitle").style.display = "";
+  $("options").style.display = "";
+  document.querySelector(".controls").style.display = "";
+  $("btnNext").disabled = false;
+  $("btnClear").disabled = false;
+
+  renderAll();
+  startTimerForQuestion();
+  setTip(`已选中作答区：${SLOT_LABEL[activeSlot]}，可点击或拖拽选项填入。`);
+}
+
+function renderAll(){
+  setQMeta();
+  renderGrid();
+  renderAnswerArea();
+  renderOptions();
+  $("btnNext").textContent = (idx === TOTAL-1) ? "提交并查看结果" : "下一题";
+}
+
+function renderGrid(){
+  const grid = $("grid");
+  grid.innerHTML = "";
+  const tiles = puzzles[idx].tiles;
+  for(let i=0;i<9;i++){
+    const el = document.createElement("div");
+    el.className = "tile";
+    el.innerHTML = tiles[i] ? tileSVG(tiles[i]) : tileSVG(null, {missing:true});
+    grid.appendChild(el);
+  }
+}
+
+function renderAnswerArea(){
+  const row = $("answerRow");
+  row.innerHTML = "";
+  const u = answers[idx];
+
+  for(const k of SLOT_KEYS){
+    const d = document.createElement("div");
+    d.className = "slot";
+    d.dataset.slot = k;
+    d.tabIndex = 0;
+
+    const v = u[k] ? { type: u[k].type, color: COLOR[u[k].colorName], outline:false } : null;
+
+    d.innerHTML = `
+      ${cellSVG(v, {active: activeSlot===k})}
+      <div class="slotLabel">${SLOT_LABEL[k]}</div>
+    `;
+
+    const select = ()=>{
+      activeSlot = k;
+      setTip(`已选中作答区：${SLOT_LABEL[k]}（可拖拽选项到该格）`);
+      renderAnswerArea();
+    };
+
+    d.addEventListener("click", select);
+    d.addEventListener("keydown",(ev)=>{
+      if(ev.key==="Enter" || ev.key===" "){ ev.preventDefault(); select(); }
+    });
+
+    // 双击清空该格
+    d.addEventListener("dblclick", ()=>{
+      u[k] = null;
+      renderAnswerArea();
+      setTip(`已清空：${SLOT_LABEL[k]}`);
+    });
+
+    row.appendChild(d);
+  }
+}
+
+function renderOptions(){
+  const wrap = $("options");
+  wrap.innerHTML = "";
+  const opts = optionsByQ[idx];
+
+  for(const o of opts){
+    const d = document.createElement("div");
+    d.className = "opt";
+    d.tabIndex = 0;
+
+    d.dataset.type = o.type;
+    d.dataset.color = o.colorName;
+    d.dataset.label = o.label;
+
+    const shapeObj = { type:o.type, color: COLOR[o.colorName], outline:false };
+    d.innerHTML = `
+      ${cellSVG(shapeObj)}
+      <div class="optNum">${o.label}</div>
+    `;
+
+    // 键盘无障碍：Enter/Space 填到当前选中格
+    d.addEventListener("keydown",(ev)=>{
+      if(ev.key==="Enter" || ev.key===" "){
+        ev.preventDefault();
+        applyOptionToSlot(activeSlot, o);
+      }
+    });
+
+    wrap.appendChild(d);
+  }
+}
+
+$("btnClear").addEventListener("click", ()=>{
+  answers[idx] = { tl:null,tr:null,bl:null,br:null, timeout:false };
+  activeSlot = "tl";
+  setTip("已清空本题作答。");
+  renderAnswerArea();
+});
+$("btnNext").addEventListener("click", ()=>goNext(false));
+
+/* ===============================
+   F. 倒计时：每题 2 分钟；切题重置；火箭/时间块暂停继续
+   =============================== */
+function fmt(sec){
+  const m = String(Math.floor(sec/60)).padStart(2,"0");
+  const s = String(sec%60).padStart(2,"0");
+  return `${m}:${s}`;
+}
+
+function updateTimerUI(){
+  const total = 120;
+  const p = (total - timeLeft) / total;
+  const pct = Math.min(100, Math.max(0, p*100));
+  $("fill").style.width = pct + "%";
+
+  const track = document.querySelector(".track");
+  const w = track.clientWidth;
+  const x = (w * pct/100);
+  $("rocket").style.left = x + "px";
+
+  $("timeBox").textContent = fmt(timeLeft);
+
+  const bar = $("timerBar");
+  if(timeLeft <= 15 && timeLeft > 0) bar.classList.add("warn");
+  else bar.classList.remove("warn");
+
+  $("timeBox").classList.toggle("paused", paused);
+}
+
+function stopTick(){
+  if(ticking){
+    clearInterval(ticking);
+    ticking = null;
+  }
+}
+
+function startTimerForQuestion(){
+  stopTick();
+  paused = false;
+  timeLeft = 120;
+  usedThisQuestion = 0;
+  updateTimerUI();
+
+  ticking = setInterval(()=>{
+    if(paused) return;
+    timeLeft -= 1;
+    usedThisQuestion += 1;
+    if(timeLeft < 0) timeLeft = 0;
+    updateTimerUI();
+    if(timeLeft <= 0){
+      answers[idx].timeout = true;
+      goNext(true);
+    }
+  }, 1000);
+}
+
+function togglePause(){
+  paused = !paused;
+  updateTimerUI();
+  setTip(paused ? "已暂停（点击火箭或时间继续）" : "继续计时：请完成本题。");
+}
+$("rocket").addEventListener("click", togglePause);
+$("timeBox").addEventListener("click", togglePause);
+
+/* ===============================
+   G. 拖拽：从选项区拖到作答区（丝滑：RAF + 幽灵跟手 + 槽位高亮）
+   =============================== */
+const Drag = {
+  pointerId: null,
+  startX: 0, startY: 0,
+  x: 0, y: 0,
+  moved: false,
+  dragging: false,
+  opt: null,
+  ghost: null,
+  raf: null,
+  overSlot: null,
+};
+
+function findOptionFromEl(el){
+  const optEl = el.closest?.(".opt");
+  if(!optEl) return null;
+  return {
+    el: optEl,
+    type: optEl.dataset.type,
+    colorName: optEl.dataset.color,
+    label: optEl.dataset.label,
+  };
+}
+
+function beginGhost(opt){
+  const ghost = document.createElement("div");
+  ghost.className = "dragGhost";
+  const shapeObj = { type: opt.type, color: COLOR[opt.colorName], outline:false };
+  ghost.innerHTML = cellSVG(shapeObj);
+  document.body.appendChild(ghost);
+  return ghost;
+}
+
+function setGhostPos(x,y){
+  if(!Drag.ghost) return;
+  Drag.ghost.style.transform = `translate3d(${x}px,${y}px,0) translate(-50%,-50%)`;
+}
+
+function clearSlotHover(){
+  document.querySelectorAll(".slot.drop-hover").forEach(el=>el.classList.remove("drop-hover"));
+}
+
+function hitTestSlot(x,y){
+  const slots = document.querySelectorAll(".slot");
+  for(const el of slots){
+    const r = el.getBoundingClientRect();
+    if(x >= r.left && x <= r.right && y >= r.top && y <= r.bottom){
+      return el.dataset.slot || null;
+    }
+  }
+  return null;
+}
+
+function updateHoverSlot(){
+  if(!Drag.dragging) return;
+
+  const k = hitTestSlot(Drag.x, Drag.y);
+  if(k !== Drag.overSlot){
+    Drag.overSlot = k;
+    clearSlotHover();
+    if(k){
+      const el = document.querySelector(`.slot[data-slot="${k}"]`);
+      if(el) el.classList.add("drop-hover");
+    }
+  }
+}
+
+function tickGhost(){
+  Drag.raf = null;
+  if(!Drag.dragging) return;
+  setGhostPos(Drag.x, Drag.y);
+  updateHoverSlot();
+}
+
+function onPointerMove(e){
+  if(Drag.pointerId !== e.pointerId) return;
+  Drag.x = e.clientX;
+  Drag.y = e.clientY;
+
+  const dx = Drag.x - Drag.startX;
+  const dy = Drag.y - Drag.startY;
+  const dist = Math.hypot(dx,dy);
+
+  if(!Drag.dragging && dist > 6){
+    Drag.dragging = true;
+    Drag.ghost = beginGhost(Drag.opt);
+    setGhostPos(Drag.x, Drag.y);
+    document.body.style.userSelect = "none";
+  }
+
+  if(Drag.dragging && !Drag.raf){
+    Drag.raf = requestAnimationFrame(tickGhost);
+  }
+}
+
+function endDrag(commit){
+  if(Drag.ghost){
+    Drag.ghost.classList.add("hide");
+    const g = Drag.ghost;
+    setTimeout(()=>g.remove(), 140);
+  }
+  Drag.pointerId = null;
+  Drag.moved = false;
+  Drag.dragging = false;
+  Drag.opt = null;
+  Drag.ghost = null;
+  if(Drag.raf) cancelAnimationFrame(Drag.raf);
+  Drag.raf = null;
+  clearSlotHover();
+  Drag.overSlot = null;
+  document.body.style.userSelect = "";
+}
+
+function onPointerUp(e){
+  if(Drag.pointerId !== e.pointerId) return;
+
+  // 拖拽：落点在 slot 则填入对应 slot
+  if(Drag.dragging){
+    const slotKey = Drag.overSlot;
+    if(slotKey){
+      // 将 opt 映射到当前题的 options 对象，确保 label 一致
+      const opts = optionsByQ[idx];
+      const found = opts.find(o=>o.type===Drag.opt.type && o.colorName===Drag.opt.colorName);
+      applyOptionToSlot(slotKey, found || Drag.opt);
+    }else{
+      setTip("未拖到作答格内，本次拖拽未生效。");
+    }
+    endDrag(true);
+    window.removeEventListener("pointermove", onPointerMove, true);
+    window.removeEventListener("pointerup", onPointerUp, true);
+    window.removeEventListener("pointercancel", onPointerCancel, true);
+    e.preventDefault();
+    return;
+  }
+
+  // 非拖拽：当作“点击”效果，填到当前 activeSlot
+  if(Drag.opt){
+    const opts = optionsByQ[idx];
+    const found = opts.find(o=>o.type===Drag.opt.type && o.colorName===Drag.opt.colorName);
+    applyOptionToSlot(activeSlot, found || Drag.opt);
+  }
+
+  endDrag(false);
+  window.removeEventListener("pointermove", onPointerMove, true);
+  window.removeEventListener("pointerup", onPointerUp, true);
+  window.removeEventListener("pointercancel", onPointerCancel, true);
+  e.preventDefault();
+}
+
+function onPointerCancel(e){
+  if(Drag.pointerId !== e.pointerId) return;
+  endDrag(false);
+  window.removeEventListener("pointermove", onPointerMove, true);
+  window.removeEventListener("pointerup", onPointerUp, true);
+  window.removeEventListener("pointercancel", onPointerCancel, true);
+}
+
+function onOptionsPointerDown(e){
+  const opt = findOptionFromEl(e.target);
+  if(!opt) return;
+
+  Drag.pointerId = e.pointerId;
+  Drag.startX = Drag.x = e.clientX;
+  Drag.startY = Drag.y = e.clientY;
+  Drag.opt = opt;
+  Drag.dragging = false;
+  Drag.overSlot = null;
+
+  window.addEventListener("pointermove", onPointerMove, true);
+  window.addEventListener("pointerup", onPointerUp, true);
+  window.addEventListener("pointercancel", onPointerCancel, true);
+
+  // 让 pointer 事件持续（即使手指移出选项）
+  try{ opt.el.setPointerCapture(e.pointerId); }catch(_){}
+  e.preventDefault();
+}
+
+$("options").addEventListener("pointerdown", onOptionsPointerDown, {capture:true});
+
+/* ===============================
+   H. 判分/分析
+   =============================== */
+function goNext(byTimeout){
+  timeSpent[idx] = usedThisQuestion;
+
+  if(idx === TOTAL-1){
+    stopTick();
+    showResults();
+    return;
+  }
+
+  idx += 1;
+  activeSlot = "tl";
+  renderAll();
+  startTimerForQuestion();
+  setTip(byTimeout ? "上一题已超时，已自动切换到下一题。" : `已切换到第 ${idx+1} 题。可拖拽选项到作答区。`);
+}
+
+function isCorrect(i){
+  const a = puzzles[i].answer;
+  const u = answers[i];
+  return SLOT_KEYS.every(k => u[k] && u[k].type===a[k].type && u[k].colorName===a[k].colorName);
+}
+
+function explainRule(pz){
+  const m = pz.meta;
+  if(m.family === "column"){
+    return [
+      "本题规律（列式轮换）",
+      "1）每个田字格左列同形、右列同形。",
+      "2）同一行从第1格到第2格到第3格：形状按三种循环轮换。",
+      "3）颜色只做“上下交换”（左列交换一次、右列交换一次）。",
+      "=> 由第3行前两格推出缺失格四象限。"
+    ].join("\n");
+  }
+  return [
+    "本题规律（象限对调·只对调类）",
+    `1）第1格→第2格：${m.step1.name}（左右或上下位置交换）。`,
+    `2）第2格→第3格：${m.step2.name}（另一种对调）。`,
+    "3）形状与颜色本身不变，只是随位置一起移动。",
+    "=> 按两步对调即可推出缺失格。"
+  ].join("\n");
+}
+
+function escapeHtml(s){
+  return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+
+function showResults(){
+  $("timerWrap").style.display = "none";
+  $("grid").style.display = "none";
+  document.querySelector(".answerWrap").style.display = "none";
+  document.querySelector(".sep").style.display = "none";
+  document.querySelector(".optTitle").style.display = "none";
+  $("options").style.display = "none";
+  document.querySelector(".controls").style.display = "none";
+
+  const correct = Array.from({length:TOTAL}, (_,i)=>isCorrect(i)).filter(Boolean).length;
+  const used = timeSpent.reduce((a,b)=>a+b,0);
+
+  const box = $("resultBox");
+  box.style.display = "";
+  box.innerHTML = "";
+
+  const sum = document.createElement("div");
+  sum.className = "summary";
+  sum.innerHTML = `
+    <div><strong>答题结束</strong></div>
+    <div>总题数：${TOTAL}；正确：<span class="${correct===TOTAL?'tagOk':'tagBad'}">${correct}</span>；错误：${TOTAL-correct}</div>
+    <div>总用时：${fmt(used)}</div>
+    <div class="smallNote">错题解析附“该题原题截图（系统生成）+ 正确补全截图（系统生成）”。</div>
+  `;
+  box.appendChild(sum);
+
+  for(let i=0;i<TOTAL;i++){
+    const ok = isCorrect(i);
+    const pz = puzzles[i];
+    const u = answers[i];
+    const a = pz.answer;
+    const opts = optionsByQ[i];
+
+    const review = document.createElement("div");
+    review.className = "review";
+    review.innerHTML = `<h3>第 ${i+1} 题：${ok ? '<span class="tagOk">正确</span>' : '<span class="tagBad">错误</span>'}（用时 ${fmt(timeSpent[i])}${u.timeout ? "，超时" : ""}）</h3>`;
+
+    const wrap = document.createElement("div");
+    wrap.className = "reviewGrid";
+
+    const shotCol = document.createElement("div");
+    shotCol.className = "shotCol";
+    if(!ok){
+      shotCol.innerHTML = `
+        <img class="shot" src="${pz.problemShotUrl}" alt="错题原题截图（系统生成）" />
+        <div class="shotCap">错题原题截图（系统生成）：缺失格保持绿色空白。</div>
+        <img class="shot" style="margin-top:10px" src="${pz.answerShotUrl}" alt="正确补全截图（系统生成）" />
+        <div class="shotCap">正确补全（系统生成）：用于对照缺失格应填内容。</div>
+      `;
+    }else{
+      shotCol.innerHTML = `
+        <img class="shot" src="${pz.problemShotUrl}" alt="原题截图（系统生成）" />
+        <div class="shotCap">本题原题截图（系统生成）。</div>
+      `;
+    }
+    wrap.appendChild(shotCol);
+
+    const ana = document.createElement("div");
+    ana.className = "analysis";
+
+    const lines = ["tl","tr","bl","br"].map(k=>{
+      const userText = u[k] ? optionLabelOf(opts, u[k].type, u[k].colorName) : (u.timeout ? "（超时未作答）" : "（未作答）");
+      const ansText  = optionLabelOf(opts, a[k].type, a[k].colorName);
+      const match = u[k] && u[k].type===a[k].type && u[k].colorName===a[k].colorName;
+      return `<div class="kv">${({tl:"左上",tr:"右上",bl:"左下",br:"右下"})[k]}：你的=${userText}；正确=${ansText} ${match ? '✅' : '❌'}</div>`;
+    }).join("");
+
+    ana.innerHTML = `
+      <div><strong>对照</strong></div>
+      ${lines}
+      ${ok ? "" : `<div style="margin-top:8px;"><strong>规律分析</strong><pre style="white-space:pre-wrap; font-family:inherit; margin:6px 0 0;">${escapeHtml(explainRule(pz))}</pre></div>`}
+    `;
+
+    wrap.appendChild(ana);
+    review.appendChild(wrap);
+    box.appendChild(review);
+  }
+
+  const restartWrap = document.createElement("div");
+  restartWrap.className = "controls";
+  restartWrap.style.marginTop = "14px";
+  restartWrap.innerHTML = `<button id="btnRestart" class="btn" type="button">重新答题（重新随机生成5题）</button>`;
+  box.appendChild(restartWrap);
+
+  document.getElementById("btnRestart").addEventListener("click", ()=>{
+    newSession();
+    $("qmeta").textContent = `第 1 题 / ${TOTAL}`;
+  });
+
+  $("qmeta").textContent = "答题结果";
+  setTip("");
+}
+
+/* 启动 */
+newSession();
+</script>
+</body>
+</html>
