@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>探索题（5题 / 单题切换）</title>
+  <style>
+    :root{
+      --paper-max: 1020px;
+
+      --tian-size: clamp(170px, 26vw, 230px);
+      --opt-size:  clamp(92px, 12vw, 128px);
+
+      --gap-lg: clamp(10px, 2vw, 16px);
+      --gap-md: clamp(6px, 1.2vw, 10px);
+
+      --bd: rgba(0,0,0,.18);
+      --bd2: rgba(0,0,0,.14);
+
+      --blank-bg: #e8f5e9;
+      --blank-bd: #4caf50;
+
+      --sel: #2196f3;
+
+      --cell-font: clamp(22px, 2.4vw, 40px);
+      --opt-font:  clamp(22px, 3vw, 40px);
+
+      --shade-blue:   #74b7ff;
+      --shade-yellow: #f6e46a;
+      --shade-pink:   #f7bfd4;
+
+      /* 倒计时条：严格贴近截图风格 */
+      --track-gray: #e6e6e6;
+      --track-green: #61c15a;
+      --timer-green: #69c36f;
+      --tag: #f0a72f;
+    }
+
+    *{ box-sizing:border-box; }
+    html{ -webkit-text-size-adjust:100%; }
+    body{
+      margin:0;
+      font-family: Arial, "Microsoft YaHei", "PingFang SC", sans-serif;
+      background:#fff;
+      color:#1b1f24;
+      padding:
+        max(10px, env(safe-area-inset-top))
+        max(12px, env(safe-area-inset-right))
+        max(10px, env(safe-area-inset-bottom))
+        max(12px, env(safe-area-inset-left));
+      display:flex;
+      justify-content:center;
+    }
+
+    .paper{ width:100%; max-width: var(--paper-max); }
+
+    /* ===== Header (参考图：标签 + 长灰线 + 火箭 + 右侧绿时间块) ===== */
+    .head{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding: 6px 4px;
+    }
+    .tag{
+      height:30px;
+      padding:0 14px;
+      border-radius:18px;
+      background: var(--tag);
+      color:#fff;
+      font-weight:900;
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    .bar{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 0;
+    }
+    .track{
+      position:relative;
+      flex:1;
+      height:6px;
+      border-radius:999px;
+      background: var(--track-gray);
+      overflow:visible;
+    }
+    .progress{
+      position:absolute;
+      left:0; top:0;
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background: var(--track-green);
+    }
+    .rocket{
+      width:30px;height:30px;
+      position:absolute;
+      top:50%;
+      left:0%;
+      transform: translate(-14px,-50%);
+      cursor:pointer;
+      user-select:none;
+      filter: drop-shadow(0 2px 0 rgba(0,0,0,.08));
+    }
+    .rocket[data-state="pause"]{ opacity:.55; }
+    .timer{
+      width:84px;
+      height:30px;
+      border-radius:3px;
+      background: var(--timer-green);
+      color:#fff;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      letter-spacing:.5px;
+      cursor:pointer;
+      user-select:none;
+      flex:0 0 auto;
+    }
+
+    .inst{
+      padding: 4px 4px 12px;
+      font-size:13px;
+      line-height:1.55;
+      color:#3b424b;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      margin-bottom: 10px;
+    }
+
+    /* ===== single question view ===== */
+    #quizView{ display:block; }
+    #resultView{ display:none; }
+
+    .qwrap{
+      padding: 8px 4px 12px;
+    }
+    .qcard{
+      border: 1px solid rgba(0,0,0,.10);
+      border-radius: 12px;
+      padding: 12px 12px 14px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+      background:#fff;
+    }
+    .qtitle{
+      font-size:16px;
+      font-weight:900;
+      padding: 0 2px 10px;
+      border-bottom: 2px solid rgba(0,0,0,.05);
+      margin-bottom: 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .qmeta{ font-size:12px; color:#6a737d; font-weight:800; }
+
+    .tian-grid{
+      display:grid;
+      grid-template-columns: repeat(3, var(--tian-size));
+      justify-content:center;
+      gap: var(--gap-lg);
+      margin: 12px 0 12px;
+      width:100%;
+    }
+    .tian{
+      width: var(--tian-size);
+      aspect-ratio: 1/1;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: var(--gap-md);
+      border: 2px solid rgba(0,0,0,.22);
+      border-radius: 10px;
+      padding: var(--gap-md);
+      background:#fff;
+    }
+
+    .cell{
+      border: 1px solid var(--bd2);
+      border-radius: 8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      aspect-ratio: 1/1;
+      background:#fff;
+      user-select:none;
+      position:relative;
+      overflow:hidden;
+      font-size: var(--cell-font);
+      white-space: nowrap;
+      font-weight: 900;
+    }
+    .shade.blue{ background: var(--shade-blue); }
+    .shade.yellow{ background: var(--shade-yellow); }
+    .shade.pink{ background: var(--shade-pink); }
+
+    .mirror{ transform: scaleX(-1); }
+
+    .blank{
+      background: var(--blank-bg) !important;
+      border: 2px solid var(--blank-bd);
+      cursor:pointer;
+    }
+
+    .payload{
+      width: 88%;
+      height: 88%;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background: transparent;
+    }
+
+    .clockSvg.cellClock{ width: 86%; height: 86%; display:block; }
+    .clockSvg.optClock { width: 78%; height: 78%; display:block; }
+
+    .optLabel{
+      text-align:center;
+      font-weight:900;
+      color:#4b525b;
+      margin-top: 6px;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .opts{
+      display:grid;
+      grid-template-columns: repeat(6, var(--opt-size));
+      justify-content:center;
+      gap: var(--gap-md);
+    }
+    .opt{
+      width: var(--opt-size);
+      aspect-ratio: 1/1;
+      border: 2px solid rgba(0,0,0,.18);
+      border-radius: 10px;
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+      overflow:hidden;
+      padding: 4px;
+      font-size: var(--opt-font);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .opt.selected{
+      border-color: var(--sel);
+      box-shadow: 0 0 0 3px rgba(33,150,243,.18);
+      background:#e3f2fd;
+    }
+    .optMirror{ display:inline-block; transform: scaleX(-1); }
+
+    .actions{
+      display:flex;
+      justify-content:center;
+      gap:12px;
+      padding: 12px 4px 10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .btn{
+      border:1px solid rgba(0,0,0,.15);
+      background:#fff;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .btn.green{
+      background:#45b948;
+      border-color:#45b948;
+      color:#fff;
+    }
+    .btn.primary{
+      background:#2b8cff;
+      border-color:#2b8cff;
+      color:#fff;
+    }
+
+    /* ===== result ===== */
+    .result{ padding: 10px 4px 20px; }
+    .summary{
+      border: 1px solid rgba(0,0,0,.10);
+      border-radius: 12px;
+      padding: 14px 14px;
+      background:#fff;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+      margin-bottom: 14px;
+    }
+    .summary h2{ margin:0 0 8px; font-size:18px; }
+    .summary .line{ color:#3b424b; font-weight:900; line-height:1.6; }
+
+    .wrongCard{
+      border: 1px solid rgba(0,0,0,.10);
+      border-radius: 12px;
+      padding: 12px;
+      background:#fff;
+      margin-bottom: 12px;
+    }
+    .wrongHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:10px;
+      font-weight:900;
+      margin-bottom:8px;
+    }
+    .shot{
+      width:100%;
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:10px;
+      overflow:hidden;
+      background:#fff;
+      margin:8px 0 10px;
+    }
+    .shot img{ width:100%; display:block; }
+    .analysis{
+      font-size:13px;
+      color:#3b424b;
+      line-height:1.55;
+    }
+    .analysis code{
+      background: rgba(0,0,0,.05);
+      padding: 0 6px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight:900;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 92px 1fr;
+      gap:6px 10px;
+      margin-top:8px;
+      font-size:13px;
+    }
+    .kv div:nth-child(odd){ color:#6a737d; font-weight:900; }
+    .kv div:nth-child(even){ color:#1b1f24; font-weight:900; }
+
+    @media (max-width: 920px){
+      .opts{ grid-template-columns: repeat(4, var(--opt-size)); }
+    }
+    @media (max-width: 620px){
+      .tian-grid{ grid-template-columns: repeat(2, var(--tian-size)); }
+      .opts{ grid-template-columns: repeat(3, var(--opt-size)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="paper">
+    <!-- Header -->
+    <div class="head">
+      <div class="tag">探索题</div>
+      <div class="bar">
+        <div class="track" id="track">
+          <div class="progress" id="progress"></div>
+          <svg class="rocket" id="rocket" viewBox="0 0 64 64" data-state="run" aria-label="小火箭（点击暂停/继续）">
+            <defs>
+              <linearGradient id="gBody" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="1" stop-color="#e8eef4"/>
+              </linearGradient>
+            </defs>
+            <path d="M14 36 C6 42, 6 52, 16 56 C14 50, 18 45, 22 42 C18 41, 16 39, 14 36 Z" fill="#ff8a3d"/>
+            <path d="M26 12 C40 12, 52 24, 52 38 C52 48, 46 54, 38 56 C30 54, 22 48, 22 38 C22 24, 34 12, 26 12 Z"
+                  fill="url(#gBody)" stroke="#b9c4d0" stroke-width="2"/>
+            <circle cx="38" cy="30" r="7" fill="#5aaee6" stroke="#2b6e9b" stroke-width="2"/>
+            <path d="M26 40 L16 44 L20 34 Z" fill="#e45858" stroke="#c74b4b" stroke-width="1.5"/>
+            <path d="M40 54 L48 62 L50 52 Z" fill="#e45858" stroke="#c74b4b" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="timer" id="timer" title="点击暂停/继续">04:00</div>
+      </div>
+    </div>
+
+    <div class="inst">
+      操作：先单击选项，再单击绿色格子；不选任何选项时单击绿色格子可清空。图片行下方为镜像显示；选项中“镜像图片”用于下方格子。
+    </div>
+
+    <!-- Quiz -->
+    <div id="quizView">
+      <div class="qwrap">
+        <div id="questionHost"></div>
+        <div class="actions">
+          <button class="btn" id="clearBtn">清空本题作答</button>
+          <button class="btn green" id="nextBtn">下一题</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="resultView" class="result">
+      <div class="summary">
+        <h2>答题结果</h2>
+        <div class="line" id="scoreLine"></div>
+      </div>
+      <div id="wrongList"></div>
+      <div class="actions">
+        <button class="btn primary" id="restartBtn">重新答题（再生成5道）</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <script>
+    (() => {
+      // ===================== Timer (per question) + rocket =====================
+      const TOTAL = 4 * 60;
+      let left = TOTAL;
+      let running = true;
+      let finishedAll = false;
+      let lastTick = performance.now();
+
+      const timerEl = document.getElementById('timer');
+      const rocketEl = document.getElementById('rocket');
+      const trackEl = document.getElementById('track');
+      const progressEl = document.getElementById('progress');
+
+      function pad(n){ return (n<10?'0':'')+n; }
+      function renderTime(){
+        const m = Math.floor(left/60), s = left%60;
+        timerEl.textContent = `${pad(m)}:${pad(s)}`;
+        rocketEl.dataset.state = running ? 'run' : 'pause';
+      }
+      function setRocketPos(){
+        const t = 1 - (left / TOTAL);          // 0 -> 1
+        progressEl.style.width = (t * 100) + '%';
+        rocketEl.style.left = (t * 100) + '%';
+      }
+      function toggleRun(){
+        if(finishedAll) return;
+        running = !running;
+        lastTick = performance.now();
+        renderTime();
+      }
+      rocketEl.addEventListener('click', toggleRun);
+      timerEl.addEventListener('click', toggleRun);
+
+      function resetTimer(){
+        left = TOTAL;
+        running = true;
+        lastTick = performance.now();
+        renderTime();
+        setRocketPos();
+      }
+
+      function tick(now){
+        const dt = (now - lastTick) / 1000;
+        if(running && !finishedAll){
+          const dec = Math.floor(dt);
+          if(dec > 0){
+            left = Math.max(0, left - dec);
+            lastTick = now;
+            renderTime();
+            setRocketPos();
+            if(left === 0){
+              running = false;
+              // 时间到：自动进入下一题（并记录截图与作答）
+              goNext(true);
+            }
+          }
+        } else {
+          lastTick = now;
+        }
+        requestAnimationFrame(tick);
+      }
+
+      // ===================== Generator =====================
+      const IMAGE_MAP = {
+        1:'🚗', 2:'🚕', 3:'🚌', 4:'🚑', 5:'🚒', 6:'🚚',
+        7:'🚛', 8:'🚜', 9:'🏎️', 10:'🛵', 11:'🛶', 12:'🚤'
+      };
+
+      const state = {
+        seed: Date.now() % 1000000,
+        rng: null,
+        questions: [],
+        idx: 0
+      };
+
+      function makeRng(seed){
+        let s = seed >>> 0;
+        return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+      }
+      function randInt(rng, min, max){ return Math.floor(rng() * (max-min+1)) + min; }
+      function pick(rng, arr){ return arr[randInt(rng, 0, arr.length-1)]; }
+      function shuffle(rng, arr){
+        const a = arr.slice();
+        for(let i=a.length-1;i>0;i--){
+          const j = Math.floor(rng()*(i+1));
+          [a[i],a[j]]=[a[j],a[i]];
+        }
+        return a;
+      }
+
+      function isChecker(subRow, subCol){ return ((subRow+subCol)%2)===0; }
+      function expectedShade(gridRow, subRow, subCol){
+        if(!isChecker(subRow, subCol)) return 'none';
+        if(gridRow < 2) return subRow===0 ? 'blue' : 'yellow';
+        return 'pink';
+      }
+
+      function clockSVG(hour, cssClass){
+        const hourAngle = (hour % 12) * 30;
+        const minuteAngle = 0;
+        return `
+          <svg class="clockSvg ${cssClass}" viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="52" fill="#707680"/>
+            <g transform="translate(60 60)">
+              <circle r="4" fill="#ffffff"/>
+              <line x1="0" y1="0" x2="0" y2="-42" stroke="#ffffff" stroke-width="6" stroke-linecap="round"
+                    transform="rotate(${minuteAngle})"/>
+              <line x1="0" y1="0" x2="0" y2="-28" stroke="#ffffff" stroke-width="7" stroke-linecap="round"
+                    transform="rotate(${hourAngle})"/>
+            </g>
+          </svg>
+        `;
+      }
+
+      function renderContentHTML(type, value, context, ori){
+        if(type === 'clock'){
+          return clockSVG(value, context === 'option' ? 'optClock' : 'cellClock');
+        }
+        if(type === 'image'){
+          const emoji = IMAGE_MAP[value] ?? String(value);
+          if(context === 'option' && ori === 'bottom'){
+            return `<span class="optMirror">${emoji}</span>`;
+          }
+          return `<span>${emoji}</span>`;
+        }
+        return `<span>${value}</span>`;
+      }
+
+      function buildClockRow(rng){
+        const d = pick(rng, [1,2]); // required
+        const startTopMax = 12 - d*5;
+        const startTop = randInt(rng, 1, startTopMax);
+        const startBottomMin = 1 + d*5;
+        const startBottom = randInt(rng, startBottomMin, 12);
+        const top = Array.from({length:6}, (_,i)=> startTop + i*d);
+        const bottom = Array.from({length:6}, (_,i)=> startBottom - i*d);
+        return { step:d, startTop, startBottom, top, bottom };
+      }
+      function buildNumberRow(rng){
+        const d = randInt(rng, 1, 4);
+        const min=0, max=20;
+        const startTopMax = max - d*5;
+        const startTop = randInt(rng, min, startTopMax);
+        const startBottomMin = min + d*5;
+        const startBottom = randInt(rng, startBottomMin, max);
+        const top = Array.from({length:6}, (_,i)=> startTop + i*d);
+        const bottom = Array.from({length:6}, (_,i)=> startBottom - i*d);
+        return { step:d, startTop, startBottom, top, bottom };
+      }
+      function buildImageRow(rng){
+        const start = randInt(rng, 1, 7);
+        const top = Array.from({length:6}, (_,i)=> start + i);
+        const bottom = top.slice().reverse();
+        return { start, top, bottom };
+      }
+      function packTo3Grids(top, bottom){
+        const rowGrids = [];
+        let ti=0, bi=0;
+        for(let c=0;c<3;c++){
+          rowGrids.push([[top[ti++], top[ti++]],[bottom[bi++], bottom[bi++]]]);
+        }
+        return rowGrids;
+      }
+
+      function idxToPos(idx){
+        const subRow = idx<6 ? 0 : 1;
+        const j = idx<6 ? idx : (idx-6);
+        const gridCol = Math.floor(j/2);
+        const subCol = j%2;
+        return {gridCol, subRow, subCol};
+      }
+      function pickBlankIndicesForRow(rng, rowType, count){
+        const picked = [];
+        let tries=0;
+        while(picked.length < count && tries++ < 25000){
+          const idx = randInt(rng, 0, 11);
+          if(picked.includes(idx)) continue;
+          if(picked.some(x => Math.abs(x-idx) === 1)) continue;
+          if(rowType === 'image'){
+            const aligned = idx < 6 ? idx+6 : idx-6;
+            if(picked.includes(aligned)) continue;
+          }
+          picked.push(idx);
+        }
+        return picked.length === count ? picked.sort((a,b)=>a-b) : null;
+      }
+      function pickBlankPlan(rng){
+        const plans = [
+          [2,3,2],
+          [2,2,3],
+          [1,3,3],
+        ];
+        return plans[randInt(rng, 0, plans.length-1)];
+      }
+
+      function generateQuestion(rng, index){
+        const clockMeta = buildClockRow(rng);
+        const numberMeta = buildNumberRow(rng);
+        const imageMeta = buildImageRow(rng);
+
+        const grids = [
+          packTo3Grids(clockMeta.top, clockMeta.bottom),
+          packTo3Grids(numberMeta.top, numberMeta.bottom),
+          packTo3Grids(imageMeta.top, imageMeta.bottom),
+        ];
+
+        const plan = pickBlankPlan(rng);
+        const blanks = [];
+        for(let row=0; row<3; row++){
+          const rowType = ['clock','number','image'][row];
+          const need = plan[row];
+          let idxs = null;
+          for(let k=0;k<120;k++){
+            idxs = pickBlankIndicesForRow(rng, rowType, need);
+            if(idxs) break;
+          }
+          idxs.forEach(idx => blanks.push({gridRow:row, ...idxToPos(idx)}));
+        }
+
+        const answers = blanks.map(b => {
+          const type = ['clock','number','image'][b.gridRow];
+          const value = grids[b.gridRow][b.gridCol][b.subRow][b.subCol];
+          const ori = type==='image' ? (b.subRow===1 ? 'bottom' : 'top') : null;
+          const shade = expectedShade(b.gridRow, b.subRow, b.subCol);
+          return {...b, type, value, ori, shade};
+        });
+
+        // options 12 = correct unique + distractors
+        const used = new Set();
+        const options = [];
+        function addOpt(opt){
+          const key = `${opt.type}:${opt.value}:${opt.ori??''}:${opt.shade}`;
+          if(used.has(key)) return false;
+          used.add(key);
+          options.push(opt);
+          return true;
+        }
+        answers.forEach(a => addOpt({type:a.type, value:a.value, ori:a.ori, shade:a.shade, correct:true}));
+
+        function randDistractor(type){
+          if(type==='clock') return randInt(rng,1,12);
+          if(type==='number') return randInt(rng,0,20);
+          return randInt(rng,1,12);
+        }
+        function randShade(type){
+          if(type==='image') return pick(rng, ['pink','none']);
+          return pick(rng, ['blue','yellow','none']);
+        }
+        while(options.length < 12){
+          const type = pick(rng, ['clock','number','image']);
+          const ori = type==='image' ? pick(rng, ['top','bottom']) : null;
+          const shade = randShade(type);
+          addOpt({type, value:randDistractor(type), ori, shade, correct:false});
+        }
+
+        return {
+          id: `q${index}`,
+          meta: {clockMeta, numberMeta, imageMeta},
+          grids, blanks, answers,
+          options: shuffle(rng, options).map((o,i)=>({...o, id:`q${index}-opt${i}`})),
+          selectedOptId: null,
+          screenshot: null
+        };
+      }
+
+      function generateAll(){
+        state.rng = makeRng(state.seed);
+        state.questions = Array.from({length:5}, (_,i)=>generateQuestion(state.rng, i));
+        state.idx = 0;
+      }
+
+      // ===================== UI rendering (single question) =====================
+      const hostEl = document.getElementById('questionHost');
+      const nextBtn = document.getElementById('nextBtn');
+
+      function renderQuestion(qIndex){
+        const q = state.questions[qIndex];
+        hostEl.innerHTML = '';
+
+        const card = document.createElement('div');
+        card.className = 'qcard';
+        card.id = q.id;
+
+        card.innerHTML = `
+          <div class="qtitle">
+            <div>第 ${qIndex+1} 题</div>
+            <div class="qmeta">空格：${q.blanks.length}　（共 5 题）</div>
+          </div>
+        `;
+
+        const grid = document.createElement('div');
+        grid.className = 'tian-grid';
+
+        for(let gridRow=0; gridRow<3; gridRow++){
+          const rowType = ['clock','number','image'][gridRow];
+          const isImageRow = rowType === 'image';
+
+          for(let gridCol=0; gridCol<3; gridCol++){
+            const tian = document.createElement('div');
+            tian.className = 'tian';
+            const vals = q.grids[gridRow][gridCol];
+
+            for(let subRow=0; subRow<2; subRow++){
+              for(let subCol=0; subCol<2; subCol++){
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.gridRow = gridRow;
+                cell.dataset.gridCol = gridCol;
+                cell.dataset.subRow = subRow;
+                cell.dataset.subCol = subCol;
+                cell.dataset.type = rowType;
+
+                if(isImageRow && subRow===1) cell.classList.add('mirror');
+
+                const isBlank = q.blanks.some(b =>
+                  b.gridRow===gridRow && b.gridCol===gridCol && b.subRow===subRow && b.subCol===subCol
+                );
+
+                if(isBlank){
+                  cell.classList.add('blank');
+                  cell.dataset.expectShade = expectedShade(gridRow, subRow, subCol);
+                  cell.addEventListener('click', () => onBlankClick(q, cell));
+                }else{
+                  const s = expectedShade(gridRow, subRow, subCol);
+                  if(s !== 'none') cell.classList.add('shade', s);
+                  cell.innerHTML = renderContentHTML(rowType, vals[subRow][subCol], 'cellFixed', null);
+                }
+
+                tian.appendChild(cell);
+              }
+            }
+            grid.appendChild(tian);
+          }
+        }
+        card.appendChild(grid);
+
+        const optLabel = document.createElement('div');
+        optLabel.className = 'optLabel';
+        optLabel.textContent = '选项区';
+        card.appendChild(optLabel);
+
+        const opts = document.createElement('div');
+        opts.className = 'opts';
+
+        q.options.forEach(opt => {
+          const el = document.createElement('div');
+          el.className = 'opt';
+          el.dataset.optId = opt.id;
+          el.dataset.type = opt.type;
+          el.dataset.shade = opt.shade || 'none';
+          if(opt.type==='image') el.dataset.ori = opt.ori;
+          if(opt.shade && opt.shade!=='none') el.classList.add('shade', opt.shade);
+
+          el.innerHTML = renderContentHTML(opt.type, opt.value, 'option', opt.ori);
+          el.addEventListener('click', () => {
+            q.selectedOptId = (q.selectedOptId === opt.id) ? null : opt.id;
+            opts.querySelectorAll('.opt').forEach(o => o.classList.toggle('selected', o.dataset.optId===q.selectedOptId));
+          });
+
+          opts.appendChild(el);
+        });
+
+        card.appendChild(opts);
+        hostEl.appendChild(card);
+
+        nextBtn.textContent = (qIndex === state.questions.length - 1) ? '提交' : '下一题';
+      }
+
+      function optById(q, optId){
+        return q.options.find(o=>o.id===optId) || null;
+      }
+      function clearBlankCell(cellEl){
+        cellEl.innerHTML = '';
+        cellEl.dataset.filled = "0";
+        cellEl.removeAttribute('data-filled');
+        cellEl.removeAttribute('data-answerType');
+        cellEl.removeAttribute('data-answerValue');
+        cellEl.removeAttribute('data-answerOri');
+        cellEl.removeAttribute('data-answerShade');
+      }
+      function setPayload(cellEl, opt){
+        const shadeClass = (opt.shade && opt.shade !== 'none') ? `shade ${opt.shade}` : '';
+        cellEl.innerHTML = `
+          <div class="payload ${shadeClass}">
+            ${renderContentHTML(opt.type, opt.value, 'payload', opt.ori)}
+          </div>
+        `;
+      }
+      function onBlankClick(q, cellEl){
+        if(finishedAll) return;
+
+        const selected = q.selectedOptId ? optById(q, q.selectedOptId) : null;
+        if(!selected){
+          if(cellEl.dataset.filled === "1") clearBlankCell(cellEl);
+          return;
+        }
+        if(selected.type !== cellEl.dataset.type) return;
+
+        if(selected.type==='image'){
+          const expectOri = (cellEl.dataset.subRow === '1') ? 'bottom' : 'top';
+          if(selected.ori !== expectOri) return;
+        }
+
+        const expectShade = cellEl.dataset.expectShade;
+        if((selected.shade || 'none') !== expectShade) return;
+
+        setPayload(cellEl, selected);
+        cellEl.dataset.filled = "1";
+        cellEl.setAttribute('data-filled','1');
+        cellEl.dataset.answerType = selected.type;
+        cellEl.dataset.answerValue = String(selected.value);
+        cellEl.dataset.answerShade = selected.shade || 'none';
+        if(selected.type==='image') cellEl.dataset.answerOri = selected.ori;
+      }
+
+      // ===================== Screenshot per question when leaving =====================
+      async function snapshotCurrentQuestion(){
+        const q = state.questions[state.idx];
+        const el = document.getElementById(q.id);
+        if(!el) return;
+        try{
+          const canvas = await html2canvas(el, {
+            backgroundColor:'#ffffff',
+            scale: Math.min(2, window.devicePixelRatio || 1.5),
+            useCORS:true
+          });
+          q.screenshot = canvas.toDataURL('image/png');
+        }catch(e){
+          console.warn('snapshot failed', e);
+        }
+      }
+
+      // ===================== Grading & analysis =====================
+      function gradeQuestion(q){
+        let correct = 0;
+        const wrong = [];
+        for(const a of q.answers){
+          const sel = `#${q.id} .cell.blank[data-grid-row="${a.gridRow}"][data-grid-col="${a.gridCol}"][data-sub-row="${a.subRow}"][data-sub-col="${a.subCol}"]`;
+          const el = document.querySelector(sel);
+          const t = el?.dataset.answerType ?? null;
+          const v = el?.dataset.answerValue ?? null;
+          const s = el?.dataset.answerShade ?? null;
+          const o = el?.dataset.answerOri ?? null;
+
+          const ok = (t === a.type) && (v === String(a.value)) && (s === a.shade) && (a.type!=='image' ? true : (o === a.ori));
+          if(ok) correct++;
+          else wrong.push({answer:a, user:{type:t,value:v,shade:s,ori:o}});
+        }
+        return {correct, total:q.answers.length, wrong};
+      }
+      function formatSeq(type, arr){
+        if(type==='image') return arr.map(x=>IMAGE_MAP[x] ?? x).join(' ');
+        return arr.join(', ');
+      }
+      function correctDisplayHTML(a){
+        const content = (a.type==='clock')
+          ? clockSVG(a.value,'cellClock')
+          : (a.type==='image' ? `<span>${IMAGE_MAP[a.value] ?? a.value}</span>` : `<span>${a.value}</span>`);
+        const shadeClass = a.shade !== 'none' ? `shade ${a.shade}` : '';
+        const extra = (a.type==='image' && a.ori==='bottom') ? '（下方镜像位）' : '';
+        return `
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="payload ${shadeClass}" style="width:56px;height:56px;">${content}</div>
+            <div style="font-weight:900;color:#1b1f24;">${extra}</div>
+          </div>
+        `;
+      }
+
+      function showResults(){
+        finishedAll = true;
+        running = false;
+        renderTime();
+
+        document.getElementById('quizView').style.display = 'none';
+        document.getElementById('resultView').style.display = 'block';
+
+        const perQ = state.questions.map(q => ({q, ...gradeQuestion(q)}));
+        const totalCorrect = perQ.reduce((s,x)=>s+x.correct,0);
+        const total = perQ.reduce((s,x)=>s+x.total,0);
+
+        document.getElementById('scoreLine').textContent = `得分：${totalCorrect} / ${total}`;
+
+        const wrongList = document.getElementById('wrongList');
+        wrongList.innerHTML = '';
+
+        perQ.forEach((r, idx) => {
+          if(r.wrong.length === 0) return;
+
+          const wc = document.createElement('div');
+          wc.className = 'wrongCard';
+
+          const head = document.createElement('div');
+          head.className = 'wrongHead';
+          head.innerHTML = `<div>第 ${idx+1} 题：错 ${r.wrong.length} 处</div><div style="color:#6a737d">本题 ${r.correct}/${r.total}</div>`;
+          wc.appendChild(head);
+
+          if(r.q.screenshot){
+            const shot = document.createElement('div');
+            shot.className = 'shot';
+            shot.innerHTML = `<img alt="原题截图" src="${r.q.screenshot}">`;
+            wc.appendChild(shot);
+          }
+
+          const {clockMeta, numberMeta, imageMeta} = r.q.meta;
+          const analysis = document.createElement('div');
+          analysis.className = 'analysis';
+          analysis.innerHTML = `
+            <div><b>规律分析</b></div>
+            <div class="kv">
+              <div>时钟行</div>
+              <div>步长 <code>${clockMeta.step}</code>；上6顺序：<code>${formatSeq('clock', clockMeta.top)}</code>；下6逆序：<code>${formatSeq('clock', clockMeta.bottom)}</code></div>
+              <div>数字行</div>
+              <div>步长 <code>${numberMeta.step}</code>；上6顺序：<code>${formatSeq('number', numberMeta.top)}</code>；下6逆序：<code>${formatSeq('number', numberMeta.bottom)}</code></div>
+              <div>图片行</div>
+              <div>上6顺序：<code>${formatSeq('image', imageMeta.top)}</code>；下6为上方反序且“下方镜像显示”</div>
+              <div>底色</div>
+              <div>第1、2行棋盘交替：有底色时上半蓝、下半黄；第3行棋盘交替：有底色为粉</div>
+            </div>
+            <div style="margin-top:10px;"><b>错题明细</b></div>
+          `;
+
+          r.wrong.forEach((w, wi) => {
+            const a = w.answer;
+            const userText = (!w.user.type)
+              ? '未作答'
+              : `${w.user.type} / ${w.user.value ?? '-'} / ${w.user.shade ?? '-'}${w.user.type==='image' ? (' / '+(w.user.ori ?? '-')) : ''}`;
+            const correctText = `${a.type} / ${a.value} / ${a.shade}${a.type==='image' ? (' / '+a.ori) : ''}`;
+
+            const item = document.createElement('div');
+            item.style.marginTop = '10px';
+            item.style.paddingTop = '10px';
+            item.style.borderTop = '1px dashed rgba(0,0,0,.12)';
+            item.innerHTML = `
+              <div style="font-weight:900;">第${wi+1}处（行：${['时钟','数字','图片'][a.gridRow]}；位置：第${a.gridCol+1}个田字格 / ${a.subRow===0?'上':'下'} / ${a.subCol===0?'左':'右'}）</div>
+              <div class="kv" style="margin-top:6px;">
+                <div>你的答案</div><div>${userText}</div>
+                <div>正确答案</div><div>${correctText}</div>
+                <div>正确示例</div><div>${correctDisplayHTML(a)}</div>
+              </div>
+            `;
+            analysis.appendChild(item);
+          });
+
+          wc.appendChild(analysis);
+          wrongList.appendChild(wc);
+        });
+
+        if(wrongList.innerHTML.trim()===''){
+          wrongList.innerHTML = `
+            <div class="summary">
+              <div class="line" style="font-weight:900;">全部正确，没有错题。</div>
+            </div>
+          `;
+        }
+
+        window.scrollTo({top:0, behavior:'instant'});
+      }
+
+      // ===================== Next / submit flow =====================
+      async function goNext(fromTimeout=false){
+        if(finishedAll) return;
+
+        // snapshot current question before leaving
+        await snapshotCurrentQuestion();
+
+        const last = (state.idx === state.questions.length - 1);
+        if(last){
+          // need also snapshot done (already)
+          showResults();
+          return;
+        }
+
+        state.idx++;
+        renderQuestion(state.idx);
+        resetTimer();
+        window.scrollTo({top:0, behavior:'instant'});
+      }
+
+      // ===================== Buttons =====================
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        if(finishedAll) return;
+        document.querySelectorAll('#questionHost .cell.blank').forEach(el => {
+          el.innerHTML = '';
+          el.removeAttribute('data-filled');
+          el.dataset.filled = "0";
+          el.removeAttribute('data-answerType');
+          el.removeAttribute('data-answerValue');
+          el.removeAttribute('data-answerOri');
+          el.removeAttribute('data-answerShade');
+        });
+      });
+
+      nextBtn.addEventListener('click', () => goNext(false));
+
+      document.getElementById('restartBtn').addEventListener('click', () => {
+        // regenerate
+        state.seed = Date.now() % 1000000;
+        generateAll();
+        finishedAll = false;
+        document.getElementById('resultView').style.display = 'none';
+        document.getElementById('quizView').style.display = 'block';
+        renderQuestion(0);
+        resetTimer();
+      });
+
+      // ===================== Init =====================
+      function init(){
+        generateAll();
+        renderQuestion(0);
+        resetTimer();
+        requestAnimationFrame((t)=>{ lastTick=t; requestAnimationFrame(tick); });
+        window.addEventListener('resize', setRocketPos);
+      }
+      init();
+    })();
+  </script>
+</body>
+</html>
