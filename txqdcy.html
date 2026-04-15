@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>高级图形逻辑推理测试 (5题闯关)</title>
+
+  <style>
+    :root{
+      --cell-size: 85px;
+      --inner-line: 1px solid #ccc;
+      --target-green: #dcedc8;
+
+      --ui-max: 1000px;
+      --pill-green: #61b544;
+      --pill-green-dark: #2f8f2f;
+      --bar-gray: #d6d6d6;
+    }
+
+    *{ -webkit-tap-highlight-color: transparent; }
+    body{
+      font-family: "Segoe UI", -apple-system, system-ui, sans-serif;
+      background:#e9ecef;
+      margin:0;
+      padding: 14px 12px calc(92px + env(safe-area-inset-bottom));
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 14px;
+      user-select:none;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* ===== 顶部：小火箭 + 倒计时 ===== */
+    .top-timer{
+      width: 100%;
+      max-width: var(--ui-max);
+      position: relative;
+      height: 44px;
+    }
+    .timer-track{
+      position:absolute;
+      left: 10px;
+      right: 112px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 14px;
+    }
+    .timer-line{
+      position:absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 4px;
+      background: var(--bar-gray);
+      border-radius: 999px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .rocket{
+      position:absolute;
+      top: 50%;
+      transform: translate(-10px, -50%);
+      width: 34px;
+      height: 22px;
+      cursor:pointer;
+      transition: left 0.25s linear, filter 0.2s ease, transform 0.15s ease;
+      will-change: left;
+      touch-action: manipulation;
+    }
+    .rocket:active{ transform: translate(-10px, -50%) scale(0.96); }
+    .rocket svg{ width:100%; height:100%; display:block; }
+
+    .time-pill{
+      position:absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 30px;
+      min-width: 86px;
+      padding: 0 12px;
+      border-radius: 6px;
+      background: var(--pill-green);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      letter-spacing:0.5px;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+      cursor:pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+      touch-action: manipulation;
+    }
+    .time-pill:hover{ background: var(--pill-green-dark); }
+    .time-pill:active{ transform: translateY(-50%) scale(0.98); }
+
+    .time-pill.paused{ background:#ff9800; }
+    .time-pill.danger{ background:#e53935; }
+    .rocket.danger{ filter: drop-shadow(0 0 2px rgba(229,57,53,0.8)); }
+    .rocket.paused{ filter: grayscale(0.2) brightness(0.9); }
+
+    @keyframes wiggle {
+      0% { transform: translate(-10px, -50%) rotate(0deg); }
+      25% { transform: translate(-10px, -50%) rotate(-4deg); }
+      50% { transform: translate(-10px, -50%) rotate(0deg); }
+      75% { transform: translate(-10px, -50%) rotate(4deg); }
+      100% { transform: translate(-10px, -50%) rotate(0deg); }
+    }
+    .rocket.wiggle{ animation: wiggle 0.45s infinite linear; }
+
+    /* ===== 题目页 ===== */
+    .page{
+      width: min(210mm, 100%);
+      max-width: var(--ui-max);
+      min-height: 290mm;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      padding: 20mm 15mm;
+      box-sizing:border-box;
+      display:none;
+    }
+    .page.active{ display:block; }
+
+    h2{ color:#333; margin:0 0 10px; font-size:22px; }
+    .instruction{ color:#555; font-size:14px; margin:0 0 22px; line-height:1.6; }
+
+    .game-board{
+      display:flex;
+      flex-direction:column;
+      gap: 25px;
+      margin-bottom: 26px;
+      width:100%;
+      align-items:center;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      gap: 35px;
+      flex-wrap: wrap;
+      justify-content:center;
+    }
+
+    .matrix{
+      display:grid;
+      grid-template-columns: var(--cell-size) var(--cell-size);
+      grid-template-rows: var(--cell-size) var(--cell-size);
+      border:2px solid #444;
+      background:#fff;
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.06);
+      border-radius:4px;
+    }
+
+    .cell{
+      border-right: var(--inner-line);
+      border-bottom: var(--inner-line);
+      width: var(--cell-size);
+      height: var(--cell-size);
+      box-sizing:border-box;
+      padding:4px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .cell:nth-child(2n){ border-right:none; }
+    .cell:nth-child(n+3){ border-bottom:none; }
+
+    .target-cell{
+      background: var(--target-green) !important;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.05);
+      border: 2px dashed #81c784;
+    }
+    .target-cell.clickable{ cursor:pointer; touch-action: manipulation; }
+    .target-cell.armed{
+      box-shadow: inset 0 0 0 2px rgba(33,150,243,0.25), 0 0 0 3px rgba(33,150,243,0.10);
+    }
+    .target-cell.filled{
+      background:#fff !important;
+      border: 2px solid #81c784;
+      box-shadow: none;
+    }
+
+    .svg-container{ width:100%; height:100%; display:flex; justify-content:center; align-items:center; }
+    svg{ width:85%; height:85%; display:block; overflow:visible; }
+    path{ vector-effect: non-scaling-stroke; }
+
+    .filter-blue{ filter: url(#outline-blue); }
+    .filter-black{ filter: url(#outline-black); }
+    .filter-red{ filter: url(#outline-red); }
+    .filter-green{ filter: url(#outline-green); }
+    .filter-orange{ filter: url(#outline-orange); }
+
+    .options-section{ width:100%; border-top:2px dashed #bbb; padding-top: 22px; }
+    .options-grid{
+      display:grid;
+      grid-template-columns: repeat(6, 1fr); /* 默认 2 行（12项） */
+      gap: 15px;
+      justify-items:center;
+      align-items:center;
+    }
+
+    .opt-card{
+      width: 80px;
+      height: 80px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      background:#fff;
+      cursor:pointer;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      padding:5px;
+      box-sizing:border-box;
+      touch-action: manipulation;
+      -webkit-user-drag: none;
+    }
+    .opt-card:hover{ transform: scale(1.08); border-color:#81c784; z-index:10; }
+    .opt-card:active{ transform: scale(0.98); border-color:#66bb6a; }
+    .opt-card.selected{ border-color:#2196f3; background:#e3f2fd; }
+
+    .svg-defs{ position:absolute; width:0; height:0; }
+
+    /* ===== 底部按钮 ===== */
+    .bottom-nav{
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(233,236,239,0.85);
+      backdrop-filter: blur(6px);
+      border-top: 1px solid rgba(0,0,0,0.06);
+      display:flex;
+      justify-content:center;
+      z-index: 99;
+    }
+    .bottom-inner{
+      width: 100%;
+      max-width: var(--ui-max);
+      background:#fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 10px 14px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .progress{ font-size: 15px; font-weight: 700; color:#333; }
+    .quiz-btn{
+      padding: 9px 16px;
+      border:none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor:pointer;
+      touch-action: manipulation;
+    }
+    .quiz-btn:active{ transform: scale(0.98); }
+    .btn-next{ background:#4caf50; color:#fff; }
+    .btn-restart{ background:#ff9800; color:#fff; }
+
+    .result-box{
+      width:100%;
+      max-width: var(--ui-max);
+      background:#fff;
+      padding: 26px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align:center;
+      display:none;
+      margin-bottom: 100px;
+      box-sizing: border-box;
+    }
+    .result-box.active{ display:block; }
+    .score{ font-size: 28px; font-weight: 900; color:#d32f2f; margin-bottom: 14px; }
+    .analysis{ color:#d32f2f; font-weight: 800; margin-top: 10px; }
+
+    /* iPad：选项仍保持 6 列 -> 2 行；缩小卡片避免拥挤 */
+    @media (max-width: 1024px){
+      :root{ --cell-size: 80px; }
+      .page{ padding: 16px 14px; min-height: auto; }
+      .row{ gap: 18px; }
+      .options-grid{ grid-template-columns: repeat(6, 1fr); gap: 10px; }
+      .opt-card{ width: 72px; height: 72px; padding:4px; }
+    }
+    /* 手机再降列数（不影响 iPad 要求） */
+    @media (max-width: 600px){
+      :root{ --cell-size: 74px; }
+      .options-grid{ grid-template-columns: repeat(3, 1fr); }
+      .opt-card{ width: 82px; height: 82px; }
+    }
+
+    @media print{
+      body{ background:#fff; padding:0; }
+      .no-print{ display:none !important; }
+      .bottom-nav{ display:none !important; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <svg class="svg-defs" aria-hidden="true">
+    <defs>
+      <filter id="outline-blue" x="-20%" y="-20%" width="140%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="thick"/><feFlood flood-color="#1E88E5" result="color"/><feComposite in="color" in2="thick" operator="in" result="stroke"/><feMerge><feMergeNode in="stroke"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="outline-black" x="-20%" y="-20%" width="140%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="thick"/><feFlood flood-color="#222222" result="color"/><feComposite in="color" in2="thick" operator="in" result="stroke"/><feMerge><feMergeNode in="stroke"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="outline-red" x="-20%" y="-20%" width="140%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="thick"/><feFlood flood-color="#E53935" result="color"/><feComposite in="color" in2="thick" operator="in" result="stroke"/><feMerge><feMergeNode in="stroke"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="outline-green" x="-20%" y="-20%" width="140%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="thick"/><feFlood flood-color="#43A047" result="color"/><feComposite in="color" in2="thick" operator="in" result="stroke"/><feMerge><feMergeNode in="stroke"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="outline-orange" x="-20%" y="-20%" width="140%" height="140%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="thick"/><feFlood flood-color="#FB8C00" result="color"/><feComposite in="color" in2="thick" operator="in" result="stroke"/><feMerge><feMergeNode in="stroke"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+  </svg>
+
+  <div class="top-timer no-print" id="topTimer">
+    <div class="timer-track" id="timerTrack">
+      <div class="timer-line"></div>
+
+      <div class="rocket" id="rocket" title="点击暂停/继续">
+        <svg viewBox="0 0 64 40" aria-hidden="true">
+          <path d="M10 20 C18 10, 30 6, 44 6 C51 6, 56 9, 58 13 C60 17, 60 23, 58 27 C56 31, 51 34, 44 34 C30 34, 18 30, 10 20 Z" fill="#8BC34A"/>
+          <path d="M14 20 C21 13, 31 10, 44 10 C49 10, 52 12, 54 15 C56 18, 56 22, 54 25 C52 28, 49 30, 44 30 C31 30, 21 27, 14 20 Z" fill="#ffffff" opacity="0.92"/>
+          <circle cx="40" cy="20" r="5" fill="#4CAF50" opacity="0.9"/>
+          <path d="M7 20 L2 16 L2 24 Z" fill="#FF9800"/>
+          <path d="M9 20 L4 18 L4 22 Z" fill="#FFB74D" opacity="0.9"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="time-pill" id="timePill" title="点击暂停/继续">
+      <span id="timeText">04:00</span>
+    </div>
+  </div>
+
+  <div id="app"></div>
+  <div class="result-box" id="resultBox"></div>
+
+  <div class="bottom-nav no-print">
+    <div class="bottom-inner">
+      <div class="progress" id="progress">第 1 题 / 共 5 题</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="quiz-btn btn-next" id="nextBtn">下一题</button>
+        <button class="quiz-btn btn-restart" id="restartBtn">重新答题</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===================== 图形库（扩充） ===================== */
+const P = {
+  outCirc:"M 50 10 A 40 40 0 1 1 49.9 10 Z",
+  outRect:"M 15 15 L 85 15 L 85 85 L 15 85 Z",
+  outDiamond:"M 50 10 L 90 50 L 50 90 L 10 50 Z",
+  outHex:"M 25 10 L 75 10 L 95 50 L 75 90 L 25 90 L 5 50 Z",
+  outPentagon:"M 50 10 L 90 38 L 75 85 L 25 85 L 10 38 Z",
+
+  inSq:"M 35 35 L 65 35 L 65 65 L 35 65 Z",
+  inCirc:"M 50 35 A 15 15 0 1 1 49.9 35 Z",
+  inTri:"M 50 25 L 75 65 L 25 65 Z",
+  inStar:"M 50 25 L 56 42 L 75 42 L 60 52 L 65 70 L 50 60 L 35 70 L 40 52 L 25 42 L 44 42 Z",
+  inDia:"M 50 30 L 65 50 L 50 70 L 35 50 Z",
+
+  pacman:"M 50 50 L 85 20 A 40 40 0 1 0 85 80 Z",
+  wedge:"M 50 50 L 85 20 A 40 40 0 0 1 85 80 Z",
+  semiL:"M 50 10 L 50 90 A 40 40 0 0 1 50 10 Z",
+  semiR:"M 50 10 A 40 40 0 0 1 50 90 Z",
+
+  halfStarL:"M 50 10 L 50 90 L 35 70 L 15 60 L 35 45 Z",
+  halfStarR:"M 50 10 L 65 45 L 85 60 L 65 70 L 50 90 Z",
+  halfHexL:"M 50 15 L 50 85 L 20 70 L 20 30 Z",
+  halfHexR:"M 50 15 L 80 30 L 80 70 L 50 85 Z",
+
+  trapTop:"M 30 50 L 70 50 L 60 20 L 40 20 Z",
+  trapBot:"M 30 50 L 40 80 L 60 80 L 70 50 Z",
+  houseTop:"M 20 50 L 80 50 L 50 20 Z",
+  houseBot:"M 30 50 L 70 50 L 70 80 L 30 80 Z",
+  gearTop:"M 25 50 L 25 35 L 40 35 L 40 20 L 60 20 L 60 35 L 75 35 L 75 50 Z",
+  gearBot:"M 25 50 L 25 65 L 40 65 L 40 80 L 60 80 L 60 65 L 75 65 L 75 50 Z",
+  capTop:"M 30 50 A 20 20 0 0 1 70 50 Z",
+  capBot:"M 30 50 A 20 20 0 0 0 70 50 Z",
+  diaTop:"M 20 50 L 80 50 L 50 20 Z",
+  diaBot:"M 20 50 L 50 80 L 80 50 Z",
+
+  barThinV:"M 42 10 L 58 10 L 58 90 L 42 90 Z",
+  barThinH:"M 10 42 L 90 42 L 90 58 L 10 58 Z",
+  barThickV:"M 35 15 L 65 15 L 65 85 L 35 85 Z",
+  barThickH:"M 15 35 L 85 35 L 85 65 L 15 65 Z",
+  slantL:"M 20 10 L 90 80 L 80 90 L 10 20 Z",
+  slantR:"M 80 10 L 90 20 L 20 90 L 10 80 Z",
+  crossDiagL:"M 15 15 L 30 15 L 85 70 L 85 85 L 70 85 L 15 30 Z",
+  crossDiagR:"M 85 15 L 70 15 L 15 70 L 15 85 L 30 85 L 85 30 Z",
+
+  paraBar1:"M 10 20 L 25 20 L 25 80 L 10 80 Z",
+  paraBar2:"M 75 20 L 90 20 L 90 80 L 75 80 Z",
+  paraRect1:"M 10 30 L 30 30 L 30 70 L 10 70 Z",
+  paraRect2:"M 70 30 L 90 30 L 90 70 L 70 70 Z",
+  paraCir1:"M 20 50 A 15 15 0 1 1 19.9 50 Z",
+  paraCir2:"M 80 50 A 15 15 0 1 1 79.9 50 Z",
+  paraTri1:"M 20 25 L 35 75 L 5 75 Z",
+  paraTri2:"M 80 25 L 95 75 L 65 75 Z",
+  paraDia1:"M 20 20 L 35 50 L 20 80 L 5 50 Z",
+  paraDia2:"M 80 20 L 95 50 L 80 80 L 65 50 Z"
+};
+
+/* ===================== 规律库（扩充） ===================== */
+const RULE_GROUPS = [
+  {name:"包含嵌套", formulas:[
+    { m1:[{d:P.outCirc}],     m2:[{d:P.inSq}],    res:[{d:P.outCirc},{d:P.inSq}] },
+    { m1:[{d:P.outRect}],     m2:[{d:P.inStar}],  res:[{d:P.outRect},{d:P.inStar}] },
+    { m1:[{d:P.outDiamond}],  m2:[{d:P.inCirc}],  res:[{d:P.outDiamond},{d:P.inCirc}] },
+    { m1:[{d:P.outHex}],      m2:[{d:P.inTri}],   res:[{d:P.outHex},{d:P.inTri}] },
+    { m1:[{d:P.outPentagon}], m2:[{d:P.inDia}],   res:[{d:P.outPentagon},{d:P.inDia}] },
+  ]},
+  {name:"左右拼接", formulas:[
+    { m1:[{d:P.pacman}],    m2:[{d:P.wedge}],     res:[{d:P.pacman},{d:P.wedge}] },
+    { m1:[{d:P.semiL}],     m2:[{d:P.semiR}],     res:[{d:P.semiL},{d:P.semiR}] },
+    { m1:[{d:P.halfHexL}],  m2:[{d:P.halfHexR}],  res:[{d:P.halfHexL},{d:P.halfHexR}] },
+    { m1:[{d:P.halfStarL}], m2:[{d:P.halfStarR}], res:[{d:P.halfStarL},{d:P.halfStarR}] },
+  ]},
+  {name:"上下拼接", formulas:[
+    { m1:[{d:P.trapTop}],  m2:[{d:P.trapBot}],  res:[{d:P.trapTop},{d:P.trapBot}] },
+    { m1:[{d:P.houseTop}], m2:[{d:P.houseBot}], res:[{d:P.houseTop},{d:P.houseBot}] },
+    { m1:[{d:P.gearTop}],  m2:[{d:P.gearBot}],  res:[{d:P.gearTop},{d:P.gearBot}] },
+    { m1:[{d:P.capTop}],   m2:[{d:P.capBot}],   res:[{d:P.capTop},{d:P.capBot}] },
+    { m1:[{d:P.diaTop}],   m2:[{d:P.diaBot}],   res:[{d:P.diaTop},{d:P.diaBot}] },
+  ]},
+  {name:"相交十字", formulas:[
+    { m1:[{d:P.barThinV}],   m2:[{d:P.barThinH}],   res:[{d:P.barThinV},{d:P.barThinH}] },
+    { m1:[{d:P.barThickV}],  m2:[{d:P.barThickH}],  res:[{d:P.barThickV},{d:P.barThickH}] },
+    { m1:[{d:P.slantL}],     m2:[{d:P.slantR}],     res:[{d:P.slantL},{d:P.slantR}] },
+    { m1:[{d:P.crossDiagL}], m2:[{d:P.crossDiagR}], res:[{d:P.crossDiagL},{d:P.crossDiagR}] },
+  ]},
+  {name:"并行分离", formulas:[
+    { m1:[{d:P.paraBar1}],  m2:[{d:P.paraBar2}],  res:[{d:P.paraBar1},{d:P.paraBar2}] },
+    { m1:[{d:P.paraRect1}], m2:[{d:P.paraRect2}], res:[{d:P.paraRect1},{d:P.paraRect2}] },
+    { m1:[{d:P.paraCir1}],  m2:[{d:P.paraCir2}],  res:[{d:P.paraCir1},{d:P.paraCir2}] },
+    { m1:[{d:P.paraTri1}],  m2:[{d:P.paraTri2}],  res:[{d:P.paraTri1},{d:P.paraTri2}] },
+    { m1:[{d:P.paraDia1}],  m2:[{d:P.paraDia2}],  res:[{d:P.paraDia1},{d:P.paraDia2}] },
+  ]}
+];
+
+/* ===================== 工具 & 生成辅助 ===================== */
+const BASE_COLORS  = ['#F44336', '#FFFFFF', '#4CAF50', '#FFEB3B', '#FF9800', '#2196F3'];
+const BASE_FILTERS = ['filter-black', 'filter-blue', 'filter-red', 'filter-green', 'filter-orange'];
+
+const ROW_TRANS_POOL = [
+  "rotate(90, 50, 50)",
+  "rotate(180, 50, 50)",
+  "rotate(270, 50, 50)",
+  "translate(100,0) scale(-1,1)",
+  "translate(0,100) scale(1,-1)"
+];
+
+function shuffle(array){ return [...array].sort(()=>Math.random()-0.5); }
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function renderSVG(items, fillColor, gTrans=""){
+  const paths = items.map(i => `<path d="${i.d}" fill="${fillColor}" transform="${i.t || ''}" />`).join('');
+  return `<svg viewBox="0 0 100 100"><g transform="${gTrans}">${paths}</g></svg>`;
+}
+function bindSmartTap(el, handler){
+  let last = 0;
+  el.addEventListener('pointerdown', (e)=>{
+    last = Date.now();
+    try{ e.preventDefault(); }catch{}
+    handler(e);
+  }, {passive:false});
+  el.addEventListener('click', (e)=>{
+    if (Date.now() - last < 450) return;
+    handler(e);
+  });
+}
+function optSignature(opt){
+  const dataSig = (opt.data || []).map(i => `${i.d}@@${i.t||''}`).join('||');
+  return `${dataSig}##${opt.color}##${opt.filter}##${opt.trans}`;
+}
+function formulaSignature(formula){
+  return ['m1','m2','res'].map(k => (formula[k]||[]).map(i=>`${i.d}@@${i.t||''}`).join('|')).join('~');
+}
+const ITEM_VARIANTS = [
+  "rotate(90, 50, 50)",
+  "rotate(180, 50, 50)",
+  "rotate(270, 50, 50)",
+  "translate(100,0) scale(-1,1)"
+];
+function cloneFormulaWithItemTransform(formula, extraT){
+  const out = {};
+  for (const k of ['m1','m2','res']){
+    out[k] = (formula[k]||[]).map(it => ({ d: it.d, t: (it.t ? (it.t + " ") : "") + extraT }));
+  }
+  return out;
+}
+function pick3FormulasForColumn(group){
+  const picked = [];
+  const seen = new Set();
+  for (const f of shuffle(group.formulas)){
+    const sig = formulaSignature(f);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    picked.push(f);
+    if (picked.length === 3) return picked;
+  }
+  let guard = 0;
+  while (picked.length < 3 && guard++ < 200){
+    const base = rand(group.formulas);
+    const v = rand(ITEM_VARIANTS);
+    const nf = cloneFormulaWithItemTransform(base, v);
+    const sig = formulaSignature(nf);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    picked.push(nf);
+  }
+  return picked;
+}
+function pickRowTransforms(){
+  const a = rand(ROW_TRANS_POOL);
+  let b = rand(ROW_TRANS_POOL);
+  let guard = 0;
+  while (b === a && guard++ < 50) b = rand(ROW_TRANS_POOL);
+  return ["", a, b];
+}
+function pick4Groups(){
+  return shuffle(RULE_GROUPS).slice(0, 4);
+}
+
+/* ===================== 倒计时：每题4分钟（下一题重置） ===================== */
+const TOTAL_SECONDS = 4 * 60;
+let remaining = TOTAL_SECONDS;
+let timerId = null;
+let paused = false;
+let timedOut = false;
+
+const rocketEl = document.getElementById('rocket');
+const timePillEl = document.getElementById('timePill');
+const timeTextEl = document.getElementById('timeText');
+
+function formatTime(sec){
+  const m = String(Math.floor(sec / 60)).padStart(2,'0');
+  const s = String(sec % 60).padStart(2,'0');
+  return `${m}:${s}`;
+}
+function setDangerUI(isDanger){
+  rocketEl.classList.toggle('danger', isDanger);
+  rocketEl.classList.toggle('wiggle', isDanger && !paused && !timedOut);
+  timePillEl.classList.toggle('danger', isDanger);
+}
+function updateTimerUI(){
+  timeTextEl.textContent = formatTime(remaining);
+  const progress = 1 - (remaining / TOTAL_SECONDS);
+  const pct = Math.max(0, Math.min(1, progress)) * 100;
+  rocketEl.style.left = `${pct}%`;
+  setDangerUI(remaining <= 30 && remaining > 0);
+  rocketEl.classList.toggle('paused', paused);
+  timePillEl.classList.toggle('paused', paused);
+}
+function stopTimer(){ if (timerId) clearInterval(timerId); timerId = null; }
+function startTimer(){
+  stopTimer();
+  timerId = setInterval(() => {
+    if (paused || timedOut) return;
+    remaining--;
+    if (remaining <= 0){
+      remaining = 0;
+      timedOut = true;
+      stopTimer();
+      updateTimerUI();
+      lockAndShowTimeout();
+      return;
+    }
+    updateTimerUI();
+  }, 1000);
+  updateTimerUI();
+}
+function resetTimerForQuestion(){
+  remaining = TOTAL_SECONDS;
+  paused = false;
+  timedOut = false;
+  updateTimerUI();
+  startTimer();
+}
+function togglePause(){
+  if (timedOut) return;
+  paused = !paused;
+  updateTimerUI();
+}
+bindSmartTap(rocketEl, togglePause);
+bindSmartTap(timePillEl, togglePause);
+
+/* ===================== 闯关核心逻辑 ===================== */
+const TOTAL_QUESTIONS = 5;
+let questionBank = [];
+let currentQuestionIndex = 0;
+
+function generateFullQuestion(){
+  const colGroups = pick4Groups();
+  const rowTrans = pickRowTransforms();
+
+  // 颜色/边框按行列独立（增强差异）
+  const colorsGrid  = Array.from({length:3}, ()=> shuffle(BASE_COLORS).slice(0,4));
+  const filtersGrid = Array.from({length:3}, ()=> shuffle(BASE_FILTERS).slice(0,4));
+
+  // 每列给三行选 3 个不同 formula
+  const colFormulasByRow = colGroups.map(g => pick3FormulasForColumn(g)); // [col][row]
+
+  const rows = [];
+  for (let r = 0; r < 3; r++){
+    const row = [];
+    for (let c = 0; c < 4; c++){
+      row.push({
+        formula: colFormulasByRow[c][r],
+        color: colorsGrid[r][c],
+        filter: filtersGrid[r][c],
+        trans: rowTrans[r],
+        blank: null,
+        holeId: null
+      });
+    }
+    rows.push(row);
+  }
+
+  // 4个答题项：第2/3行随机分布（两行都有）
+  const k2 = rand([1,2,3]);
+  const k3 = 4 - k2;
+  const row2Cols = shuffle([0,1,2,3]).slice(0, k2);
+  const row3Cols = shuffle([0,1,2,3]).slice(0, k3);
+  const picked = [
+    ...row2Cols.map(c => ({r:1, c})),
+    ...row3Cols.map(c => ({r:2, c}))
+  ];
+
+  const holes = [];
+  picked.forEach(({r,c}) => {
+    const blankType = rand(['m1','m2','res']);
+    const holeId = `h-${r}-${c}-${blankType}`;
+    rows[r][c].blank = blankType;
+    rows[r][c].holeId = holeId;
+    holes.push({ id: holeId, r, c, type: blankType, correctSig: null });
+  });
+
+  const correctOptions = holes.map(h => {
+    const cell = rows[h.r][h.c];
+    const opt = {
+      id: `ans-${h.id}`,
+      data: cell.formula[h.type],
+      color: cell.color,
+      filter: cell.filter,
+      trans: cell.trans,
+      correct: true,
+      forHole: h.id
+    };
+    h.correctSig = optSignature(opt);
+    return opt;
+  });
+
+  // 避免4个正确项完全相同
+  const correctSigSet = new Set(correctOptions.map(optSignature));
+  if (correctSigSet.size !== correctOptions.length) return generateFullQuestion();
+
+  // 选项唯一性：禁止完全相同
+  const sigSet = new Set(correctOptions.map(optSignature));
+  const options = [...correctOptions];
+
+  function pushIfUnique(opt){
+    const sig = optSignature(opt);
+    if (sigSet.has(sig)) return false;
+    sigSet.add(sig);
+    options.push(opt);
+    return true;
+  }
+
+  // 至少4个强干扰：同形同变换，仅改边框/填充
+  let needStrong = 4, guard = 0;
+  while (needStrong > 0 && guard++ < 3000){
+    const base = rand(correctOptions);
+    const opt = {
+      id: `dist-strong-${Math.random()}`,
+      data: base.data,
+      trans: base.trans,
+      correct: false,
+      color: (Math.random() < 0.5) ? base.color : rand(BASE_COLORS.filter(c => c !== base.color)),
+      filter:(Math.random() < 0.5) ? base.filter: rand(BASE_FILTERS.filter(f => f !== base.filter))
+    };
+    if (pushIfUnique(opt)) needStrong--;
+  }
+
+  // 其余干扰随机（仍唯一）
+  guard = 0;
+  while (options.length < 12 && guard++ < 9000){
+    const mode = Math.random();
+    let data, color, filter, trans;
+
+    if (mode < 0.35){
+      const base = rand(correctOptions);
+      data = base.data;
+      trans = base.trans;
+      color = rand(BASE_COLORS);
+      filter = rand(BASE_FILTERS);
+    } else {
+      const r = Math.floor(Math.random() * 3);
+      const c = Math.floor(Math.random() * 4);
+      const t = rand(['m1','m2','res']);
+      data = rows[r][c].formula[t];
+      color = rand(BASE_COLORS);
+      filter = rand(BASE_FILTERS);
+      trans = rand(rowTrans);
+    }
+
+    pushIfUnique({ id:`dist-${Math.random()}`, data, color, filter, trans, correct:false });
+  }
+
+  return {
+    rows,
+    holes,
+    options: shuffle(options),
+    selectedOption: null,
+    holeAnswers: {}
+  };
+}
+
+function renderQuestion(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  const q = questionBank[currentQuestionIndex];
+
+  const page = document.createElement('div');
+  page.className = 'page active';
+  page.innerHTML = `
+    <h2>选择出绿色格子内对应的图形</h2>
+    <div class="instruction">第2、3行共有4个绿色答题项（随机分布）：先点选下方选项，再点击对应绿色格完成填入。</div>
+
+    <div class="game-board">
+      ${q.rows.map((row) => `
+        <div class="row">
+          ${['m1','m2','res'].map(type => `
+            <div class="matrix">
+              ${row.map((cell) => {
+                const isHole = (cell.blank === type);
+                if (!isHole){
+                  return `
+                    <div class="cell">
+                      <div class="svg-container ${cell.filter}">${renderSVG(cell.formula[type], cell.color, cell.trans)}</div>
+                    </div>
+                  `;
+                }
+                return `
+                  <div class="cell target-cell clickable"
+                       data-hole-id="${cell.holeId}"
+                       aria-label="答题格"></div>
+                `;
+              }).join('')}
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="options-section">
+      <div class="options-grid" id="q-options"></div>
+    </div>
+  `;
+  app.appendChild(page);
+
+  const optBox = page.querySelector('#q-options');
+  const allHoleEls = [...page.querySelectorAll('[data-hole-id]')];
+
+  function armUnfilledHoles(){
+    allHoleEls.forEach(holeEl => {
+      const hid = holeEl.getAttribute('data-hole-id');
+      const filled = !!q.holeAnswers[hid];
+      holeEl.classList.toggle('armed', !!q.selectedOption && !filled);
+    });
+  }
+
+  function fillHole(holeId, holeEl){
+    if (timedOut) return;
+    if (!q.selectedOption){
+      alert('请先点选下方选项！');
+      return;
+    }
+    const opt = q.selectedOption;
+    holeEl.innerHTML = `<div class="svg-container ${opt.filter}">${renderSVG(opt.data, opt.color, opt.trans)}</div>`;
+    holeEl.classList.add('filled');
+    holeEl.classList.remove('armed');
+    q.holeAnswers[holeId] = opt;
+  }
+
+  q.options.forEach(opt => {
+    const card = document.createElement('div');
+    card.className = 'opt-card';
+    card.innerHTML = `<div class="svg-container ${opt.filter}">${renderSVG(opt.data, opt.color, opt.trans)}</div>`;
+
+    bindSmartTap(card, () => {
+      if (timedOut) return;
+      page.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      q.selectedOption = opt;
+      armUnfilledHoles();
+    });
+
+    optBox.appendChild(card);
+  });
+
+  allHoleEls.forEach(holeEl => {
+    const holeId = holeEl.getAttribute('data-hole-id');
+    bindSmartTap(holeEl, () => fillHole(holeId, holeEl));
+  });
+
+  armUnfilledHoles();
+}
+
+function updateProgress(){
+  document.getElementById('progress').innerText = `第 ${currentQuestionIndex + 1} 题 / 共 ${TOTAL_QUESTIONS} 题`;
+}
+
+function isQuestionComplete(q){
+  return q.holes.every(h => !!q.holeAnswers[h.id]);
+}
+function isQuestionAllCorrect(q){
+  return q.holes.every(h => {
+    const ans = q.holeAnswers[h.id];
+    if (!ans) return false;
+    return optSignature(ans) === h.correctSig;
+  });
+}
+
+function nextQuestion(){
+  if (timedOut) return;
+  const q = questionBank[currentQuestionIndex];
+  if (!isQuestionComplete(q)) return alert('请完成4个绿色答题项后再进入下一题！');
+
+  currentQuestionIndex++;
+  if (currentQuestionIndex >= TOTAL_QUESTIONS){
+    showResult(false);
+    return;
+  }
+
+  // —— 关键：切换下一题后，倒计时重新开始（4:00）——
+  resetTimerForQuestion();
+
+  renderQuestion();
+  updateProgress();
+}
+
+function showResult(isTimeout){
+  stopTimer();
+
+  let correctCount = 0;
+  let wrongList = [];
+  questionBank.forEach((q, i) => {
+    if (isQuestionComplete(q) && isQuestionAllCorrect(q)) correctCount++;
+    else wrongList.push(i + 1);
+  });
+
+  document.getElementById('app').innerHTML = '';
+  const resBox = document.getElementById('resultBox');
+  resBox.classList.add('active');
+
+  resBox.innerHTML = `
+    <div class="score">${isTimeout ? '时间到' : '完成'}：${correctCount}/${TOTAL_QUESTIONS}</div>
+    <div style="text-align:left; max-width:720px; margin:0 auto;">
+      ${wrongList.length === 0 ? '全部正确。' : ('错题题号：' + wrongList.join(','))}
+      <div class="analysis">规律提示：同“位置”规则类型一致；同一行整体旋转/翻转一致。颜色/边框仅用于干扰。</div>
+    </div>
+  `;
+}
+
+function lockAndShowTimeout(){
+  document.querySelectorAll('.opt-card').forEach(el => el.style.pointerEvents = 'none');
+  document.querySelectorAll('[data-hole-id]').forEach(el => el.style.pointerEvents = 'none');
+  showResult(true);
+}
+
+function restartQuiz(){
+  questionBank = [];
+  for (let i = 0; i < TOTAL_QUESTIONS; i++) questionBank.push(generateFullQuestion());
+  currentQuestionIndex = 0;
+
+  document.getElementById('resultBox').classList.remove('active');
+  document.getElementById('resultBox').innerHTML = '';
+
+  resetTimerForQuestion();
+
+  renderQuestion();
+  updateProgress();
+}
+
+bindSmartTap(document.getElementById('nextBtn'), nextQuestion);
+bindSmartTap(document.getElementById('restartBtn'), restartQuiz);
+
+// 启动
+restartQuiz();
+</script>
+</body>
+</html>
